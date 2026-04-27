@@ -1,0 +1,21 @@
+# 로컬/Docker Compose 전용 — liboqs 없이 Bouncy Castle만 사용
+FROM eclipse-temurin:21-jdk-jammy AS builder
+
+WORKDIR /workspace
+
+COPY gradlew gradlew.bat gradle.properties settings.gradle.kts build.gradle.kts ./
+COPY gradle/ gradle/
+RUN ./gradlew dependencies --no-daemon -q
+
+COPY src/ src/
+RUN ./gradlew bootJar --no-daemon -x test
+
+FROM eclipse-temurin:21-jre-jammy
+
+COPY --from=builder /workspace/build/libs/*.jar app.jar
+
+ENV SPRING_PROFILES_ACTIVE=dev
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/app.jar"]

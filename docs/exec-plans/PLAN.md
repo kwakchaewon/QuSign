@@ -31,9 +31,9 @@
 - [ ] when expression 사용법
 - [ ] Kotlin 공식 문서 Basics 섹션 완독
 - [ ] coroutine 기초 개념 파악 (suspend, launch) — 깊이는 나중에
-- [ ] **→ 즉시 적용:** Gradle Kotlin DSL 기반 Spring Boot 3.2 프로젝트 생성
-- [ ] **→ 즉시 적용:** Logback JSON 구조화 로그 설정
-- [ ] **→ 즉시 적용:** GitHub 레포지토리 생성 + 초기 커밋
+- [x] **→ 즉시 적용:** Gradle Kotlin DSL 기반 Spring Boot 3.5 프로젝트 생성
+- [x] **→ 즉시 적용:** Logback JSON 구조화 로그 설정
+- [x] **→ 즉시 적용:** GitHub 레포지토리 생성 + 초기 커밋
 
 **완료 기준:** Kotlin으로 Spring Boot REST API 하나 혼자 짤 수 있으면 됨
 

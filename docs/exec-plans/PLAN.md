@@ -48,16 +48,16 @@
 - [ ] 격자 암호(Lattice Cryptography) 개념 수준 파악 (깊이 X, 방향만)
 - [ ] NIST PQC 표준 4종 이름과 용도 파악 (ML-KEM, ML-DSA, SLH-DSA, FALCON)
 - [ ] ML-DSA 키쌍 구조 이해 (공개키/개인키/서명값 각각 크기)
-- [ ] **→ 즉시 적용:** liboqs 공식 Docker 이미지 pull
+- [x] **→ 즉시 적용:** liboqs 공식 Docker 이미지 pull
   ```bash
   docker pull openquantumsafe/liboqs
   ```
-- [ ] **→ 즉시 적용:** liboqs-java 네이티브 빌드 Dockerfile 작성
-- [ ] **→ 즉시 적용:** Spring Boot 프로젝트에 liboqs-java 의존성 연동
-- [ ] **→ 즉시 적용:** ML-DSA 키쌍 생성 코드 작성
-- [ ] **→ 즉시 적용:** ML-DSA 서명 코드 작성
-- [ ] **→ 즉시 적용:** ML-DSA 검증 코드 작성
-- [ ] ✅ 단위 테스트 통과 ← **전체 프로젝트 핵심 관문**
+- [x] **→ 즉시 적용:** liboqs-java 네이티브 빌드 Dockerfile 작성
+- [x] **→ 즉시 적용:** Spring Boot 프로젝트에 ML-DSA 의존성 연동 (Bouncy Castle 1.84, 로컬) / liboqs-java (Docker)
+- [x] **→ 즉시 적용:** ML-DSA 키쌍 생성 코드 작성
+- [x] **→ 즉시 적용:** ML-DSA 서명 코드 작성
+- [x] **→ 즉시 적용:** ML-DSA 검증 코드 작성
+- [x] ✅ 단위 테스트 통과 ← **전체 프로젝트 핵심 관문**
   ```kotlin
   @Test
   fun `ML-DSA 서명 검증 성공`() {

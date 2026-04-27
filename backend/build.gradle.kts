@@ -32,6 +32,7 @@ dependencies {
 	implementation("org.bouncycastle:bcprov-jdk18on:1.84")
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-mysql")
+	implementation("org.apache.pdfbox:pdfbox:3.0.3")
 	runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

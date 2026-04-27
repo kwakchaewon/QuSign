@@ -27,7 +27,9 @@
       "Bash(jar tf *)",
       "Bash(grep -v \"\\\\.class$\")",
       "Bash(jar xf *)",
-      "Bash(javap -c /tmp/org/bouncycastle/jcajce/spec/MLDSAParameterSpec.class)"
+      "Bash(javap -c /tmp/org/bouncycastle/jcajce/spec/MLDSAParameterSpec.class)",
+      "Bash(./gradlew compileKotlin --no-daemon)",
+      "Bash(xargs grep *)"
     ]
   },
   "model": "sonnet",

@@ -1,16 +1,20 @@
 spring:
   datasource:
     url: jdbc:mariadb://localhost:3306/qusign?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
-    username: qusign
-    password: qusign
+    username: root
+    password: root
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: true
+
+  flyway:
+    clean-on-validation-error: false
 
 logging:
   level:
     com.qusign: DEBUG
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
+    org.flywaydb: DEBUG

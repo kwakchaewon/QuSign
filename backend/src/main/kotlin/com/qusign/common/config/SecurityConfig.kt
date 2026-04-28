@@ -25,7 +25,7 @@ class SecurityConfig(private val jwtAuthenticationFilter: JwtAuthenticationFilte
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers("/api/health", "/actuator/health", "/api/auth/**").permitAll()
+                    .requestMatchers("/api/health", "/actuator/health", "/api/auth/**", "/api/verify").permitAll()
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

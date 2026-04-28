@@ -5,6 +5,7 @@ import com.qusign.auth.exception.InvalidCredentialsException
 import com.qusign.common.response.ApiResponse
 import com.qusign.document.exception.DocumentNotFoundException
 import com.qusign.document.exception.StorageException
+import com.qusign.signature.exception.*
 import org.springframework.http.HttpStatus
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -39,6 +40,26 @@ class GlobalExceptionHandler {
             .joinToString(", ") { "${it.field}: ${it.defaultMessage}" }
         return ApiResponse.error(message)
     }
+
+    @ExceptionHandler(SignatureRequestNotFoundException::class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    fun handleSignatureRequestNotFound(e: SignatureRequestNotFoundException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(SignatureRequestExpiredException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleSignatureExpired(e: SignatureRequestExpiredException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(SignatureRequestAlreadySignedException::class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    fun handleAlreadySigned(e: SignatureRequestAlreadySignedException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(UnauthorizedSignerException::class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    fun handleUnauthorizedSigner(e: UnauthorizedSignerException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(SignatureVerificationFailedException::class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    fun handleVerificationFailed(e: SignatureVerificationFailedException) = ApiResponse.error(e.message!!)
 
     @ExceptionHandler(Exception::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

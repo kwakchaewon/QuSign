@@ -20,3 +20,7 @@ spring:
     user:
       name: admin
       password: admin
+
+jwt:
+  secret: QuSignTestSecretKeyForUnitTests2024
+  expiration-ms: 3600000

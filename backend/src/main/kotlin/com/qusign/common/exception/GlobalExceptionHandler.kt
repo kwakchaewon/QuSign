@@ -3,6 +3,8 @@ package com.qusign.common.exception
 import com.qusign.auth.exception.EmailAlreadyExistsException
 import com.qusign.auth.exception.InvalidCredentialsException
 import com.qusign.common.response.ApiResponse
+import com.qusign.document.exception.DocumentNotFoundException
+import com.qusign.document.exception.StorageException
 import org.springframework.http.HttpStatus
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -20,6 +22,14 @@ class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun handleInvalidCredentials(e: InvalidCredentialsException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(DocumentNotFoundException::class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    fun handleDocumentNotFound(e: DocumentNotFoundException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(StorageException::class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    fun handleStorage(e: StorageException) = ApiResponse.error(e.message!!)
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

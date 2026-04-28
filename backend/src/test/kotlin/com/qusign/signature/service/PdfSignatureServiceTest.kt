@@ -32,7 +32,8 @@ class PdfSignatureServiceTest {
         val message = "테스트 문서 해시".toByteArray()
         val signature = pqcSignatureService.sign(keyPair.private, message)
 
-        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com")
+        val docHash = "테스트 문서 해시".toByteArray()
+        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com", docHash)
         val extracted = pdfSignatureService.extractSignature(signedPdf)
 
         assertNotNull(extracted)
@@ -46,7 +47,7 @@ class PdfSignatureServiceTest {
         val message = "테스트 문서 해시".toByteArray()
         val signature = pqcSignatureService.sign(keyPair.private, message)
 
-        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com")
+        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com", message)
         val extracted = pdfSignatureService.extractSignature(signedPdf)!!
 
         assertTrue(pqcSignatureService.verify(keyPair.public, message, extracted))
@@ -55,17 +56,19 @@ class PdfSignatureServiceTest {
     @Test
     fun `서명 메타데이터 추출 성공`() {
         val pdf = createMinimalPdf()
+        val docHash = "hash".toByteArray()
         val signature = pqcSignatureService.sign(
             pqcSignatureService.generateKeyPair().private,
-            "hash".toByteArray()
+            docHash
         )
 
-        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com")
+        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com", docHash)
         val meta = pdfSignatureService.extractMetadata(signedPdf)
 
         assertNotNull(meta)
         assertTrue(meta.signerId == "tester@qusign.com")
         assertTrue(meta.signedAt.isNotBlank())
+        assertContentEquals(docHash, meta.documentHash)
     }
 
     @Test

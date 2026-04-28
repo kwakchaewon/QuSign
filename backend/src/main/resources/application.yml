@@ -30,6 +30,12 @@ spring:
 server:
   port: 8080
 
+storage:
+  endpoint: ${STORAGE_ENDPOINT:http://localhost:9000}
+  bucket: ${STORAGE_BUCKET:qusign}
+  access-key: ${STORAGE_ACCESS_KEY:minioadmin}
+  secret-key: ${STORAGE_SECRET_KEY:minioadmin}
+
 jwt:
   secret: ${JWT_SECRET:QuSignLocalDevelopmentSecret2024}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}

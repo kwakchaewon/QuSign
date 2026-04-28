@@ -12,6 +12,12 @@ spring:
   flyway:
     clean-on-validation-error: false
 
+storage:
+  endpoint: http://localhost:9000
+  bucket: qusign
+  access-key: minioadmin
+  secret-key: minioadmin
+
 logging:
   level:
     com.qusign: DEBUG

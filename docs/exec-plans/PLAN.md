@@ -10,7 +10,7 @@
 | 단계 | 내용 | 상태 |
 |------|------|------|
 | 1단계 | 환경 세팅 + PQC 핵심 검증 | 🔄 진행 중 (1-4 남음) |
-| 2단계 | 백엔드 핵심 구현 | 🔄 진행 중 (2-4 남음) |
+| 2단계 | 백엔드 핵심 구현 | ✅ 완료 |
 | 3단계 | 프론트엔드 + 이메일 연동 | ⬜ 진행 전 |
 | 4단계 | AWS 배포 + GitHub Actions | ⬜ 진행 전 |
 | 5단계 | Terraform + 수익화 | ⬜ 진행 전 |
@@ -168,12 +168,14 @@
 
 ### 2-4. 레이어 분리
 
-- [ ] `PqcSignatureService` — liboqs-java 래핑, ML-DSA 전담
-- [ ] `PdfSignatureService` — PDFBox 래핑, 서명 삽입/추출 전담
-- [ ] `StorageService` — MinIO/S3 추상화
+- [x] `PqcSignatureService` (interface) / `BouncyCastlePqcSignatureService` (impl) — ML-DSA 전담
+- [x] `PdfSignatureService` (interface) / `PdfBoxSignatureService` (impl) — 서명 삽입/추출 전담
+- [x] `StorageService` (interface) / `S3StorageService` (impl) — MinIO/S3 추상화
 
 **2단계 완료 기준**
-- [ ] Postman으로 회원가입 → 업로드 → 서명 요청 → 서명 → 검증 전체 플로우 동작
+- [x] `./gradlew build` 성공 (전체 컴파일 통과)
+- [x] 통합 테스트 전체 통과 (AuthService, DocumentService, PdfSignatureService, SignatureFlowService)
+- [ ] Postman으로 회원가입 → 업로드 → 서명 요청 → 서명 → 검증 전체 플로우 동작 (서버 기동 후 수동 확인)
 
 ---
 

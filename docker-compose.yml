@@ -1,23 +1,4 @@
 services:
-  mariadb:
-    image: mariadb:10.11
-    container_name: qusign-mariadb
-    restart: unless-stopped
-    environment:
-      MARIADB_ROOT_PASSWORD: root
-      MARIADB_DATABASE: qusign
-      MARIADB_ROOT_HOST: "%"
-    ports:
-      - "3306:3306"
-    volumes:
-      - mariadb_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
   minio:
     image: minio/minio:latest
     container_name: qusign-minio
@@ -38,34 +19,5 @@ services:
       retries: 5
       start_period: 10s
 
-  app:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.local
-    container_name: qusign-app
-    restart: unless-stopped
-    depends_on:
-      mariadb:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
-      DB_URL: jdbc:mariadb://mariadb:3306/qusign
-      DB_USERNAME: root
-      DB_PASSWORD: root
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-    ports:
-      - "8080:8080"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-
 volumes:
-  mariadb_data:
   minio_data:

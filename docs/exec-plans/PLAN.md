@@ -90,13 +90,14 @@
 
 ### 1-4. 로컬 Docker Compose 환경 완성 (1주)
 
-- [ ] Docker Compose 작성
-  - [ ] Spring Boot 앱 컨테이너
-  - [ ] MariaDB 10.11 컨테이너
-  - [ ] MinIO 컨테이너 (로컬 S3 대체)
-- [ ] Docker Compose로 전체 환경 한번에 실행 확인
+- [x] Docker Compose 작성 (MinIO 전용 — 앱·MariaDB는 호스트에서 직접 실행)
+  - [ ] ~~Spring Boot 앱 컨테이너~~ → 호스트에서 `./gradlew bootRun`
+  - [ ] ~~MariaDB 10.11 컨테이너~~ → 호스트 MariaDB 사용 (root/root)
+  - [x] MinIO 컨테이너 (로컬 S3 대체)
+- [ ] 로컬 환경 실행 확인
   ```bash
-  docker compose up -d
+  docker compose up -d   # MinIO 기동
+  ./gradlew bootRun      # 앱 호스트 직접 실행 (local 프로파일)
   ```
 
 **1단계 완료 기준**

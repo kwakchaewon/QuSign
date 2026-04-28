@@ -32,7 +32,9 @@
       "Bash(xargs grep *)",
       "Bash(docker info *)",
       "Bash(docker compose *)",
-      "Bash(git -C e:/dev/QuSign diff)"
+      "Bash(git -C e:/dev/QuSign diff)",
+      "Bash(git -C e:/dev/QuSign status)",
+      "Bash(git -C e:/dev/QuSign diff .claude/settings.json)"
     ]
   },
   "model": "sonnet",

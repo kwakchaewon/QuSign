@@ -46,17 +46,9 @@
       <div class="qs-list-card">
         <div class="qs-list-toolbar">
           <div class="qs-tabs">
-            <button class="qs-tab" :class="{ 'is-active': tab === 'all' }" @click="tab = 'all'">
+            <button class="qs-tab is-active">
               전체
               <span class="qs-tab-count">{{ docs.length }}</span>
-            </button>
-            <button class="qs-tab" :class="{ 'is-active': tab === 'signed' }" @click="tab = 'signed'">
-              서명 완료
-              <span class="qs-tab-count">{{ signedCount }}</span>
-            </button>
-            <button class="qs-tab" :class="{ 'is-active': tab === 'pending' }" @click="tab = 'pending'">
-              서명 대기
-              <span class="qs-tab-count">{{ pendingCount }}</span>
             </button>
           </div>
           <label class="qs-search">
@@ -129,29 +121,26 @@
                 </svg>
               </div>
               <div class="qs-doc-main">
-                <div class="qs-doc-name">{{ doc.name }}</div>
+                <div class="qs-doc-name">{{ doc.originalFilename }}</div>
                 <div class="qs-doc-meta">
-                  <span>{{ formatDate(doc.date) }}</span>
+                  <span>{{ formatDate(doc.createdAt) }}</span>
                   <span class="qs-dot-sep">·</span>
-                  <span class="qs-doc-signer">{{ doc.signer }}</span>
+                  <span class="qs-doc-signer">{{ doc.hashSha3256.slice(0, 12) }}…</span>
                 </div>
               </div>
               <div class="qs-doc-status">
-                <span class="qs-badge" :class="statusClass(doc.status)">
-                  <span class="qs-badge-dot" :style="{ background: statusColor(doc.status) }"></span>
-                  {{ statusLabel(doc.status) }}
+                <span class="qs-badge qs-badge-pending">
+                  <span class="qs-badge-dot" style="background:var(--color-gray-400)"></span>
+                  업로드됨
                 </span>
               </div>
               <div class="qs-doc-actions">
-                <button v-if="doc.status === 'pending'" class="qs-btn qs-btn-sm qs-btn-primary">
+                <RouterLink to="/request" class="qs-btn qs-btn-sm qs-btn-primary">
                   서명 요청
-                </button>
-                <button v-if="doc.status === 'signed'" class="qs-btn qs-btn-sm qs-btn-secondary">
+                </RouterLink>
+                <button class="qs-btn qs-btn-sm qs-btn-secondary" @click="handleDownload(doc)">
                   다운로드
                 </button>
-                <RouterLink to="/verify" class="qs-btn qs-btn-sm qs-btn-secondary">
-                  검증
-                </RouterLink>
               </div>
             </div>
           </div>
@@ -170,77 +159,71 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
-
-type DocStatus = 'signed' | 'pending' | 'reviewing'
+import { useAuthStore } from '@/stores/auth'
+import api from '@/lib/api'
 
 interface Doc {
   id: number
-  name: string
-  date: string
-  signer: string
-  status: DocStatus
+  originalFilename: string
+  hashSha3256: string
+  createdAt: string | null
 }
 
 const router = useRouter()
+const auth = useAuthStore()
 const theme = ref<'light' | 'dark'>('light')
-const tab = ref<'all' | 'signed' | 'pending'>('all')
 const search = ref('')
 const isLoading = ref(true)
+const fetchError = ref('')
 
-const userEmail = ref('admin@qusign.io')
+const userEmail = computed(() => auth.email ?? '')
 const userInitial = computed(() => userEmail.value.charAt(0).toUpperCase())
 
 const docs = ref<Doc[]>([])
 
-const mockDocs: Doc[] = [
-  { id: 1, name: '2026년_1분기_계약서.pdf', date: '2026-05-05', signer: 'partner@corp.com', status: 'signed' },
-  { id: 2, name: 'NDA_체결_합의서.pdf', date: '2026-05-03', signer: 'legal@example.com', status: 'pending' },
-  { id: 3, name: '서비스_이용약관_v2.pdf', date: '2026-04-28', signer: 'cto@startup.kr', status: 'reviewing' },
-  { id: 4, name: '공급_계약_최종본.pdf', date: '2026-04-21', signer: 'ops@vendor.com', status: 'signed' },
-  { id: 5, name: '개인정보처리_동의서.pdf', date: '2026-04-15', signer: 'user@client.co', status: 'pending' },
-]
-
-onMounted(() => {
-  setTimeout(() => {
-    docs.value = mockDocs
+onMounted(async () => {
+  try {
+    const res = await api.get<{ data: Doc[] }>('/api/documents')
+    docs.value = res.data.data ?? []
+  } catch {
+    fetchError.value = '문서 목록을 불러오지 못했어요.'
+  } finally {
     isLoading.value = false
-  }, 900)
+  }
 })
 
 watch(theme, (t) => {
   document.documentElement.setAttribute('data-theme', t)
 }, { immediate: true })
 
-const signedCount = computed(() => docs.value.filter(d => d.status === 'signed').length)
-const pendingCount = computed(() => docs.value.filter(d => d.status === 'pending').length)
-
 const filteredDocs = computed(() => {
-  let list = docs.value
-  if (tab.value === 'signed') list = list.filter(d => d.status === 'signed')
-  else if (tab.value === 'pending') list = list.filter(d => d.status === 'pending')
-  if (search.value.trim()) {
-    const q = search.value.toLowerCase()
-    list = list.filter(d => d.name.toLowerCase().includes(q))
-  }
-  return list
+  if (!search.value.trim()) return docs.value
+  const q = search.value.toLowerCase()
+  return docs.value.filter(d => d.originalFilename.toLowerCase().includes(q))
 })
 
-function statusClass(s: DocStatus) {
-  return { 'qs-badge-success': s === 'signed', 'qs-badge-warning': s === 'pending', 'qs-badge-pending': s === 'reviewing' }
-}
-function statusColor(s: DocStatus) {
-  return s === 'signed' ? 'var(--color-success)' : s === 'pending' ? 'var(--color-warning)' : 'var(--color-gray-400)'
-}
-function statusLabel(s: DocStatus) {
-  return s === 'signed' ? '서명 완료' : s === 'pending' ? '서명 대기' : '검토 중'
-}
-function formatDate(d: string) {
-  return d.replace(/-/g, '.')
+function formatDate(d: string | null) {
+  if (!d) return '-'
+  return d.slice(0, 10).replace(/-/g, '.')
 }
 function handleThemeToggle(t: 'light' | 'dark') {
   theme.value = t
 }
 function handleLogout() {
+  auth.logout()
   router.push('/login')
+}
+async function handleDownload(doc: Doc) {
+  try {
+    const res = await api.get(`/api/documents/${doc.id}/download`, { responseType: 'blob' })
+    const url = URL.createObjectURL(res.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = doc.originalFilename
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    alert('다운로드에 실패했어요.')
+  }
 }
 </script>

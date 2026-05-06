@@ -314,26 +314,31 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
+import { useAuthStore } from '@/stores/auth'
+import api from '@/lib/api'
 
 interface Signer { email: string; name: string; error: boolean }
 
 const router = useRouter()
+const auth = useAuthStore()
 const theme = ref<'light' | 'dark'>('light')
 const step = ref(1)
-const userEmail = ref('admin@qusign.io')
+const userEmail = computed(() => auth.email ?? '')
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const file = ref<File | null>(null)
 const isDrag = ref(false)
-const isHashing = ref(false)
+const isUploading = ref(false)
 const hashDone = ref(false)
 const hash = ref('')
+const uploadedDocId = ref<number | null>(null)
 
 const signers = ref<Signer[]>([{ email: '', name: '', error: false }])
 const message = ref('')
 const isSending = ref(false)
-const signingLink = ref('')
+const signingLinks = ref<string[]>([])
 const copied = ref(false)
+const submitError = ref('')
 
 watch(theme, (t) => document.documentElement.setAttribute('data-theme', t), { immediate: true })
 
@@ -348,16 +353,25 @@ function handleFileChange(e: Event) {
   const f = (e.target as HTMLInputElement).files?.[0]
   if (f) setFile(f)
 }
-function setFile(f: File) {
+async function setFile(f: File) {
   file.value = f
   hashDone.value = false
   hash.value = ''
-  isHashing.value = true
-  setTimeout(() => {
-    hash.value = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+  uploadedDocId.value = null
+  isUploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', f)
+    const res = await api.post<{ data: { id: number; hashSha3256: string } }>('/api/documents', formData)
+    uploadedDocId.value = res.data.data.id
+    hash.value = res.data.data.hashSha3256
     hashDone.value = true
-    isHashing.value = false
-  }, 1400)
+  } catch (err: any) {
+    file.value = null
+    alert(err.response?.data?.message ?? '파일 업로드에 실패했어요.')
+  } finally {
+    isUploading.value = false
+  }
 }
 function formatSize(bytes: number) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -378,16 +392,30 @@ const canSubmit = computed(() =>
 
 async function handleSubmit() {
   signers.value.forEach((_, i) => validateSigner(i))
-  if (!canSubmit.value) return
+  if (!canSubmit.value || !uploadedDocId.value) return
   isSending.value = true
-  await new Promise(r => setTimeout(r, 1200))
-  signingLink.value = `https://qusign.io/sign/${Math.random().toString(36).slice(2, 10)}`
-  isSending.value = false
-  step.value = 3
+  submitError.value = ''
+  try {
+    const results = await Promise.all(
+      signers.value.map(s =>
+        api.post<{ data: { token: string } }>('/api/signature-requests', {
+          documentId: uploadedDocId.value,
+          signerEmail: s.email,
+          expirationHours: 72,
+        })
+      )
+    )
+    signingLinks.value = results.map(r => `${window.location.origin}/sign/${r.data.data.token}`)
+    step.value = 3
+  } catch (err: any) {
+    submitError.value = err.response?.data?.message ?? '서명 요청 전송에 실패했어요.'
+  } finally {
+    isSending.value = false
+  }
 }
 
 async function copyLink() {
-  await navigator.clipboard.writeText(signingLink.value).catch(() => {})
+  await navigator.clipboard.writeText(signingLinks.value[0] ?? '').catch(() => {})
   copied.value = true
   setTimeout(() => { copied.value = false }, 2000)
 }
@@ -397,8 +425,10 @@ function resetForm() {
   file.value = null
   hash.value = ''
   hashDone.value = false
+  uploadedDocId.value = null
   signers.value = [{ email: '', name: '', error: false }]
   message.value = ''
-  signingLink.value = ''
+  signingLinks.value = []
+  submitError.value = ''
 }
 </script>

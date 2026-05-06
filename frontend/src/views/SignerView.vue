@@ -46,77 +46,82 @@
         </li>
       </ol>
 
-      <!-- Step 1: OTP verification -->
+      <!-- Step 1: Login -->
       <div v-if="step === 1" class="sg-card">
         <h2 class="sg-card-title">본인 확인</h2>
         <p class="sg-card-desc">
-          서명 요청을 받은 이메일 주소를 입력하고 인증 코드를 받아 주세요.
+          QuSign 계정으로 로그인하여 서명 요청을 확인해 주세요.
         </p>
 
         <div class="qs-field">
           <label class="qs-label" for="sg-email">이메일</label>
-          <div class="qs-input" :class="{ 'is-error': emailError }">
+          <div class="qs-input" :class="{ 'is-error': !!loginErr }">
             <span class="qs-input-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
                 <path d="m2 7 10 7 10-7" stroke="currentColor" stroke-width="2"/>
               </svg>
             </span>
-            <input id="sg-email" v-model="email" type="email"
-              placeholder="서명 요청을 받은 이메일"
-              :disabled="otpSent"
-              @blur="validateEmail">
+            <input id="sg-email" v-model="loginEmail" type="email"
+              autocomplete="username"
+              placeholder="name@company.com"
+              :disabled="isLoginLoading" />
           </div>
-          <span v-if="emailError" class="qs-help is-error">올바른 이메일 형식이 아닙니다</span>
         </div>
 
-        <button v-if="!otpSent"
-          class="qs-btn qs-btn-full qs-btn-primary"
-          :disabled="!email || !!emailError"
-          @click="sendOtp">
-          인증 코드 받기
-        </button>
-
-        <template v-if="otpSent">
-          <p class="qs-label" style="margin-bottom:10px">
-            <strong>{{ email }}</strong>으로 6자리 코드가 발송되었습니다
-          </p>
-
-          <div class="sg-otp-row">
-            <input
-              v-for="(_, i) in 6"
-              :key="i"
-              :ref="el => { if (el) otpRefs[i] = el as HTMLInputElement }"
-              class="sg-otp-box"
-              :class="{ 'is-filled': otp[i] }"
-              type="text"
-              inputmode="numeric"
-              maxlength="1"
-              :value="otp[i]"
-              @input="handleOtpInput($event, i)"
-              @keydown="handleOtpKeydown($event, i)"
-              @paste="handleOtpPaste">
-          </div>
-
-          <div class="sg-timer-row">
-            <span class="sg-timer" :class="{ 'is-urgent': timerSeconds <= 30 }">
-              <svg class="sg-timer-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
-                <path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <div class="qs-field">
+          <label class="qs-label" for="sg-pw">비밀번호</label>
+          <div class="qs-input" :class="{ 'is-error': !!loginErr }">
+            <span class="qs-input-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="9" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M7 9V7a5 5 0 0 1 10 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
-              {{ formatTimer(timerSeconds) }}
             </span>
-            <button class="sg-resend" :disabled="timerSeconds > 0" @click="resendOtp">
-              재전송
+            <input id="sg-pw" v-model="loginPw"
+              :type="showLoginPw ? 'text' : 'password'"
+              autocomplete="current-password"
+              placeholder="비밀번호 입력"
+              :disabled="isLoginLoading"
+              @keydown.enter="handleLogin" />
+            <button type="button" class="qs-input-eye"
+              :aria-label="showLoginPw ? '비밀번호 숨기기' : '비밀번호 표시'"
+              @click="showLoginPw = !showLoginPw">
+              <svg v-if="showLoginPw" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                <path d="M10.6 6.2A10 10 0 0 1 12 6c6.5 0 10 6 10 6a14.7 14.7 0 0 1-2.6 3.4M6.7 7.4A14.7 14.7 0 0 0 2 12s3.5 6 10 6c1.7 0 3.2-.4 4.5-1"
+                  stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              </svg>
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="1.6" />
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" />
+              </svg>
             </button>
           </div>
+        </div>
 
-          <button class="qs-btn qs-btn-full qs-btn-primary"
-            :disabled="otp.some(d => !d)"
-            @click="verifyOtp">
-            확인
-          </button>
-        </template>
+        <div v-if="loginErr" class="qs-alert" role="alert">
+          <span class="qs-alert-dot" aria-hidden="true" />
+          {{ loginErr }}
+        </div>
+
+        <button class="qs-btn qs-btn-full qs-btn-primary"
+          :disabled="isLoginLoading || !loginEmail || !loginPw"
+          @click="handleLogin">
+          <template v-if="isLoginLoading">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="animation: qs-spin 0.8s linear infinite">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.25" stroke-width="2.4" />
+              <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+            </svg>
+            <span>로그인 중…</span>
+          </template>
+          <template v-else>
+            <span>로그인</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </template>
+        </button>
       </div>
 
       <!-- Step 2: Document review -->
@@ -124,7 +129,6 @@
         <h2 class="sg-card-title">문서 검토 및 서명</h2>
         <p class="sg-card-desc">문서 내용을 확인하고 서명에 동의해 주세요.</p>
 
-        <!-- Doc meta -->
         <div class="sg-doc-meta">
           <div class="sg-doc-meta-name">
             <svg width="24" height="30" viewBox="0 0 24 30" fill="none" aria-hidden="true">
@@ -132,46 +136,23 @@
               <text x="3" y="19" font-size="6" font-weight="800" fill="var(--color-error)"
                 font-family="monospace">PDF</text>
             </svg>
-            <span class="sg-doc-name">{{ docInfo.name }}</span>
+            <span class="sg-doc-name">서명 요청 문서</span>
           </div>
           <div class="sg-meta-rows">
             <div class="sg-meta-row">
-              <span class="sg-meta-k">요청자</span>
-              <span class="sg-meta-v">{{ docInfo.requester }}</span>
+              <span class="sg-meta-k">서명자</span>
+              <span class="sg-meta-v">{{ auth.email }}</span>
             </div>
             <div class="sg-meta-row">
-              <span class="sg-meta-k">요청 일시</span>
-              <span class="sg-meta-v">{{ docInfo.requestedAt }}</span>
-            </div>
-            <div class="sg-meta-row">
-              <span class="sg-meta-k">만료 일시</span>
-              <span class="sg-meta-v">{{ docInfo.expiresAt }}</span>
-            </div>
-            <div class="sg-meta-row">
-              <span class="sg-meta-k">SHA3-256</span>
-              <div class="sg-meta-v">
-                <span class="sg-meta-v is-mono">
-                  {{ hashVisible ? docInfo.hash : docInfo.hash.slice(0, 20) + '...' }}
-                </span>
-                <button class="sg-hash-toggle" @click="hashVisible = !hashVisible">
-                  {{ hashVisible ? '접기' : '전체 보기' }}
-                </button>
-              </div>
+              <span class="sg-meta-k">서명 토큰</span>
+              <span class="sg-meta-v is-mono">{{ signToken }}</span>
             </div>
           </div>
         </div>
 
-        <!-- PDF preview -->
         <div class="sg-pdf-preview">
           <div class="sg-pdf-toolbar">
             <span class="sg-pdf-label">문서 미리보기</span>
-            <button class="qs-btn qs-btn-sm qs-btn-secondary" style="height:28px;font-size:12px;border-radius:8px">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-              전체화면
-            </button>
           </div>
           <div class="sg-pdf-placeholder">
             <svg class="sg-pdf-placeholder-icon" width="48" height="56" viewBox="0 0 48 56" fill="none">
@@ -185,7 +166,6 @@
           </div>
         </div>
 
-        <!-- Consent -->
         <div class="sg-consent">
           <label class="sg-check-row" @click.prevent="consent1 = !consent1">
             <div class="sg-check-box" :class="{ 'is-checked': consent1 }">
@@ -211,8 +191,45 @@
           </label>
         </div>
 
+        <div class="qs-field">
+          <label class="qs-label" for="sg-sign-pw">서명 비밀번호</label>
+          <p class="qs-help" style="margin-bottom:8px">ML-DSA 개인키 복호화를 위해 QuSign 계정 비밀번호를 입력해 주세요.</p>
+          <div class="qs-input" :class="{ 'is-error': !!signErr }">
+            <span class="qs-input-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="9" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M7 9V7a5 5 0 0 1 10 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <input id="sg-sign-pw" v-model="signPassword"
+              :type="showSignPw ? 'text' : 'password'"
+              autocomplete="current-password"
+              placeholder="계정 비밀번호 입력"
+              :disabled="isSigning"
+              @keydown.enter="handleSign" />
+            <button type="button" class="qs-input-eye"
+              :aria-label="showSignPw ? '비밀번호 숨기기' : '비밀번호 표시'"
+              @click="showSignPw = !showSignPw">
+              <svg v-if="showSignPw" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                <path d="M10.6 6.2A10 10 0 0 1 12 6c6.5 0 10 6 10 6a14.7 14.7 0 0 1-2.6 3.4M6.7 7.4A14.7 14.7 0 0 0 2 12s3.5 6 10 6c1.7 0 3.2-.4 4.5-1"
+                  stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              </svg>
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="1.6" />
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="signErr" class="qs-alert" role="alert">
+          <span class="qs-alert-dot" aria-hidden="true" />
+          {{ signErr }}
+        </div>
+
         <button class="qs-btn qs-btn-full qs-btn-primary"
-          :disabled="!consent1 || !consent2 || isSigning"
+          :disabled="!consent1 || !consent2 || !signPassword || isSigning"
           @click="handleSign">
           서명하기
         </button>
@@ -240,7 +257,7 @@
           <div class="sg-success-meta">
             <div class="sg-success-row">
               <span class="sg-success-k">서명자</span>
-              <span class="sg-success-v">{{ email }}</span>
+              <span class="sg-success-v">{{ auth.email }}</span>
             </div>
             <div class="sg-success-row">
               <span class="sg-success-k">서명 일시</span>
@@ -251,20 +268,10 @@
               <span class="sg-success-v is-mono">ML-DSA-65</span>
             </div>
           </div>
-
-          <button class="qs-btn qs-btn-full qs-btn-primary" style="margin-bottom:10px">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round"/>
-            </svg>
-            서명된 PDF 다운로드
-          </button>
         </div>
       </div>
     </main>
 
-    <!-- Signing overlay -->
     <Transition name="sg-fade">
       <div v-if="isSigning" class="sg-signing-overlay">
         <div class="sg-signing-modal">
@@ -278,109 +285,73 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
+import { useAuthStore } from '@/stores/auth'
+import api from '@/lib/api'
 
 const theme = ref<'light' | 'dark'>('light')
+const route = useRoute()
+const auth = useAuthStore()
+
+const signToken = computed(() => (route.params.token as string) ?? '')
 const step = ref(1)
 
 // Step 1
-const email = ref('')
-const emailError = ref(false)
-const otpSent = ref(false)
-const otp = ref<string[]>(['', '', '', '', '', ''])
-const otpRefs = ref<HTMLInputElement[]>([])
-const timerSeconds = ref(0)
-let timerInterval: ReturnType<typeof setInterval> | null = null
+const loginEmail = ref('')
+const loginPw = ref('')
+const showLoginPw = ref(false)
+const isLoginLoading = ref(false)
+const loginErr = ref<string | null>(null)
 
 // Step 2
-const hashVisible = ref(false)
 const consent1 = ref(false)
 const consent2 = ref(false)
+const signPassword = ref('')
+const showSignPw = ref(false)
 const isSigning = ref(false)
+const signErr = ref<string | null>(null)
 const signedAt = ref('')
-
-const docInfo = {
-  name: '2026년_1분기_계약서.pdf',
-  requester: 'admin@qusign.io',
-  requestedAt: '2026-05-06 09:14',
-  expiresAt: '2026-05-13 09:14',
-  hash: 'a3f9e8c12d45b67890feabc1234567890abcdef1234567890abcdef1234567890',
-}
 
 watch(theme, (t) => document.documentElement.setAttribute('data-theme', t), { immediate: true })
 function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
 
-function validateEmail() {
-  emailError.value = !!email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)
-}
+onMounted(() => {
+  if (auth.isLoggedIn) step.value = 2
+})
 
-function sendOtp() {
-  validateEmail()
-  if (emailError.value || !email.value) return
-  otpSent.value = true
-  startTimer()
-  setTimeout(() => otpRefs.value[0]?.focus(), 100)
-}
-
-function startTimer() {
-  timerSeconds.value = 180
-  if (timerInterval) clearInterval(timerInterval)
-  timerInterval = setInterval(() => {
-    if (timerSeconds.value > 0) timerSeconds.value--
-    else { if (timerInterval) clearInterval(timerInterval) }
-  }, 1000)
-}
-
-function resendOtp() {
-  otp.value = ['', '', '', '', '', '']
-  startTimer()
-  setTimeout(() => otpRefs.value[0]?.focus(), 100)
-}
-
-function formatTimer(s: number) {
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-}
-
-function handleOtpInput(e: Event, i: number) {
-  const v = (e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 1)
-  otp.value[i] = v
-  if (v && i < 5) setTimeout(() => otpRefs.value[i + 1]?.focus(), 0)
-}
-
-function handleOtpKeydown(e: KeyboardEvent, i: number) {
-  if (e.key === 'Backspace' && !otp.value[i] && i > 0) {
-    otp.value[i - 1] = ''
-    otpRefs.value[i - 1]?.focus()
+async function handleLogin() {
+  if (!loginEmail.value || !loginPw.value) return
+  isLoginLoading.value = true
+  loginErr.value = null
+  try {
+    await auth.login(loginEmail.value.trim(), loginPw.value)
+    step.value = 2
+  } catch (err: any) {
+    loginErr.value = err.response?.data?.message ?? '이메일 또는 비밀번호가 올바르지 않아요'
+  } finally {
+    isLoginLoading.value = false
   }
-}
-
-function handleOtpPaste(e: ClipboardEvent) {
-  e.preventDefault()
-  const digits = (e.clipboardData?.getData('text') ?? '').replace(/\D/g, '').slice(0, 6)
-  digits.split('').forEach((d, i) => { otp.value[i] = d })
-  const lastFilled = Math.min(digits.length, 5)
-  otpRefs.value[lastFilled]?.focus()
-}
-
-function verifyOtp() {
-  if (timerInterval) clearInterval(timerInterval)
-  step.value = 2
 }
 
 async function handleSign() {
   isSigning.value = true
-  await new Promise(r => setTimeout(r, 2200))
-  isSigning.value = false
-  signedAt.value = new Date().toLocaleString('ko-KR', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit'
-  })
-  step.value = 3
+  signErr.value = null
+  try {
+    await api.post(`/api/signature-requests/${signToken.value}/sign`, { password: signPassword.value })
+    signedAt.value = new Date().toLocaleString('ko-KR', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+    })
+    step.value = 3
+  } catch (err: any) {
+    signErr.value = err.response?.data?.message ?? '서명에 실패했어요. 비밀번호를 확인해 주세요.'
+  } finally {
+    isSigning.value = false
+  }
 }
-
-onUnmounted(() => { if (timerInterval) clearInterval(timerInterval) })
 </script>
 
 <style scoped>

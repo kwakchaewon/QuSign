@@ -202,6 +202,87 @@
 
 ---
 
+### 3-0.5. Claude 디자인 산출물 → Vue 프로젝트 이식
+
+**목표:** claude.ai/design 산출물을 실제 개발 환경으로 옮긴다
+
+#### Step 1. claude.ai/design에서 파일 다운로드
+
+| 프로젝트 | 받을 파일 |
+|---|---|
+| QuSign Design System | `tokens.css`, `tier1-components.html`, `design-principles.md` |
+| QuSign UI (화면별) | `[화면명].html`, `[화면명].css`, 필요 시 `.jsx` |
+
+#### Step 2. Vue 3 스캐폴딩 (뼈대 자동 생성)
+
+```bash
+# e:\dev\QuSign\ 루트에서 실행
+npm create vue@latest frontend
+# 선택 옵션: TypeScript ✓  Vue Router ✓  Pinia ✓  Vitest ✓
+cd frontend && npm install
+```
+
+생성 결과:
+```
+frontend/
+├── package.json
+├── vite.config.ts
+├── src/
+│   ├── main.ts
+│   ├── App.vue
+│   ├── router/
+│   ├── stores/
+│   └── views/
+```
+
+#### Step 3. 파일 배치
+
+```
+frontend/src/
+├── assets/
+│   └── tokens.css              ← Design System의 tokens.css (CSS 변수)
+├── components/ui/              ← tier1-components.html을 .vue SFC로 분해
+├── views/
+│   ├── LoginView.vue           ← 각 화면 .html + .css 병합
+│   └── ...
+└── docs/
+    └── design-principles.md
+```
+
+#### Step 4. HTML → Vue SFC 변환
+
+```vue
+<!-- 예시: LoginView.vue -->
+<template>
+  <!-- [화면].html의 <body> 내용 -->
+</template>
+
+<script setup lang="ts">
+// .jsx 로직을 Composition API로 변환
+</script>
+
+<style scoped>
+/* [화면].css 붙여넣기 */
+@import '@/assets/tokens.css';
+</style>
+```
+
+#### Step 5. 동작 확인
+
+```bash
+npm run dev   # http://localhost:5173 브라우저 확인
+```
+
+- [ ] Step 1 — claude.ai/design에서 전 화면 파일 다운로드
+- [ ] Step 2 — `npm create vue@latest frontend` 스캐폴딩
+- [ ] Step 3 — `tokens.css` + 각 화면 파일 배치
+- [ ] Step 4 — HTML → Vue SFC 변환 (화면별)
+- [ ] Step 5 — `npm run dev` 브라우저 확인
+
+**완료 기준:** `npm run dev` 후 전 화면 브라우저에서 렌더링 확인
+
+---
+
 ### 3-1. Vue 3 Composition API + Pinia → 화면 구현
 
 **목표:** Vue 3 개념을 익히고 바로 각 페이지를 만든다

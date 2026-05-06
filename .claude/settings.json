@@ -37,7 +37,8 @@
       "Bash(git -C e:/dev/QuSign diff .claude/settings.json)",
       "Bash(grep -E \"\\\\.\\(gradle|properties|yml|yaml|xml|md\\)$\")",
       "Bash(./gradlew build *)",
-      "Bash(git -C frontend status --short)"
+      "Bash(git -C frontend status --short)",
+      "Bash(dir \"e:\\\\dev\\\\QuSign\\\\frontend\\\\src\")"
     ]
   },
   "model": "sonnet",

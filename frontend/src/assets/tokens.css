@@ -1,0 +1,236 @@
+/* ============================================================
+   QuSign Design Tokens
+   토스 UI 시각 · 라이트 + 다크 대응 설계
+   ============================================================ */
+
+:root {
+  /* ===== Color · Primary (Toss Blue) ===== */
+  --color-primary-50:  #EBF4FF;
+  --color-primary-100: #D6E8FF;
+  --color-primary-200: #ADD0FF;
+  --color-primary-300: #7AB0F8;
+  --color-primary-400: #4D8FF7;
+  --color-primary-500: #3182F6;
+  --color-primary-600: #1B64DA;
+  --color-primary-700: #1456B8;
+  --color-primary-800: #0E4290;
+  --color-primary-900: #0A3066;
+
+  /* ===== Color · Neutral ===== */
+  --color-gray-50:  #F9FAFB;
+  --color-gray-100: #F2F4F6;
+  --color-gray-200: #E5E8EB;
+  --color-gray-300: #D1D6DB;
+  --color-gray-400: #B0B8C1;
+  --color-gray-500: #8B95A1;
+  --color-gray-600: #6B7684;
+  --color-gray-700: #4E5968;
+  --color-gray-800: #333D4B;
+  --color-gray-900: #191F28;
+
+  /* ===== Color · Semantic ===== */
+  --color-success: #1ABF7C;
+  --color-success-bg: rgba(26, 191, 124, 0.12);
+  --color-warning: #FF9D2C;
+  --color-warning-bg: rgba(255, 157, 44, 0.14);
+  --color-error: #F04452;
+  --color-error-bg: rgba(240, 68, 82, 0.10);
+  --color-info: #3182F6;
+  --color-info-bg: rgba(49, 130, 246, 0.10);
+
+  /* ===== Component Tokens (라이트) ===== */
+  --badge-success-bg: rgba(26, 191, 124, 0.12);
+  --badge-success-text: #0F8A56;
+  --badge-warning-bg: rgba(255, 157, 44, 0.14);
+  --badge-warning-text: #C2730E;
+  --badge-pending-bg: #F9FAFB;
+  --badge-pending-text: #4E5968;
+
+  --btn-primary-hover-bg: rgba(49, 130, 246, 0.08);
+  --btn-danger-hover-bg: rgba(240, 68, 82, 0.08);
+
+  --input-focus-ring: rgba(49, 130, 246, 0.15);
+  --input-focus-ring-error: rgba(240, 68, 82, 0.15);
+
+  --text-on-vivid: #FFFFFF;
+
+  /* ===== Surface (라이트 모드) ===== */
+  --surface-bg: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-muted: #F9FAFB;
+  --surface-overlay: rgba(0,0,0,0.5);
+
+  --text-primary: #191F28;
+  --text-secondary: #4E5968;
+  --text-tertiary: #8B95A1;
+  --text-disabled: #B0B8C1;
+  --text-inverse: #FFFFFF;
+
+  --border-default: #E5E8EB;
+  --border-strong: #D1D6DB;
+  --border-focus: #3182F6;
+
+  /* ===== Typography ===== */
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+               system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'D2Coding', 'Menlo', 'Consolas', monospace;
+
+  --text-xs:   12px;
+  --text-sm:   14px;
+  --text-base: 15px;
+  --text-lg:   17px;
+  --text-xl:   19px;
+  --text-2xl:  24px;
+  --text-3xl:  28px;
+  --text-4xl:  32px;
+
+  --leading-xs:   16px;
+  --leading-sm:   20px;
+  --leading-base: 24px;
+  --leading-lg:   26px;
+  --leading-xl:   28px;
+  --leading-2xl:  32px;
+  --leading-3xl:  36px;
+  --leading-4xl:  40px;
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* ===== Spacing (4px 기반) ===== */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ===== Radius ===== */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-2xl:  28px;
+  --radius-full: 9999px;
+
+  /* ===== Shadow ===== */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-focus: 0 0 0 3px rgba(49, 130, 246, 0.15);
+  --shadow-focus-error: 0 0 0 3px rgba(240, 68, 82, 0.15);
+
+  /* ===== Motion ===== */
+  --duration-fast: 0.15s;
+  --duration-base: 0.2s;
+  --duration-slow: 0.3s;
+  --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ===== Layout ===== */
+  --container-sm: 480px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --z-dropdown: 100;
+  --z-modal: 1000;
+  --z-toast: 1100;
+}
+
+/* ============================================================
+   Dark Mode
+   ============================================================ */
+[data-theme="dark"] {
+  --color-primary-500: #4D8FF7;
+  --color-primary-600: #3182F6;
+
+  --surface-bg: #17181C;
+  --surface-elevated: #1E2025;
+  --surface-muted: #2A2D34;
+  --surface-overlay: rgba(0, 0, 0, 0.7);
+
+  --text-primary: #F2F4F6;
+  --text-secondary: #C9CDD2;
+  --text-tertiary: #8B95A1;
+  --text-disabled: #4E5968;
+  --text-inverse: #191F28;
+
+  --border-default: #2A2D34;
+  --border-strong: #3A3D44;
+  --border-focus: #4D8FF7;
+
+  --color-success-bg: rgba(26, 191, 124, 0.18);
+  --color-warning-bg: rgba(255, 157, 44, 0.20);
+  --color-error-bg: rgba(240, 68, 82, 0.16);
+  --color-info-bg: rgba(77, 143, 247, 0.16);
+
+  --badge-success-bg: rgba(26, 191, 124, 0.18);
+  --badge-success-text: #4FD9A0;
+  --badge-warning-bg: rgba(255, 157, 44, 0.20);
+  --badge-warning-text: #FFB659;
+  --badge-pending-bg: #2A2D34;
+  --badge-pending-text: #C9CDD2;
+
+  --btn-primary-hover-bg: rgba(77, 143, 247, 0.14);
+  --btn-danger-hover-bg: rgba(240, 68, 82, 0.14);
+
+  --input-focus-ring: rgba(77, 143, 247, 0.25);
+  --input-focus-ring-error: rgba(240, 68, 82, 0.25);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-primary-500: #4D8FF7;
+    --color-primary-600: #3182F6;
+    --surface-bg: #17181C;
+    --surface-elevated: #1E2025;
+    --surface-muted: #2A2D34;
+    --surface-overlay: rgba(0, 0, 0, 0.7);
+    --text-primary: #F2F4F6;
+    --text-secondary: #C9CDD2;
+    --text-tertiary: #8B95A1;
+    --text-disabled: #4E5968;
+    --text-inverse: #191F28;
+    --border-default: #2A2D34;
+    --border-strong: #3A3D44;
+    --border-focus: #4D8FF7;
+    --color-success-bg: rgba(26, 191, 124, 0.18);
+    --color-warning-bg: rgba(255, 157, 44, 0.20);
+    --color-error-bg: rgba(240, 68, 82, 0.16);
+    --color-info-bg: rgba(77, 143, 247, 0.16);
+    --badge-success-bg: rgba(26, 191, 124, 0.18);
+    --badge-success-text: #4FD9A0;
+    --badge-warning-bg: rgba(255, 157, 44, 0.20);
+    --badge-warning-text: #FFB659;
+    --badge-pending-bg: #2A2D34;
+    --badge-pending-text: #C9CDD2;
+    --btn-primary-hover-bg: rgba(77, 143, 247, 0.14);
+    --btn-danger-hover-bg: rgba(240, 68, 82, 0.14);
+    --input-focus-ring: rgba(77, 143, 247, 0.25);
+    --input-focus-ring-error: rgba(240, 68, 82, 0.25);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ============================================================
+   Base Reset
+   ============================================================ */
+html, body {
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

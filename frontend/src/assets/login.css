@@ -75,15 +75,15 @@ button { font: inherit; }
 
 .qs-main {
   flex: 1;
-  display: flex;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px 32px;
-  gap: 48px;
 }
 
 .qs-layout-centered .qs-main {
+  display: flex;
+  gap: 48px;
   align-items: center; justify-content: center;
 }
 .qs-layout-centered .qs-card-wrap {

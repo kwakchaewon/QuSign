@@ -58,6 +58,7 @@
 | 작업 흐름 / 플랜 양식 | `harness/WORKFLOW.md` |
 | 제품 비전 / 우선순위 | `harness/PRODUCT_SENSE.md` |
 | 영역별 품질 등급 | `harness/QUALITY_SCORE.md` |
+| **Claude 디자인 → Vue 이식** | `harness/DESIGN_HANDOFF.md` |
 | 전체 개발 체크리스트 | `docs/exec-plans/PLAN.md` |
 | 사용 가능한 스킬 | `.claude/skills/` |
 | 하네스 변경 이력 | `harness/CHANGELOG.md` |

@@ -35,13 +35,13 @@
 
             <div class="qs-signup">
               <span>아직 계정이 없으신가요?</span>
-              <a href="#" @click.prevent>
+              <RouterLink to="/signup">
                 회원가입
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
-              </a>
+              </RouterLink>
             </div>
             <div class="qs-forgot">
               <a href="#" @click.prevent>비밀번호를 잊어버리셨나요?</a>

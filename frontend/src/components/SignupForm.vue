@@ -173,8 +173,10 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 
 const emit = defineEmits<{ success: [email: string] }>()
+const auth = useAuthStore()
 
 const emailInput = ref<HTMLInputElement | null>(null)
 const email = ref('')
@@ -224,15 +226,22 @@ const pw2Err = computed(() => {
   return pw2.value.length === 0 ? '비밀번호를 한 번 더 입력해 주세요' : '비밀번호가 일치하지 않아요'
 })
 
-function handleSubmit() {
+async function handleSubmit() {
   touched.value = { email: true, pw: true, pw2: true }
   submitErr.value = null
   if (!emailValid.value || !pwValid.value || !pw2Match.value) return
   if (!agree.value) { submitErr.value = '약관에 동의해 주세요'; return }
+
   phase.value = 'generating'
-  setTimeout(() => {
+  try {
+    await auth.register(email.value.trim(), pw.value)
+    await auth.login(email.value.trim(), pw.value)
     phase.value = 'done'
     emit('success', email.value.trim())
-  }, 2000)
+  } catch (err: any) {
+    phase.value = 'idle'
+    const msg = err.response?.data?.message
+    submitErr.value = msg ?? '회원가입에 실패했어요. 다시 시도해 주세요.'
+  }
 }
 </script>

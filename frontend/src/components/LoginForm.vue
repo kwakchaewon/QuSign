@@ -117,8 +117,14 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const emit = defineEmits<{ login: [email: string] }>()
+
+const router = useRouter()
+const route = useRoute()
+const auth = useAuthStore()
 
 const emailInput = ref<HTMLInputElement | null>(null)
 const email = ref('')
@@ -153,26 +159,30 @@ const pwErr = computed(() => {
   return pw.value.length === 0 ? '비밀번호를 입력해 주세요' : '8자 이상 입력해 주세요'
 })
 
-function handleSubmit() {
+async function handleSubmit() {
   touched.value = { email: true, pw: true }
   submitErr.value = null
   if (!emailValid.value || !pwValid.value) return
 
   loading.value = true
-  setTimeout(() => {
-    if (pw.value === 'wrong!1') {
-      loading.value = false
-      submitErr.value = '이메일 또는 비밀번호가 올바르지 않아요'
-      return
-    }
+  try {
+    await auth.login(email.value.trim(), pw.value)
     try {
       if (remember.value) localStorage.setItem('qusign:rememberedEmail', email.value.trim())
       else localStorage.removeItem('qusign:rememberedEmail')
     } catch {}
-    loading.value = false
     success.value = true
     emit('login', email.value.trim())
-    setTimeout(() => { success.value = false }, 2200)
-  }, 1100)
+    setTimeout(() => {
+      success.value = false
+      const redirect = route.query.redirect as string | undefined
+      router.push(redirect ?? '/documents')
+    }, 1000)
+  } catch (err: any) {
+    const msg = err.response?.data?.message
+    submitErr.value = msg ?? '이메일 또는 비밀번호가 올바르지 않아요'
+  } finally {
+    loading.value = false
+  }
 }
 </script>

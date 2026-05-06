@@ -38,7 +38,13 @@
       "Bash(grep -E \"\\\\.\\(gradle|properties|yml|yaml|xml|md\\)$\")",
       "Bash(./gradlew build *)",
       "Bash(git -C frontend status --short)",
-      "Bash(dir \"e:\\\\dev\\\\QuSign\\\\frontend\\\\src\")"
+      "Bash(dir \"e:\\\\dev\\\\QuSign\\\\frontend\\\\src\")",
+      "PowerShell(docker info 2>&1)",
+      "PowerShell(mysql -u root -proot -e \"SHOW DATABASES LIKE 'qusign';\" 2>&1)",
+      "PowerShell(mysql -u root -proot -e \"CREATE DATABASE IF NOT EXISTS qusign CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\" 2>&1)",
+      "PowerShell(curl -s http://localhost:8080/actuator/health)",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:8080/actuator/health\")",
+      "PowerShell($proc = Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess; if \\($proc\\) { Stop-Process -Id $proc -Force; Write-Output \"PID $proc 종료 완료\" } else { Write-Output \"8080 포트 프로세스 없음\" })"
     ]
   },
   "model": "sonnet",

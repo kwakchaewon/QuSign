@@ -6,6 +6,8 @@ import RequestView from '../views/RequestView.vue'
 import SignerView from '../views/SignerView.vue'
 import VerifyView from '../views/VerifyView.vue'
 
+const AUTH_ROUTES = ['/documents', '/request']
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -17,6 +19,13 @@ const router = createRouter({
     { path: '/sign/:token?', name: 'sign', component: SignerView },
     { path: '/verify', name: 'verify', component: VerifyView },
   ],
+})
+
+router.beforeEach((to) => {
+  const needsAuth = AUTH_ROUTES.some((p) => to.path.startsWith(p))
+  if (needsAuth && !localStorage.getItem('qusign:token')) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
 })
 
 export default router

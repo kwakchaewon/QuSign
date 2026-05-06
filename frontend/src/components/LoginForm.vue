@@ -141,7 +141,7 @@ onMounted(() => {
 watch([email, pw], () => { submitErr.value = null })
 
 const emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()))
-const pwValid = computed(() => pw.value.length >= 6)
+const pwValid = computed(() => pw.value.length >= 8)
 
 const emailErr = computed(() => {
   if (!touched.value.email || emailValid.value) return ''
@@ -150,7 +150,7 @@ const emailErr = computed(() => {
 
 const pwErr = computed(() => {
   if (!touched.value.pw || pwValid.value) return ''
-  return pw.value.length === 0 ? '비밀번호를 입력해 주세요' : '6자 이상 입력해 주세요'
+  return pw.value.length === 0 ? '비밀번호를 입력해 주세요' : '8자 이상 입력해 주세요'
 })
 
 function handleSubmit() {

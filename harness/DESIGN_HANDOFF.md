@@ -75,7 +75,13 @@ Design System 프로젝트는 최초 1회 전달 후, **변경이 생길 때만 
 
 ---
 
-## 5. 전달 방법
+## 5. 화면별 프롬프트
+
+각 화면의 claude.ai/design 프롬프트는 `harness/DESIGN_PROMPTS.md` 참조.
+
+---
+
+## 6. 전달 방법
 
 claude.ai/design에서 파일을 열어 **코드 전체 선택 → 복사** 후 대화창에 붙여넣는다.
 

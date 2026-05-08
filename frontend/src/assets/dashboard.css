@@ -354,31 +354,6 @@
 }
 .qs-noresults p { margin: 0 0 8px; font-size: 14px; }
 
-/* =============== Toast =============== */
-.qs-toast-wrap {
-  position: fixed;
-  bottom: 24px; left: 50%;
-  transform: translate(-50%, 16px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s, transform 0.25s var(--easing-default);
-  z-index: var(--z-toast);
-}
-.qs-toast-wrap.is-show { opacity: 1; transform: translate(-50%, 0); }
-.qs-toast {
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 12px 18px;
-  background: var(--text-primary);
-  color: var(--surface-elevated);
-  border-radius: 12px;
-  font-size: 13px; font-weight: 500;
-  box-shadow: var(--shadow-lg);
-}
-.qs-toast-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--color-success);
-}
 
 /* =============== Responsive =============== */
 @media (max-width: 880px) {

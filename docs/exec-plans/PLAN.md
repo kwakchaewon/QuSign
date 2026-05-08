@@ -320,14 +320,38 @@ npm run dev   # http://localhost:5173 브라우저 확인
 
 ### 3-3. AWS SES → 이메일 연동
 
+#### 로컬 테스트 환경 (✅ 완료)
+
+> 프로파일 전략: `EmailService` 인터페이스 + 구현체 교체 방식
+>
+> | 프로파일 | 구현체 | 동작 |
+> |---|---|---|
+> | `local` | `ConsoleEmailService` | 백엔드 콘솔에 서명 링크 출력 |
+> | `prod` | `SesEmailService` | AWS SES 실제 발송 (4단계) |
+
+- [x] **→ 즉시 적용:** `EmailService` 인터페이스 생성 (`common/email/`)
+- [x] **→ 즉시 적용:** `ConsoleEmailService` 구현 (`@Profile("local")`) — 콘솔 로그로 서명 링크 출력
+- [x] **→ 즉시 적용:** `SesEmailService` 스텁 생성 (`@Profile("prod")`) — 4단계에서 구현
+- [x] **→ 즉시 적용:** `application.yml`에 `email.base-url` 설정 추가
+- [x] **→ 즉시 적용:** `SignatureFlowService.requestSignature()`에 이메일 발송 호출 연결
+
+**로컬 테스트 방법:**
+서명 요청 전송 후 백엔드 콘솔에서 아래 형식의 로그를 확인, 서명 링크 복사해 직접 접속
+```
+│  서명링크: http://localhost:5173/sign/{token}
+```
+
+#### AWS SES 연동 (⬜ 4단계에서 구현)
+
 - [ ] AWS SES 샌드박스 설정 및 이메일 인증 프로세스 이해
-- [ ] **→ 즉시 적용:** 이메일 발송 서비스 구현
-- [ ] **→ 즉시 적용:** 서명 요청 이메일 템플릿 작성
+- [ ] **→ 즉시 적용:** `SesEmailService` 실제 구현 (SesClient + HTML 템플릿)
+- [ ] **→ 즉시 적용:** 서명 요청 이메일 HTML 템플릿 작성
 - [ ] **→ 즉시 적용:** 서명 완료 이메일 템플릿 작성
 - [ ] **→ 즉시 적용:** 실제 이메일 수신 테스트
 
 **3단계 완료 기준**
-- [ ] 로컬에서 실제 이메일 받고 서명까지 전체 플로우 동작
+- [ ] 로컬에서 콘솔 로그로 서명 링크 확인 후 전체 플로우 동작 ← 현재 가능
+- [ ] (4단계) 실제 이메일 수신 후 서명까지 전체 플로우 동작
 
 ---
 

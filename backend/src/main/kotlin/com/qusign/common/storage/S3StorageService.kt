@@ -1,5 +1,6 @@
 package com.qusign.common.storage
 
+import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -17,6 +18,7 @@ class S3StorageService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
+    @PostConstruct
     fun ensureBucketExists() {
         try {
             val exists = s3Client.listBuckets().buckets().any { it.name() == bucket }

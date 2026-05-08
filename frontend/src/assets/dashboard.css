@@ -22,6 +22,7 @@
 .qs-topbar-brand {
   display: flex; align-items: center; gap: 10px;
   flex-shrink: 0;
+  text-decoration: none; color: inherit;
 }
 .qs-topbar-name {
   font-size: 17px; font-weight: 600;

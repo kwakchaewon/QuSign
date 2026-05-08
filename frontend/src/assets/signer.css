@@ -13,7 +13,7 @@
   padding: 0 24px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.qs-sg-page .qs-topbar-brand { display: flex; align-items: center; gap: 10px; }
+.qs-sg-page .qs-topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
 .qs-sg-page .qs-topbar-label {
   font-size: 15px; font-weight: 600;
   color: var(--text-primary);

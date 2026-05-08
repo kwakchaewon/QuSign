@@ -22,7 +22,7 @@
   padding: 0 24px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.qs-rq-page .qs-topbar-brand { display: flex; align-items: center; gap: 10px; }
+.qs-rq-page .qs-topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
 .qs-rq-page .qs-topbar-name {
   font-size: 17px; font-weight: 600;
   letter-spacing: -0.01em; color: var(--text-primary);

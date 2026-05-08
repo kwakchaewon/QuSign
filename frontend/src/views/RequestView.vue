@@ -354,6 +354,12 @@ function handleFileChange(e: Event) {
   if (f) setFile(f)
 }
 async function setFile(f: File) {
+  const MAX_FILE_SIZE = 50 * 1024 * 1024
+  if (f.size > MAX_FILE_SIZE) {
+    alert(`파일 크기가 50MB를 초과합니다. (${formatSize(f.size)})`)
+    if (fileInput.value) fileInput.value.value = ''
+    return
+  }
   file.value = f
   hashDone.value = false
   hash.value = ''

@@ -140,7 +140,11 @@ class SignatureFlowService(
 
     private fun signWithDecryptedKey(signer: User, password: String, message: ByteArray): ByteArray {
         val encryptedKey = objectMapper.readValue(signer.encryptedPrivateKey, EncryptedKey::class.java)
-        val privateKeyBytes = keyEncryptionService.decrypt(encryptedKey, password)
+        val privateKeyBytes = try {
+            keyEncryptionService.decrypt(encryptedKey, password)
+        } catch (e: Exception) {
+            throw InvalidSignaturePasswordException()
+        }
         return try {
             val privateKey = KeyFactory.getInstance("ML-DSA", "BC")
                 .generatePrivate(PKCS8EncodedKeySpec(privateKeyBytes))

@@ -2,10 +2,10 @@
   <div class="qs-page qs-sg-page">
     <header class="qs-topbar">
       <div class="qs-topbar-inner">
-        <div class="qs-topbar-brand">
+        <RouterLink class="qs-topbar-brand" to="/documents">
           <QuSignMark variant="badge" :size="24" />
           <span class="qs-topbar-label">전자서명 요청</span>
-        </div>
+        </RouterLink>
         <div class="qs-topbar-right">
           <div class="sg-pqc-pill">
             <span class="sg-pqc-dot"></span>

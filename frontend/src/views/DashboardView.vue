@@ -2,10 +2,10 @@
   <div class="qs-page">
     <header class="qs-topbar">
       <div class="qs-topbar-inner">
-        <div class="qs-topbar-brand">
+        <RouterLink class="qs-topbar-brand" to="/documents">
           <QuSignMark variant="badge" :size="28" />
           <span class="qs-topbar-name">QuSign</span>
-        </div>
+        </RouterLink>
         <nav class="qs-topbar-nav">
           <RouterLink class="qs-nav-link is-active" to="/documents">문서</RouterLink>
           <a class="qs-nav-link" href="#" @click.prevent>설정</a>

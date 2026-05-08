@@ -1,10 +1,10 @@
 <template>
   <div class="qs-page qs-layout-centered">
     <header class="qs-topbar">
-      <div class="qs-topbar-brand">
+      <RouterLink class="qs-topbar-brand" to="/">
         <QuSignMark variant="badge" :size="28" />
         <span class="qs-topbar-name">QuSign</span>
-      </div>
+      </RouterLink>
       <div class="qs-topbar-right">
         <a class="qs-link-quiet qs-topbar-help" href="#" @click.prevent>고객지원</a>
         <ThemeToggle :theme="theme" @change="handleThemeToggle" />

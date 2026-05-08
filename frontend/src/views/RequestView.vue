@@ -2,10 +2,10 @@
   <div class="qs-page qs-rq-page">
     <header class="qs-topbar">
       <div class="qs-topbar-inner">
-        <div class="qs-topbar-brand">
+        <RouterLink class="qs-topbar-brand" to="/documents">
           <QuSignMark variant="badge" :size="28" />
           <span class="qs-topbar-name">서명 요청</span>
-        </div>
+        </RouterLink>
         <div class="qs-topbar-right">
           <span class="qs-user-email">{{ userEmail }}</span>
           <ThemeToggle :theme="theme" @change="handleThemeToggle" />

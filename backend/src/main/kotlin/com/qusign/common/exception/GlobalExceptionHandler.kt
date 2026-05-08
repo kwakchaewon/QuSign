@@ -71,6 +71,10 @@ class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleInvalidSignaturePassword(e: InvalidSignaturePasswordException) = ApiResponse.error(e.message!!)
 
+    @ExceptionHandler(NoQuSignMetadataException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleNoQuSignMetadata(e: NoQuSignMetadataException) = ApiResponse.error(e.message!!)
+
     @ExceptionHandler(Exception::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     fun handleUnexpected(e: Exception) = ApiResponse.error("서버 오류가 발생했습니다")

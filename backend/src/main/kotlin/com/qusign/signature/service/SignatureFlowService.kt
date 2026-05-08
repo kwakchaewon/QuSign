@@ -138,6 +138,32 @@ class SignatureFlowService(
         )
     }
 
+    @Transactional(readOnly = true)
+    fun verifyFile(pdfBytes: ByteArray): VerifyResponse {
+        val metadata = pdfSignatureService.extractMetadata(pdfBytes)
+            ?: throw NoQuSignMetadataException()
+
+        val signer = userRepository.findByEmail(metadata.signerId)
+            ?: return VerifyResponse(valid = false, signerId = metadata.signerId)
+
+        val pubKeyBytes = Base64.getDecoder().decode(signer.publicKey)
+        val publicKey = KeyFactory.getInstance("ML-DSA", "BC")
+            .generatePublic(X509EncodedKeySpec(pubKeyBytes))
+
+        val valid = try {
+            pqcSignatureService.verify(publicKey, metadata.documentHash, metadata.signature)
+        } catch (e: Exception) {
+            false
+        }
+
+        return VerifyResponse(
+            valid = valid,
+            signerId = metadata.signerId,
+            signedAt = metadata.signedAt,
+            documentHash = metadata.documentHash.joinToString("") { "%02x".format(it) },
+        )
+    }
+
     private fun signWithDecryptedKey(signer: User, password: String, message: ByteArray): ByteArray {
         val encryptedKey = objectMapper.readValue(signer.encryptedPrivateKey, EncryptedKey::class.java)
         val privateKeyBytes = try {

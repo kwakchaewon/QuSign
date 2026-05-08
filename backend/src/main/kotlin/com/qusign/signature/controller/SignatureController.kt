@@ -6,8 +6,10 @@ import com.qusign.signature.service.SignatureFlowService
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -62,4 +64,10 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @Valid @RequestBody dto: VerifyRequest,
     ): ApiResponse<VerifyResponse> =
         ApiResponse.ok(signatureFlowService.verify(dto.token))
+
+    @PostMapping("/verify/file", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun verifyFile(
+        @RequestParam("file") file: MultipartFile,
+    ): ApiResponse<VerifyResponse> =
+        ApiResponse.ok(signatureFlowService.verifyFile(file.bytes))
 }

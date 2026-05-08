@@ -49,7 +49,11 @@
       "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\" http://localhost:8080/api/documents -H \"Authorization: Bearer test\")",
       "Bash(curl -s http://localhost:9000/minio/health/live)",
       "Bash(curl -s -u minioadmin:minioadmin \"http://localhost:9000/\")",
-      "Bash(docker exec *)"
+      "Bash(docker exec *)",
+      "Bash(Get-ChildItem -Path \"e:\\\\dev\\\\QuSign\" -Recurse -Directory)",
+      "Bash(Select-Object -First 50 FullName)",
+      "Bash(Get-ChildItem -Path \"e:\\\\dev\\\\QuSign\\\\backend\\\\src\\\\main\\\\kotlin\\\\com\\\\qusign\" -Recurse -File)",
+      "Bash(Select-Object FullName)"
     ]
   },
   "model": "sonnet",

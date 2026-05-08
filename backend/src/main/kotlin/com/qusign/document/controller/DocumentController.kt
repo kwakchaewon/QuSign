@@ -9,6 +9,8 @@ import org.springframework.http.MediaType
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @RestController
 @RequestMapping("/api/documents")
@@ -32,8 +34,9 @@ class DocumentController(private val documentService: DocumentService) {
         response: HttpServletResponse,
     ) {
         val (bytes, filename) = documentService.download(email, id)
+        val encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20")
         response.contentType = "application/pdf"
-        response.setHeader("Content-Disposition", "attachment; filename=\"$filename\"")
+        response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''$encodedFilename")
         response.outputStream.write(bytes)
     }
 }

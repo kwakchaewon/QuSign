@@ -188,7 +188,7 @@ class SignatureFlowService(
         val signature = signatureRepository.findBySignatureRequest(req)
             ?: throw SignatureRequestNotFoundException()
         val bytes = storageService.download(signature.signedStorageKey)
-        return Pair(bytes, "signed_${req.document.originalFilename}")
+        return Pair(bytes, req.document.originalFilename.addQusignedSuffix())
     }
 
     @Transactional(readOnly = true)
@@ -202,4 +202,10 @@ class SignatureFlowService(
 
     private fun sha3256(bytes: ByteArray): ByteArray =
         MessageDigest.getInstance("SHA3-256").digest(bytes)
+}
+
+private fun String.addQusignedSuffix(): String {
+    val dot = lastIndexOf('.')
+    return if (dot != -1) substring(0, dot) + "_qusigned" + substring(dot)
+    else this + "_qusigned"
 }

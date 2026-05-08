@@ -319,6 +319,20 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
+.sg-pdf-frame {
+  display: block;
+  width: 100%;
+  height: 480px;
+  border: none;
+  background: var(--surface-muted);
+}
+.sg-pdf-loading {
+  height: 240px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px;
+  color: var(--text-tertiary);
+  font-size: 13px; font-weight: 500;
+}
 .sg-pdf-placeholder {
   height: 240px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -329,6 +343,43 @@
 .sg-pdf-placeholder-icon {
   opacity: 0.4;
 }
+
+/* =============== Terms collapsible =============== */
+.sg-terms {
+  border-radius: 10px;
+  border: 0.5px solid var(--border-default);
+  overflow: hidden;
+}
+.sg-terms-toggle {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  background: transparent;
+  border: none; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 600;
+  color: var(--color-primary-500);
+  text-align: left;
+  transition: background 0.15s;
+}
+.sg-terms-toggle:hover { background: var(--surface-elevated); }
+.sg-terms-arrow { transition: transform 0.2s; color: var(--color-primary-500); flex-shrink: 0; }
+.sg-terms-arrow.is-open { transform: rotate(180deg); }
+.sg-terms-body {
+  padding: 4px 14px 12px;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  line-height: 1.75;
+  border-top: 0.5px solid var(--border-default);
+}
+.sg-terms-body ol { margin: 0; padding-left: 16px; }
+.sg-terms-body li { margin-bottom: 4px; }
+.sg-terms-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+.sg-check-row.is-disabled { cursor: not-allowed; opacity: 0.5; }
+.sg-check-box.is-disabled { cursor: not-allowed; }
 
 /* =============== Consent =============== */
 .sg-consent {
@@ -453,6 +504,10 @@
 .sg-success-k { color: var(--text-secondary); }
 .sg-success-v { color: var(--text-primary); font-weight: 500; }
 .sg-success-v.is-mono { font-family: var(--font-mono); font-size: 12px; }
+.sg-success-actions {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  width: 100%;
+}
 
 /* =============== Responsive =============== */
 @media (max-width: 640px) {
@@ -464,4 +519,5 @@
   .sg-otp-box { height: 52px; font-size: 22px; border-radius: 12px; }
   .sg-doc-meta { padding: 14px 16px; }
   .sg-meta-k { width: 60px; }
+  .sg-pdf-frame { height: 320px; }
 }

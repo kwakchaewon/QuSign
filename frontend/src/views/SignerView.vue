@@ -153,8 +153,25 @@
         <div class="sg-pdf-preview">
           <div class="sg-pdf-toolbar">
             <span class="sg-pdf-label">문서 미리보기</span>
+            <button class="qs-btn qs-btn-sm qs-btn-secondary" :disabled="!pdfBlobUrl" @click="handleDownload">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v10M7 15l5 5 5-5" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              다운로드
+            </button>
           </div>
-          <div class="sg-pdf-placeholder">
+          <div v-if="pdfLoading" class="sg-pdf-loading">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+              style="animation:sg-spin 0.8s linear infinite">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"
+                stroke-dasharray="20 40"/>
+            </svg>
+            <span>PDF 불러오는 중...</span>
+          </div>
+          <iframe v-else-if="pdfBlobUrl" :src="pdfBlobUrl" class="sg-pdf-frame" title="서명 요청 문서" />
+          <div v-else class="sg-pdf-placeholder">
             <svg class="sg-pdf-placeholder-icon" width="48" height="56" viewBox="0 0 48 56" fill="none">
               <rect width="48" height="56" rx="6" fill="var(--border-default)"/>
               <rect x="8" y="12" width="32" height="4" rx="2" fill="var(--text-tertiary)" opacity="0.4"/>
@@ -162,7 +179,7 @@
               <rect x="8" y="26" width="30" height="3" rx="1.5" fill="var(--text-tertiary)" opacity="0.25"/>
               <rect x="8" y="32" width="24" height="3" rx="1.5" fill="var(--text-tertiary)" opacity="0.25"/>
             </svg>
-            <span>PDF 미리보기</span>
+            <span>PDF 미리보기를 불러올 수 없습니다</span>
           </div>
         </div>
 
@@ -178,8 +195,30 @@
               문서 내용을 확인했으며 <strong>서명에 동의</strong>합니다.
             </span>
           </label>
-          <label class="sg-check-row" @click.prevent="consent2 = !consent2">
-            <div class="sg-check-box" :class="{ 'is-checked': consent2 }">
+
+          <div class="sg-terms">
+            <button class="sg-terms-toggle" type="button" @click="termsExpanded = !termsExpanded">
+              <span>전자서명 이용약관 전체 보기</span>
+              <svg class="sg-terms-arrow" :class="{ 'is-open': termsExpanded }"
+                width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <div v-if="termsExpanded" class="sg-terms-body">
+              <ol>
+                <li>본 서비스는 NIST 표준 ML-DSA(Module-Lattice Digital Signature Algorithm, FIPS 204) 양자내성 전자서명을 사용합니다.</li>
+                <li>전자서명은 「전자서명법」 제2조에 의거하여 서명자의 신원 확인 및 서명 사실에 대한 법적 효력을 가집니다.</li>
+                <li>서명자는 자신의 개인키(비밀번호로 암호화 보관)에 대한 보안 관리 책임을 집니다.</li>
+                <li>서명된 문서는 PDF 내부에 서명값과 문서 해시(SHA3-256)가 포함되며, 이후 내용 변조 시 서명 검증이 실패합니다.</li>
+                <li>서명 완료 시 서명자의 이메일, 서명 일시, 서명 알고리즘 정보가 기록됩니다.</li>
+              </ol>
+            </div>
+          </div>
+
+          <label class="sg-check-row" :class="{ 'is-disabled': !termsExpanded }"
+            @click.prevent="toggleConsent2">
+            <div class="sg-check-box" :class="{ 'is-checked': consent2, 'is-disabled': !termsExpanded }">
               <svg v-if="consent2" width="12" height="12" viewBox="0 0 24 24" fill="none">
                 <path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3" stroke-linecap="round"
                   stroke-linejoin="round"/>
@@ -187,6 +226,7 @@
             </div>
             <span class="sg-check-label">
               <strong>ML-DSA 전자서명의 법적 효력</strong>에 동의합니다.
+              <span v-if="!termsExpanded" class="sg-terms-hint">(약관을 먼저 확인해 주세요)</span>
             </span>
           </label>
         </div>
@@ -268,6 +308,27 @@
               <span class="sg-success-v is-mono">ML-DSA-65</span>
             </div>
           </div>
+
+          <div class="sg-success-actions">
+            <button class="qs-btn qs-btn-md qs-btn-secondary" :disabled="isDownloadingSigned"
+              @click="handleDownloadSigned">
+              <svg v-if="!isDownloadingSigned" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                aria-hidden="true">
+                <path d="M12 5v10M7 15l5 5 5-5" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none"
+                style="animation:sg-spin 0.8s linear infinite">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"
+                  stroke-dasharray="20 40"/>
+              </svg>
+              {{ isDownloadingSigned ? '다운로드 중...' : '서명된 PDF 다운로드' }}
+            </button>
+            <RouterLink to="/documents" class="qs-btn qs-btn-md qs-btn-primary">
+              내 문서함으로
+            </RouterLink>
+          </div>
         </div>
       </div>
     </main>
@@ -285,7 +346,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
@@ -309,11 +370,18 @@ const loginErr = ref<string | null>(null)
 // Step 2
 const consent1 = ref(false)
 const consent2 = ref(false)
+const termsExpanded = ref(false)
 const signPassword = ref('')
 const showSignPw = ref(false)
 const isSigning = ref(false)
+const isDownloadingSigned = ref(false)
 const signErr = ref<string | null>(null)
 const signedAt = ref('')
+
+// PDF preview
+const pdfBlobUrl = ref('')
+const pdfFilename = ref('문서.pdf')
+const pdfLoading = ref(false)
 
 watch(theme, (t) => document.documentElement.setAttribute('data-theme', t), { immediate: true })
 function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
@@ -321,6 +389,65 @@ function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
 onMounted(() => {
   if (auth.isLoggedIn) step.value = 2
 })
+
+watch(step, async (val) => {
+  if (val === 2) await fetchPdf()
+})
+
+onBeforeUnmount(() => {
+  if (pdfBlobUrl.value) URL.revokeObjectURL(pdfBlobUrl.value)
+})
+
+async function fetchPdf() {
+  if (!signToken.value) return
+  pdfLoading.value = true
+  try {
+    const res = await api.get(`/api/signature-requests/${signToken.value}/document`, {
+      responseType: 'blob',
+    })
+    const disposition = res.headers['content-disposition'] as string | undefined
+    const m = disposition?.match(/filename\*=UTF-8''(.+)/i) || disposition?.match(/filename="([^"]+)"/)
+    if (m) pdfFilename.value = decodeURIComponent(m[1])
+    if (pdfBlobUrl.value) URL.revokeObjectURL(pdfBlobUrl.value)
+    pdfBlobUrl.value = URL.createObjectURL(res.data)
+  } catch {
+    // 미리보기 실패 시 placeholder 유지
+  } finally {
+    pdfLoading.value = false
+  }
+}
+
+function handleDownload() {
+  if (!pdfBlobUrl.value) return
+  const a = document.createElement('a')
+  a.href = pdfBlobUrl.value
+  a.download = pdfFilename.value
+  a.click()
+}
+
+function toggleConsent2() {
+  if (!termsExpanded.value) return
+  consent2.value = !consent2.value
+}
+
+async function handleDownloadSigned() {
+  isDownloadingSigned.value = true
+  try {
+    const res = await api.get(`/api/signature-requests/${signToken.value}/signed-document`, {
+      responseType: 'blob',
+    })
+    const url = URL.createObjectURL(res.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `signed_${pdfFilename.value}`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    alert('서명된 PDF 다운로드에 실패했어요.')
+  } finally {
+    isDownloadingSigned.value = false
+  }
+}
 
 async function handleLogin() {
   if (!loginEmail.value || !loginPw.value) return

@@ -44,7 +44,12 @@
       "PowerShell(mysql -u root -proot -e \"CREATE DATABASE IF NOT EXISTS qusign CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\" 2>&1)",
       "PowerShell(curl -s http://localhost:8080/actuator/health)",
       "PowerShell(Invoke-RestMethod -Uri \"http://localhost:8080/actuator/health\")",
-      "PowerShell($proc = Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess; if \\($proc\\) { Stop-Process -Id $proc -Force; Write-Output \"PID $proc 종료 완료\" } else { Write-Output \"8080 포트 프로세스 없음\" })"
+      "PowerShell($proc = Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess; if \\($proc\\) { Stop-Process -Id $proc -Force; Write-Output \"PID $proc 종료 완료\" } else { Write-Output \"8080 포트 프로세스 없음\" })",
+      "Bash(curl -s http://localhost:8080/api/documents -H \"Authorization: Bearer test\")",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\" http://localhost:8080/api/documents -H \"Authorization: Bearer test\")",
+      "Bash(curl -s http://localhost:9000/minio/health/live)",
+      "Bash(curl -s -u minioadmin:minioadmin \"http://localhost:9000/\")",
+      "Bash(docker exec *)"
     ]
   },
   "model": "sonnet",

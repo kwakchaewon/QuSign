@@ -150,6 +150,26 @@ class SignatureFlowService(
         }
     }
 
+    @Transactional(readOnly = true)
+    fun getSignedDocument(token: String, signerEmail: String): Pair<ByteArray, String> {
+        val req = signatureRequestRepository.findByToken(token)
+            ?: throw SignatureRequestNotFoundException()
+        if (!req.signerEmail.equals(signerEmail, ignoreCase = true)) throw UnauthorizedSignerException()
+        val signature = signatureRepository.findBySignatureRequest(req)
+            ?: throw SignatureRequestNotFoundException()
+        val bytes = storageService.download(signature.signedStorageKey)
+        return Pair(bytes, "signed_${req.document.originalFilename}")
+    }
+
+    @Transactional(readOnly = true)
+    fun getDocument(token: String, signerEmail: String): Pair<ByteArray, String> {
+        val req = signatureRequestRepository.findByToken(token)
+            ?: throw SignatureRequestNotFoundException()
+        if (!req.signerEmail.equals(signerEmail, ignoreCase = true)) throw UnauthorizedSignerException()
+        val bytes = storageService.download(req.document.storageKey)
+        return Pair(bytes, req.document.originalFilename)
+    }
+
     private fun sha3256(bytes: ByteArray): ByteArray =
         MessageDigest.getInstance("SHA3-256").digest(bytes)
 }

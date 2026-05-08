@@ -278,7 +278,7 @@
           <div class="qs-link-box">
             <p class="qs-link-label">서명 링크</p>
             <div class="qs-link-row">
-              <span class="qs-link-url">{{ signingLink }}</span>
+              <span class="qs-link-url">{{ signingLinks[0] }}</span>
               <button class="qs-btn qs-btn-sm qs-btn-secondary"
                 :class="{ 'is-success': copied }" @click="copyLink">
                 <svg v-if="!copied" width="14" height="14" viewBox="0 0 24 24" fill="none">

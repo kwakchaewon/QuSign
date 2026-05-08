@@ -5,6 +5,7 @@ import com.qusign.auth.entity.User
 import com.qusign.auth.repository.UserRepository
 import com.qusign.auth.service.EncryptedKey
 import com.qusign.auth.service.KeyEncryptionService
+import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import com.qusign.document.exception.DocumentNotFoundException
 import com.qusign.document.repository.DocumentRepository
@@ -35,6 +36,7 @@ class SignatureFlowService(
     private val pdfSignatureService: PdfSignatureService,
     private val keyEncryptionService: KeyEncryptionService,
     private val objectMapper: ObjectMapper,
+    private val emailService: EmailService,
 ) {
 
     @Transactional
@@ -52,6 +54,15 @@ class SignatureFlowService(
                 expiresAt = LocalDateTime.now().plusHours(dto.expirationHours),
             )
         )
+
+        emailService.sendSignatureRequest(
+            to = req.signerEmail,
+            token = req.token,
+            documentName = document.originalFilename,
+            requesterEmail = requesterEmail,
+            expiresAt = req.expiresAt.toString(),
+        )
+
         return SignatureRequestResponse(req)
     }
 

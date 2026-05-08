@@ -18,6 +18,9 @@ storage:
   access-key: minioadmin
   secret-key: minioadmin
 
+email:
+  base-url: http://localhost:5173
+
 logging:
   level:
     com.qusign: DEBUG

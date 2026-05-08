@@ -40,6 +40,9 @@ jwt:
   secret: ${JWT_SECRET:QuSignLocalDevelopmentSecret2024}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
+email:
+  base-url: ${EMAIL_BASE_URL:http://localhost:5173}
+
 management:
   endpoints:
     web:

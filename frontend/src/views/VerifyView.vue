@@ -2,10 +2,10 @@
   <div class="vf-page">
     <header class="vf-header">
       <div class="vf-header-inner">
-        <div class="vf-logo">
+        <RouterLink class="vf-logo" to="/documents">
           <QuSignMark variant="badge" :size="24" />
           <span class="vf-logo-name">QuSign</span>
-        </div>
+        </RouterLink>
         <div class="vf-header-center">
           <span class="vf-header-title">무결성 검증</span>
         </div>
@@ -30,7 +30,28 @@
         </div>
 
         <div class="vf-card-body">
-          <div class="vf-token-section">
+          <!-- Mode tabs -->
+          <div class="vf-tabs">
+            <button class="vf-tab" :class="{ 'is-active': mode === 'token' }" @click="mode = 'token'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              토큰 입력
+            </button>
+            <button class="vf-tab" :class="{ 'is-active': mode === 'file' }" @click="mode = 'file'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+              파일 업로드
+            </button>
+          </div>
+
+          <!-- Token mode -->
+          <div v-if="mode === 'token'" class="vf-token-section">
             <div class="vf-field">
               <label class="vf-label" for="vf-token">서명 토큰</label>
               <div class="vf-input">
@@ -50,6 +71,47 @@
             <button class="vf-btn vf-btn-primary"
               :disabled="!token.trim()"
               @click="startVerify">
+              검증하기
+            </button>
+          </div>
+
+          <!-- File mode -->
+          <div v-else>
+            <div class="vf-drop"
+              :class="{ 'is-drag': isDragging }"
+              @click="fileInput?.click()"
+              @dragover.prevent="isDragging = true"
+              @dragleave.prevent="isDragging = false"
+              @drop.prevent="handleDrop">
+              <div class="vf-drop-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <template v-if="selectedFile">
+                <p class="vf-drop-title">{{ selectedFile.name }}</p>
+                <p class="vf-drop-sub">다른 파일을 선택하려면 클릭하세요</p>
+              </template>
+              <template v-else>
+                <p class="vf-drop-title">서명된 PDF를 여기에 드래그하세요</p>
+                <p class="vf-drop-sub">또는 클릭하여 파일 선택 · PDF만 가능</p>
+                <span class="vf-drop-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  파일 선택
+                </span>
+              </template>
+            </div>
+            <input ref="fileInput" type="file" accept=".pdf" style="display:none" @change="handleFileChange">
+            <button v-if="selectedFile"
+              class="vf-btn vf-btn-primary"
+              style="margin-top:14px"
+              @click="startVerifyFile">
               검증하기
             </button>
           </div>
@@ -155,6 +217,7 @@ import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import api from '@/lib/api'
 
 type Status = 'idle' | 'loading' | 'success' | 'fail'
+type Mode = 'token' | 'file'
 
 interface VerifyResult {
   valid: boolean
@@ -165,7 +228,11 @@ interface VerifyResult {
 
 const theme = ref<'light' | 'dark'>('light')
 const status = ref<Status>('idle')
+const mode = ref<Mode>('token')
 const token = ref('')
+const selectedFile = ref<File | null>(null)
+const isDragging = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 const detailsOpen = ref(false)
 const failReason = ref('')
 const verifyResult = ref<VerifyResult>({ valid: false, signerId: '', signedAt: '', documentHash: '' })
@@ -173,21 +240,51 @@ const verifyResult = ref<VerifyResult>({ valid: false, signerId: '', signedAt: '
 watch(theme, (t) => document.documentElement.setAttribute('data-theme', t), { immediate: true })
 function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
 
+function handleDrop(e: DragEvent) {
+  isDragging.value = false
+  const file = e.dataTransfer?.files[0]
+  if (file?.type === 'application/pdf') selectedFile.value = file
+}
+
+function handleFileChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) selectedFile.value = file
+}
+
 async function startVerify() {
   if (!token.value.trim()) return
   status.value = 'loading'
   try {
     const res = await api.post<{ data: VerifyResult }>('/api/verify', { token: token.value.trim() })
-    const result = res.data.data
-    if (result.valid) {
-      verifyResult.value = result
-      status.value = 'success'
-    } else {
-      failReason.value = '서명값 불일치'
-      status.value = 'fail'
-    }
+    handleResult(res.data.data, '토큰을 확인해 주세요.')
   } catch (err: any) {
     failReason.value = err.response?.data?.message ?? '검증에 실패했어요. 토큰을 확인해 주세요.'
+    status.value = 'fail'
+  }
+}
+
+async function startVerifyFile() {
+  if (!selectedFile.value) return
+  status.value = 'loading'
+  try {
+    const form = new FormData()
+    form.append('file', selectedFile.value)
+    const res = await api.post<{ data: VerifyResult }>('/api/verify/file', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    handleResult(res.data.data, 'PDF를 확인해 주세요.')
+  } catch (err: any) {
+    failReason.value = err.response?.data?.message ?? '검증에 실패했어요. PDF를 확인해 주세요.'
+    status.value = 'fail'
+  }
+}
+
+function handleResult(result: VerifyResult, fallbackMsg: string) {
+  if (result.valid) {
+    verifyResult.value = result
+    status.value = 'success'
+  } else {
+    failReason.value = `서명값 불일치 — ${fallbackMsg}`
     status.value = 'fail'
   }
 }
@@ -195,6 +292,8 @@ async function startVerify() {
 function reset() {
   status.value = 'idle'
   token.value = ''
+  selectedFile.value = null
+  isDragging.value = false
   detailsOpen.value = false
   verifyResult.value = { valid: false, signerId: '', signedAt: '', documentHash: '' }
   failReason.value = ''

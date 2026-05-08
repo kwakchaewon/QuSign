@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -31,6 +32,11 @@ class GlobalExceptionHandler {
     @ExceptionHandler(StorageException::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     fun handleStorage(e: StorageException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+    fun handleMaxUploadSize(e: MaxUploadSizeExceededException) =
+        ApiResponse.error("파일 크기가 50MB를 초과합니다")
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

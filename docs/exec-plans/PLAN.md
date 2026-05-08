@@ -449,6 +449,93 @@ npm run dev   # http://localhost:5173 브라우저 확인
 
 ---
 
+### 3-5. 서명 요청 상세 조회 페이지
+
+**목표:** 요청자가 서명 요청의 현황(서명자별 서명 완료 여부, 서명 일시, 서명된 PDF 다운로드)을 한눈에 파악할 수 있는 상세 페이지를 만든다
+
+#### Step 1. Claude Design → UI 설계
+
+> **⚠️ 구현 전 반드시 Claude Design에서 목업을 완성한다**
+
+- [ ] claude.ai/design에서 서명 요청 상세 화면 목업 생성
+  - 상단: 문서 정보 (파일명, SHA3-256, 업로드 일시)
+  - 중단: 서명자 목록 테이블 (이메일 / 상태 배지 / 서명 일시 / 서명된 PDF 다운로드)
+  - 하단: 요청 메타데이터 (요청자, 요청 일시, 만료 일시, 전체 상태)
+- [ ] HTML/CSS 퍼블리싱 산출물 다운로드 (`detail.html`, `detail.css`)
+- [ ] `harness/DESIGN_PROMPTS.md`에 화면 프롬프트 기록
+
+#### Step 2. 백엔드
+
+- [ ] **→ 즉시 적용:** `GET /api/signature-requests/{id}` 상세 조회 API
+  - [ ] 요청자 본인만 조회 가능 (소유권 검증)
+  - [ ] 응답: 문서 정보 + 서명자 목록 (상태·서명 일시 포함)
+- [ ] **→ 즉시 적용:** `SignatureRequestDetailResponse` DTO 추가
+- [ ] `./gradlew test` 통과 확인
+
+#### Step 3. 프론트엔드 (Claude Design 산출물 활용)
+
+- [ ] `detail.html` + `detail.css` → `DocumentDetailView.vue` 변환
+- [ ] 라우트 추가: `/documents/:id` → `DocumentDetailView` (인증 필수)
+- [ ] DashboardView 문서 목록에서 각 항목 클릭 시 상세 페이지 이동
+- [ ] 서명자별 상태 배지 (PENDING / SIGNED / EXPIRED)
+- [ ] 서명된 PDF 다운로드 버튼 (SIGNED 상태일 때만 활성화)
+- [ ] 서명 링크 복사 버튼 (PENDING 상태일 때만 표시)
+
+**완료 기준:**
+- [ ] claude.ai/design 목업 완성
+- [ ] `/documents/:id` 접속 시 서명 요청 상세 정보 표시
+- [ ] 서명자별 상태·일시 정확히 표시
+- [ ] 서명된 PDF 다운로드 동작
+- [ ] `./gradlew test` 통과
+
+---
+
+### 3-6. PDF 멀티 파일 업로드 (최대 5개)
+
+**목표:** 서명 요청 생성 시 PDF를 한 번에 최대 5개까지 업로드해 문서별 독립 서명 요청을 일괄 생성할 수 있도록 한다
+
+#### Step 1. Claude Design → UI 설계
+
+> **⚠️ 구현 전 반드시 Claude Design에서 목업을 완성한다**
+
+- [ ] claude.ai/design에서 멀티 업로드 화면 목업 생성
+  - Step 1 드롭존: 복수 파일 표시 목록 (파일명 / 크기 / 해시 / 삭제 버튼)
+  - 파일 추가 버튼 (5개 미만일 때만 활성)
+  - 각 파일 업로드 진행 바
+  - 5개 초과 시 경고 메시지 처리
+- [ ] HTML/CSS 퍼블리싱 산출물 다운로드 (`request-multi.html`, `request-multi.css`)
+- [ ] `harness/DESIGN_PROMPTS.md`에 화면 프롬프트 기록
+
+#### Step 2. 백엔드
+
+- [ ] **→ 즉시 적용:** `POST /api/documents/batch` 배치 업로드 API
+  - [ ] `multipart/form-data` 복수 파일 수신 (최대 5개)
+  - [ ] 파일별 SHA3-256 해시 생성 + MinIO 저장 병렬 처리
+  - [ ] 파일 개수 초과 시 400 반환
+  - [ ] 응답: 업로드된 문서 ID 목록
+- [ ] **→ 즉시 적용:** `POST /api/signature-requests/batch` 배치 서명 요청 API
+  - [ ] 문서 ID 목록 + 서명자 목록을 받아 문서별 서명 요청 일괄 생성
+  - [ ] 응답: 생성된 서명 요청 목록 (토큰 포함)
+- [ ] `./gradlew test` 통과 확인
+
+#### Step 3. 프론트엔드 (Claude Design 산출물 활용)
+
+- [ ] `request-multi.html` + `request-multi.css` → RequestView Step 1 교체
+- [ ] 드롭존에 복수 파일 드래그앤드롭 지원
+- [ ] 파일 목록 표시 (파일명 / 크기 / 해시 프리뷰 / 개별 삭제)
+- [ ] 파일 5개 초과 시 클라이언트 사전 차단 + 안내 메시지
+- [ ] 업로드 진행 상태 파일별 개별 표시
+- [ ] Step 3 완료 화면: 문서별 서명 링크 목록으로 변경
+
+**완료 기준:**
+- [ ] claude.ai/design 목업 완성
+- [ ] 복수 파일(최대 5개) 동시 업로드 동작
+- [ ] 5개 초과 시 클라이언트·서버 양쪽에서 차단
+- [ ] 기존 단일 파일 업로드 플로우 하위 호환 유지
+- [ ] `./gradlew test` 통과
+
+---
+
 ## 4단계: AWS 배포 + GitHub Actions
 > 기간: 5~7개월
 

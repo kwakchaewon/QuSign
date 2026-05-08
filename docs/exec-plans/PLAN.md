@@ -318,6 +318,39 @@ npm run dev   # http://localhost:5173 브라우저 확인
 
 ---
 
+### 3-2.5. PDF 파일 업로드 기반 검증 구현
+
+**목표:** 토큰 없이 서명된 PDF 파일만으로 ML-DSA 서명 검증이 가능하도록 개선한다
+> 현재 `/verify`는 토큰 입력만 지원 → 토큰을 보관하지 않은 사용자나 제3자도 PDF만 있으면 검증 가능해야 함
+> PDF 메타데이터에 이미 서명값·서명자·해시가 포함되어 있으므로 파일만으로 충분
+
+#### 백엔드
+
+- [x] **→ 즉시 적용:** `POST /api/verify/file` 엔드포인트 추가 (`multipart/form-data`)
+  - [x] `pdfSignatureService.extractMetadata()`로 QuSign 메타데이터 추출
+  - [x] `QuSign-SignerId`(이메일)로 DB에서 공개키 조회
+  - [x] `pqcSignatureService.verify()`로 ML-DSA 검증
+  - [x] 기존 토큰 검증과 동일한 응답 구조 반환 (valid / signerId / signedAt / documentHash)
+- [x] 예외 처리
+  - [x] QuSign 메타데이터 없는 PDF → 400 "QuSign 서명이 없는 문서입니다"
+  - [x] 서명자 계정 없음 (탈퇴 등) → valid: false 반환
+  - [x] 검증 실패 → `valid: false` 반환 (예외 아님)
+
+#### 프론트엔드
+
+- [x] **→ 즉시 적용:** VerifyView 탭 UI 추가 — `토큰 입력` | `파일 업로드` 전환
+- [x] 파일 업로드 드롭존 구현 (PDF only, 클라이언트 파일 타입 검사)
+- [x] `POST /api/verify/file` 연동
+- [x] 기존 검증 결과 영역 재사용 (탭과 무관하게 동일 결과 컴포넌트)
+
+**완료 기준:**
+- [x] 서명된 PDF 업로드 → ML-DSA 검증 결과 표시
+- [x] QuSign 서명 없는 PDF 업로드 → "QuSign 서명이 없는 문서입니다" 에러 표시
+- [x] 토큰 입력 방식 기존 동작 유지
+- [ ] `./gradlew test` 통과
+
+---
+
 ### 3-3. AWS SES → 이메일 연동
 
 #### 로컬 테스트 환경 (✅ 완료)

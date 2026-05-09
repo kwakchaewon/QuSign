@@ -1,0 +1,313 @@
+/* QuSign · 서명 요청 상세 */
+
+@keyframes qs-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =============== Layout overrides (detail: narrow) =============== */
+.qs-page-detail .qs-main {
+  max-width: 768px;
+  animation: qs-fade-up 0.3s var(--easing-default);
+}
+.qs-page-detail .qs-page-head {
+  align-items: baseline;
+  margin-bottom: 24px;
+}
+.qs-page-detail .qs-page-title { font-size: 24px; margin: 0; }
+.qs-page-detail .qs-page-sub {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  letter-spacing: -0.005em;
+}
+
+/* =============== Back link =============== */
+.qs-back {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 34px;
+  padding: 0 12px 0 8px;
+  margin-left: 8px;
+  border-radius: 9px;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.qs-back:hover { background: var(--surface-muted); color: var(--text-primary); }
+.qs-spacer { flex: 1; }
+
+/* =============== Card =============== */
+.qs-card {
+  background: var(--surface-elevated);
+  border: 0.5px solid var(--border-default);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.qs-card + .qs-card { margin-top: 16px; }
+
+/* =============== Document card =============== */
+.qs-doc-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  padding: 24px;
+  align-items: start;
+}
+.qs-doc-icon-lg {
+  width: 56px; height: 68px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.qs-detail-doc-name {
+  margin: 0 0 6px;
+  font-size: 17px; font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.qs-doc-uploaded {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+}
+
+/* =============== Hash display =============== */
+.qs-hash {
+  display: inline-flex; align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 10px;
+  border-radius: 9px;
+  background: var(--surface-muted);
+  border: 0.5px solid var(--border-default);
+  max-width: 100%;
+}
+.qs-hash-label {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  padding-right: 8px;
+  border-right: 0.5px solid var(--border-default);
+  flex-shrink: 0;
+}
+.qs-hash-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  word-break: break-all;
+  min-width: 0;
+}
+.qs-hash-toggle {
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-primary-500);
+  padding: 2px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.qs-hash-toggle:hover { background: var(--btn-primary-hover-bg); }
+
+/* =============== Badge variants =============== */
+.qs-badge-sm {
+  height: 24px;
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.qs-btn.is-success { color: var(--badge-success-text); }
+
+/* =============== Section header =============== */
+.qs-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px;
+  margin: 24px 0 12px;
+  padding: 0 4px;
+}
+.qs-section-title {
+  margin: 0;
+  font-size: 16px; font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.qs-section-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.qs-section-meta strong { color: var(--text-primary); font-weight: 600; }
+
+/* =============== Signers list =============== */
+.qs-signers { display: flex; flex-direction: column; }
+.qs-signer-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 0.5px solid var(--border-default);
+  transition: background 0.15s;
+}
+.qs-signer-row:last-child { border-bottom: none; }
+.qs-signer-row:hover { background: var(--surface-muted); }
+.qs-signer-row.is-expired { opacity: 0.7; }
+
+.qs-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #fff;
+  flex-shrink: 0;
+}
+.qs-avatar-signed  { background: linear-gradient(135deg, #1ABF7C, #0F8A56); }
+.qs-avatar-pending { background: linear-gradient(135deg, #FF9D2C, #E47A0E); }
+.qs-avatar-expired {
+  background: var(--surface-muted);
+  color: var(--text-tertiary);
+  border: 0.5px solid var(--border-default);
+}
+
+.qs-signer-main { min-width: 0; }
+.qs-signer-email {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  margin-bottom: 6px;
+}
+.qs-signer-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.qs-signer-time {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.qs-signer-time.is-empty { color: var(--text-disabled); font-family: var(--font-sans); }
+
+.qs-signer-actions { display: flex; align-items: center; gap: 6px; }
+.qs-signer-disabled {
+  font-size: 12px;
+  color: var(--text-disabled);
+  padding: 0 8px;
+}
+
+/* =============== Meta grid =============== */
+.qs-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border-default);
+}
+.qs-meta-cell {
+  padding: 18px 20px;
+  background: var(--surface-elevated);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.qs-meta-k {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.qs-meta-v {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+  word-break: break-all;
+}
+.qs-meta-v.qs-mono { font-family: var(--font-mono); font-size: 13px; }
+.qs-meta-v.is-warning { color: var(--badge-warning-text); }
+.qs-meta-v.is-expired { color: var(--text-disabled); text-decoration: line-through; }
+
+.qs-meta-tag {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--badge-warning-bg);
+  color: var(--badge-warning-text);
+  margin-top: 2px;
+  align-self: flex-start;
+}
+.qs-meta-tag.is-expired {
+  background: var(--badge-pending-bg);
+  color: var(--badge-pending-text);
+  border: 0.5px solid var(--border-default);
+}
+
+/* =============== Error states =============== */
+.qs-error {
+  padding: 64px 24px 72px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+}
+.qs-error-illu {
+  width: 88px; height: 88px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-muted);
+  border-radius: 24px;
+  margin-bottom: 20px;
+}
+.qs-error-code {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.qs-error-title {
+  margin: 0 0 8px;
+  font-size: 18px; font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.qs-error-desc {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 420px;
+}
+
+/* =============== Responsive =============== */
+@media (max-width: 720px) {
+  .qs-back .qs-back-text { display: none; }
+  .qs-page-detail .qs-main { padding: 20px 16px 48px; }
+  .qs-page-detail .qs-page-title { font-size: 22px; }
+
+  .qs-doc-card {
+    grid-template-columns: 44px 1fr;
+    grid-template-areas: "icon main" "status status";
+    gap: 14px;
+    padding: 18px;
+  }
+  .qs-doc-icon-lg { grid-area: icon; width: 44px; height: 56px; }
+  .qs-doc-card .qs-doc-main { grid-area: main; }
+  .qs-doc-card .qs-doc-status { grid-area: status; }
+  .qs-detail-doc-name { font-size: 15px; }
+
+  .qs-signer-row {
+    grid-template-columns: 36px 1fr;
+    grid-template-areas: "avatar main" ". actions";
+    gap: 10px 12px;
+    padding: 14px 16px;
+  }
+  .qs-avatar { grid-area: avatar; width: 36px; height: 36px; font-size: 14px; }
+  .qs-signer-main { grid-area: main; }
+  .qs-signer-actions { grid-area: actions; justify-content: flex-end; }
+
+  .qs-meta-grid { grid-template-columns: 1fr; }
+  .qs-meta-cell { padding: 14px 16px; }
+}

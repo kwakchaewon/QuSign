@@ -58,7 +58,8 @@
       "PowerShell(Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue | Select-Object LocalAddress, LocalPort, OwningProcess, State | ForEach-Object { $_ | Add-Member -NotePropertyName ProcessName -NotePropertyValue \\(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue\\).Name -PassThru })",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/actuator/health)",
       "PowerShell($conn = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $pid8080 = $conn.OwningProcess; $name = \\(Get-Process -Id $pid8080 -ErrorAction SilentlyContinue\\).Name; Stop-Process -Id $pid8080 -Force; \"Killed PID $pid8080 \\($name\\)\" } else { \"No process on 8080\" })",
-      "Bash(git -C e:/dev/QuSign diff --stat)"
+      "Bash(git -C e:/dev/QuSign diff --stat)",
+      "Bash(./gradlew compileKotlin)"
     ]
   },
   "model": "sonnet",

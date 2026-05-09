@@ -53,7 +53,7 @@
 
           <!-- ===== 01 프로필 ===== -->
           <div id="sec-profile">
-            <section class="qs-card">
+            <section class="qs-settings-card">
               <div class="qs-card-head">
                 <h2 class="qs-card-title">프로필</h2>
                 <p class="qs-card-desc">QuSign에 등록된 계정 정보입니다.</p>
@@ -80,7 +80,7 @@
           <!-- ===== 02 보안 ===== -->
           <div id="sec-security">
             <!-- 비밀번호 변경 -->
-            <section class="qs-card">
+            <section class="qs-settings-card">
               <div class="qs-card-head">
                 <h2 class="qs-card-title">비밀번호 변경</h2>
                 <p class="qs-card-desc">8자 이상, 대소문자 · 숫자 · 특수문자를 조합하면 더 안전해요.</p>
@@ -199,7 +199,7 @@
             <div style="height: 16px;"></div>
 
             <!-- 보안 토글 -->
-            <section class="qs-card">
+            <section class="qs-settings-card">
               <div class="qs-card-head">
                 <h2 class="qs-card-title">보안</h2>
                 <p class="qs-card-desc">서명과 로그인의 안전성을 향상시키는 옵션들입니다.</p>
@@ -273,7 +273,7 @@
 
           <!-- ===== 03 알림 ===== -->
           <div id="sec-notify">
-            <section class="qs-card">
+            <section class="qs-settings-card">
               <div class="qs-card-head">
                 <h2 class="qs-card-title">알림</h2>
                 <p class="qs-card-desc">중요한 항목만 골라 받아볼 수 있어요.</p>
@@ -304,7 +304,7 @@
 
           <!-- ===== 04 계정 삭제 ===== -->
           <div id="sec-danger">
-            <section class="qs-card qs-card-danger">
+            <section class="qs-settings-card qs-card-danger">
               <div class="qs-card-head">
                 <h2 class="qs-card-title">계정 삭제</h2>
                 <p class="qs-card-desc">계정을 삭제하면 다음 데이터가 영구적으로 사라집니다.</p>

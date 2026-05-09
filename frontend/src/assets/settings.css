@@ -59,7 +59,8 @@
 .qs-settings-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 
 /* =============== Card =============== */
-.qs-card {
+/* .qs-settings-card — settings 전용. detail.css의 .qs-card와 이름 충돌 방지 */
+.qs-settings-card {
   background: var(--surface-elevated);
   border: 0.5px solid var(--border-default);
   border-radius: 16px;
@@ -290,14 +291,14 @@
 .qs-switch:focus-visible { box-shadow: 0 0 0 3px var(--input-focus-ring); }
 
 /* =============== Danger card =============== */
-.qs-card-danger {
+.qs-settings-card.qs-card-danger {
   border-color: rgba(240, 68, 82, 0.35);
   background:
     linear-gradient(0deg, var(--color-error-bg), var(--color-error-bg)),
     var(--surface-elevated);
 }
-[data-theme="dark"] .qs-card-danger { border-color: rgba(240, 68, 82, 0.40); }
-.qs-card-danger .qs-card-title { color: var(--color-error); }
+[data-theme="dark"] .qs-settings-card.qs-card-danger { border-color: rgba(240, 68, 82, 0.40); }
+.qs-settings-card.qs-card-danger .qs-card-title { color: var(--color-error); }
 .qs-danger-list {
   margin: 0 0 20px;
   padding-left: 18px;
@@ -441,7 +442,7 @@
 @media (max-width: 480px) {
   .qs-settings-main { padding: 20px 16px 64px; }
   .qs-settings-title { font-size: 22px; }
-  .qs-card { padding: 20px; border-radius: 14px; }
+  .qs-settings-card { padding: 20px; border-radius: 14px; }
   .qs-card-hr { margin: 16px -20px; }
   .qs-input { height: 44px; }
   .qs-form-foot { flex-direction: column; align-items: stretch; }

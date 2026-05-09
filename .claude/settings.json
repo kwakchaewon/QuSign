@@ -67,7 +67,12 @@
       "Bash(Get-ChildItem -Path \"e:\\\\dev\\\\QuSign\\\\frontend\\\\src\" -Recurse -Include \"*.vue\")",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(Get-ChildItem -Path \"e:\\\\dev\\\\QuSign\\\\backend\\\\src\\\\main\\\\kotlin\\\\com\\\\qusign\" -Recurse -Directory)",
-      "PowerShell(ls -r \"e:\\\\dev\\\\QuSign\\\\backend\\\\src\\\\main\\\\kotlin\\\\com\\\\qusign\" -Directory)"
+      "PowerShell(ls -r \"e:\\\\dev\\\\QuSign\\\\backend\\\\src\\\\main\\\\kotlin\\\\com\\\\qusign\" -Directory)",
+      "Bash(git add *)",
+      "Bash(git -C /e/dev/QuSign add frontend/src/views/HomeView.vue frontend/src/views/DashboardView.vue frontend/src/views/AccountSettingsView.vue frontend/src/views/DocumentDetailView.vue frontend/src/views/RequestView.vue)",
+      "Bash(git -C /e/dev/QuSign commit -m ' *)",
+      "Bash(git -C /e/dev/QuSign status)",
+      "Bash(git -C /e/dev/QuSign diff .claude/settings.json)"
     ]
   },
   "model": "sonnet",

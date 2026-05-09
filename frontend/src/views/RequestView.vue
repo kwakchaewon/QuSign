@@ -300,12 +300,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
+import { useTheme } from '@/composables/useTheme'
 
 const MAX_FILES = 5
 const MAX_SIZE = 50 * 1024 * 1024
@@ -329,7 +330,7 @@ interface FileResult { fileName: string; signers: SignerResult[] }
 
 const router = useRouter()
 const auth = useAuthStore()
-const theme = ref<'light' | 'dark'>('light')
+const { theme } = useTheme()
 const step = ref(1)
 const userEmail = computed(() => auth.email ?? '')
 
@@ -347,7 +348,6 @@ const fileResults = ref<FileResult[]>([])
 const copiedKey = ref('')
 const copiedAll = ref(false)
 
-watch(theme, (t) => document.documentElement.setAttribute('data-theme', t), { immediate: true })
 function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
 
 const canGoNext = computed(() =>

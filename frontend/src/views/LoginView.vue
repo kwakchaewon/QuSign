@@ -67,7 +67,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
+import { useTheme } from '@/composables/useTheme'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import PqcBadge from '@/components/ui/PqcBadge.vue'
 import TrustStrip from '@/components/ui/TrustStrip.vue'
@@ -75,12 +76,8 @@ import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import Toast from '@/components/ui/Toast.vue'
 import LoginForm from '@/components/LoginForm.vue'
 
-const theme = ref<'light' | 'dark'>('light')
+const { theme } = useTheme()
 const toast = ref({ show: false, email: '' })
-
-watch(theme, (t) => {
-  document.documentElement.setAttribute('data-theme', t)
-}, { immediate: true })
 
 function handleThemeToggle(t: 'light' | 'dark') {
   theme.value = t

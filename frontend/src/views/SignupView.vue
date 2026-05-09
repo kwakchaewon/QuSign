@@ -104,13 +104,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
+import { useTheme } from '@/composables/useTheme'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import PqcBadge from '@/components/ui/PqcBadge.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import SignupForm from '@/components/SignupForm.vue'
 
-const theme = ref<'light' | 'dark'>('light')
+const { theme } = useTheme()
 const success = ref({ show: false, email: '' })
 
 const trustItems = [
@@ -118,10 +119,6 @@ const trustItems = [
   { k: '저장방식', v: 'AES-256' },
   { k: '전송', v: 'TLS 1.3' },
 ]
-
-watch(theme, (t) => {
-  document.documentElement.setAttribute('data-theme', t)
-}, { immediate: true })
 
 function handleThemeToggle(t: 'light' | 'dark') {
   theme.value = t

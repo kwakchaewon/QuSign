@@ -280,12 +280,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
+import { useTheme } from '@/composables/useTheme'
 
 interface RecentRequestItem {
   id: number
@@ -305,7 +306,7 @@ interface DashboardData {
 
 const router = useRouter()
 const auth = useAuthStore()
-const theme = ref<'light' | 'dark'>('light')
+const { theme } = useTheme()
 const isLoading = ref(true)
 const toast = ref<string | null>(null)
 
@@ -338,10 +339,6 @@ onMounted(async () => {
     isLoading.value = false
   }
 })
-
-watch(theme, (t) => {
-  document.documentElement.setAttribute('data-theme', t)
-}, { immediate: true })
 
 function handleThemeToggle(t: 'light' | 'dark') {
   theme.value = t

@@ -352,8 +352,9 @@ import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
+import { useTheme } from '@/composables/useTheme'
 
-const theme = ref<'light' | 'dark'>('light')
+const { theme } = useTheme()
 const route = useRoute()
 const auth = useAuthStore()
 
@@ -383,7 +384,6 @@ const pdfBlobUrl = ref('')
 const pdfFilename = ref('문서.pdf')
 const pdfLoading = ref(false)
 
-watch(theme, (t) => document.documentElement.setAttribute('data-theme', t), { immediate: true })
 function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
 
 onMounted(() => {

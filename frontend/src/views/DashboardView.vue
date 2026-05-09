@@ -200,6 +200,7 @@ import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
+import { useTheme } from '@/composables/useTheme'
 
 interface Doc {
   id: number
@@ -220,7 +221,7 @@ type TabKey = typeof TABS[number]['key']
 
 const router = useRouter()
 const auth = useAuthStore()
-const theme = ref<'light' | 'dark'>('light')
+const { theme } = useTheme()
 const search = ref('')
 const isLoading = ref(true)
 const fetchError = ref('')
@@ -244,9 +245,6 @@ onMounted(async () => {
   }
 })
 
-watch(theme, (t) => {
-  document.documentElement.setAttribute('data-theme', t)
-}, { immediate: true })
 
 function tabCount(key: TabKey) {
   if (key === 'ALL') return docs.value.length

@@ -379,12 +379,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
+import { useTheme } from '@/composables/useTheme'
 
 const SECTIONS = [
   { id: 'profile',  num: '01', label: '프로필' },
@@ -399,8 +400,7 @@ const userEmail = computed(() => auth.email ?? '')
 const userInitial = computed(() => auth.email?.charAt(0).toUpperCase() ?? '?')
 
 // Theme
-const theme = ref<'light' | 'dark'>('light')
-watch(theme, (t) => document.documentElement.setAttribute('data-theme', t), { immediate: true })
+const { theme } = useTheme()
 function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
 
 function handleLogout() {

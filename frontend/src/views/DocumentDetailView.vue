@@ -343,8 +343,8 @@ const userEmail = computed(() => auth.email ?? '')
 
 onMounted(async () => {
   try {
-    const res = await api.get<SignatureRequestDetail>(`/api/signature-requests/${route.params.id}`)
-    detail.value = res.data
+    const res = await api.get<{ data: SignatureRequestDetail }>(`/api/signature-requests/${route.params.id}`)
+    detail.value = res.data.data
   } catch (err: any) {
     errorCode.value = err?.response?.status ?? 500
   } finally {

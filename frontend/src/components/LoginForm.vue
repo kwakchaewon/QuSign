@@ -176,7 +176,7 @@ async function handleSubmit() {
     setTimeout(() => {
       success.value = false
       const redirect = route.query.redirect as string | undefined
-      router.push(redirect ?? '/documents')
+      router.push(redirect ?? '/home')
     }, 1000)
   } catch (err: any) {
     const msg = err.response?.data?.message

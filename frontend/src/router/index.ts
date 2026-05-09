@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import SignupView from '../views/SignupView.vue'
+import HomeView from '../views/HomeView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import DocumentDetailView from '../views/DocumentDetailView.vue'
 import RequestView from '../views/RequestView.vue'
@@ -8,12 +9,16 @@ import SignerView from '../views/SignerView.vue'
 import VerifyView from '../views/VerifyView.vue'
 import AccountSettingsView from '../views/AccountSettingsView.vue'
 
-const AUTH_ROUTES = ['/documents', '/request', '/settings']
+const AUTH_ROUTES = ['/home', '/documents', '/request', '/settings']
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', redirect: '/login' },
+    {
+      path: '/',
+      redirect: () => (localStorage.getItem('qusign:token') ? '/home' : '/login'),
+    },
+    { path: '/home', name: 'home', component: HomeView },
     { path: '/login', name: 'login', component: LoginView },
     { path: '/signup', name: 'signup', component: SignupView },
     { path: '/documents', name: 'documents', component: DashboardView },

@@ -7,11 +7,13 @@ data class DocumentResponse(
     val originalFilename: String,
     val hashSha3256: String,
     val createdAt: String?,
+    val signatureStatus: String = "NONE",
 ) {
-    constructor(doc: Document) : this(
+    constructor(doc: Document, signatureStatus: String = "NONE") : this(
         id = doc.id,
         originalFilename = doc.originalFilename,
         hashSha3256 = doc.hashSha3256,
         createdAt = doc.createdAt?.toString(),
+        signatureStatus = signatureStatus,
     )
 }

@@ -8,4 +8,5 @@ interface SignatureRequestRepository : JpaRepository<SignatureRequest, Long> {
     fun findByToken(token: String): SignatureRequest?
     fun findByDocumentOrderByCreatedAtAsc(document: Document): List<SignatureRequest>
     fun findByDocumentAndSignerEmail(document: Document, signerEmail: String): SignatureRequest?
+    fun findByDocumentIn(documents: List<Document>): List<SignatureRequest>
 }

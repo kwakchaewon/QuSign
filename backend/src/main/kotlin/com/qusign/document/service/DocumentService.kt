@@ -7,6 +7,7 @@ import com.qusign.document.entity.Document
 import com.qusign.document.exception.DocumentNotFoundException
 import com.qusign.document.exception.StorageException
 import com.qusign.document.repository.DocumentRepository
+import com.qusign.signature.repository.SignatureRequestRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -18,6 +19,7 @@ class DocumentService(
     private val documentRepository: DocumentRepository,
     private val userRepository: UserRepository,
     private val storageService: StorageService,
+    private val signatureRequestRepository: SignatureRequestRepository,
 ) {
     @Transactional
     fun upload(email: String, file: MultipartFile): DocumentResponse {
@@ -46,7 +48,17 @@ class DocumentService(
     @Transactional(readOnly = true)
     fun list(email: String): List<DocumentResponse> {
         val user = userRepository.findByEmail(email) ?: return emptyList()
-        return documentRepository.findByUserOrderByCreatedAtDesc(user).map { DocumentResponse(it) }
+        val docs = documentRepository.findByUserOrderByCreatedAtDesc(user)
+        val requestsByDocId = signatureRequestRepository.findByDocumentIn(docs).groupBy { it.document.id }
+        return docs.map { doc ->
+            val reqs = requestsByDocId[doc.id] ?: emptyList()
+            val status = when {
+                reqs.isEmpty() -> "NONE"
+                reqs.all { it.status == "SIGNED" } -> "SIGNED"
+                else -> "PENDING"
+            }
+            DocumentResponse(doc, status)
+        }
     }
 
     @Transactional(readOnly = true)

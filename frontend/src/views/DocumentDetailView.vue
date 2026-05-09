@@ -412,7 +412,7 @@ async function downloadSigned(signer: SignerDetail) {
   if (!detail.value) return
   try {
     const res = await api.get(
-      `/api/signature-requests/${detail.value.id}/download?email=${encodeURIComponent(signer.email)}`,
+      `/api/signature-requests/${detail.value.id}/download?signerEmail=${encodeURIComponent(signer.email)}`,
       { responseType: 'blob' }
     )
     const url = URL.createObjectURL(res.data)

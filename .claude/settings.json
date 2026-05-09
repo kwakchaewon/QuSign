@@ -53,7 +53,10 @@
       "Bash(Get-ChildItem -Path \"e:\\\\dev\\\\QuSign\" -Recurse -Directory)",
       "Bash(Select-Object -First 50 FullName)",
       "Bash(Get-ChildItem -Path \"e:\\\\dev\\\\QuSign\\\\backend\\\\src\\\\main\\\\kotlin\\\\com\\\\qusign\" -Recurse -File)",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "PowerShell(docker compose -f e:\\\\dev\\\\QuSign\\\\docker-compose.yml ps)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue | Select-Object LocalAddress, LocalPort, OwningProcess, State | ForEach-Object { $_ | Add-Member -NotePropertyName ProcessName -NotePropertyValue \\(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue\\).Name -PassThru })",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/actuator/health)"
     ]
   },
   "model": "sonnet",

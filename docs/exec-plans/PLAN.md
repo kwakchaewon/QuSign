@@ -9,7 +9,7 @@
 
 | 단계 | 내용 | 상태 |
 |------|------|------|
-| 1단계 | 환경 세팅 + PQC 핵심 검증 | 🔄 진행 중 (로컬 실행 확인 남음) |
+| 1단계 | 환경 세팅 + PQC 핵심 검증 | ✅ 완료 |
 | 2단계 | 백엔드 핵심 구현 | ✅ 완료 |
 | 3단계 | 프론트엔드 구현 | ✅ 완료 |
 | 4단계 | 기능 고도화 & 품질 강화 | 🔄 진행 중 (다음 단계) |
@@ -77,7 +77,7 @@
 ### 1-4. 로컬 Docker Compose 환경 완성 (1주)
 
 - [x] Docker Compose 작성 (MinIO 컨테이너)
-- [ ] 로컬 환경 전체 실행 확인
+- [x] 로컬 환경 전체 실행 확인
   ```bash
   docker compose up -d     # MinIO 기동
   ./gradlew bootRun        # 백엔드 (local 프로파일)
@@ -87,7 +87,7 @@
 **1단계 완료 기준**
 - [x] ML-DSA 단위 테스트 통과
 - [x] PDF 서명값 삽입/추출 성공
-- [ ] 로컬 전체 스택 실행 확인 (백엔드 + MinIO + 프론트엔드)
+- [x] 로컬 전체 스택 실행 확인 (백엔드 + MinIO + 프론트엔드)
 
 ---
 
@@ -198,29 +198,29 @@
 
 > **⚠️ 구현 전 반드시 Claude Design에서 목업을 완성한다**
 
-- [ ] claude.ai/design에서 상세 화면 목업 생성
+- [x] claude.ai/design에서 상세 화면 목업 생성
   - 상단: 문서 정보 (파일명, SHA3-256, 업로드 일시)
   - 중단: 서명자 목록 (이메일 / 상태 배지 / 서명 일시 / 서명된 PDF 다운로드)
   - 하단: 요청 메타데이터 (요청자, 요청 일시, 만료 일시)
-- [ ] `detail.html` + `detail.css` 다운로드
-- [ ] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
+- [x] `detail.html` + `detail.css` 다운로드
+- [x] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
 
 #### Step 2. 백엔드
 
-- [ ] `GET /api/signature-requests/{id}` — 요청자 본인만 조회 가능
-- [ ] `SignatureRequestDetailResponse` DTO 추가
+- [x] `GET /api/signature-requests/{id}` — 요청자 본인만 조회 가능
+- [x] `SignatureRequestDetailResponse` DTO 추가
 - [ ] `./gradlew test` 통과
 
 #### Step 3. 프론트엔드
 
-- [ ] `detail.html` + `detail.css` → `DocumentDetailView.vue` 변환
-- [ ] 라우트 추가: `/documents/:id` (인증 필수)
-- [ ] 대시보드에서 문서 클릭 시 상세 페이지 이동
-- [ ] 서명자별 상태 배지 (PENDING / SIGNED / EXPIRED)
-- [ ] 서명된 PDF 다운로드 버튼 (SIGNED일 때만 활성)
-- [ ] 서명 링크 복사 버튼 (PENDING일 때만 표시)
+- [x] `detail.html` + `detail.css` → `DocumentDetailView.vue` 변환
+- [x] 라우트 추가: `/documents/:id` (인증 필수)
+- [x] 대시보드에서 문서 클릭 시 상세 페이지 이동
+- [x] 서명자별 상태 배지 (PENDING / SIGNED / EXPIRED)
+- [x] 서명된 PDF 다운로드 버튼 (SIGNED일 때만 활성)
+- [x] 서명 링크 복사 버튼 (PENDING일 때만 표시)
 
-**완료 기준:** 목업 완성 → 상세 페이지 동작 → 테스트 통과
+**완료 기준:** 목업 완성 → 상세 페이지 동작 → 테스트 통과 (테스트만 남음)
 
 ---
 
@@ -387,7 +387,7 @@
 
 | 시점 | 목표 | 완료 |
 |------|------|------|
-| 2주 | Kotlin + Spring Boot 실행 확인 | ⬜ |
+| 2주 | Kotlin + Spring Boot 실행 확인 | ✅ |
 | 4주 | ML-DSA 서명 / 검증 단위 테스트 통과 | ✅ |
 | 6주 | PDF ML-DSA 서명값 삽입 / 추출 성공 | ✅ |
 | 3개월 | 백엔드 API 전체 완성 | ✅ |

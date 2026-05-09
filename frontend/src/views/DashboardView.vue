@@ -111,7 +111,7 @@
         <template v-else>
           <div class="qs-list">
             <div
-              v-for="doc in filteredDocs"
+              v-for="doc in pagedDocs"
               :key="doc.id"
               class="qs-doc"
               style="cursor:pointer"
@@ -153,7 +153,27 @@
         </template>
 
         <div v-if="!isLoading && filteredDocs.length > 0" class="qs-list-foot">
-          총 <strong>{{ filteredDocs.length }}</strong>개 문서
+          <span class="qs-foot-info">
+            {{ (currentPage - 1) * PAGE_SIZE + 1 }}–{{ Math.min(currentPage * PAGE_SIZE, filteredDocs.length) }} / 총 {{ filteredDocs.length }}개
+          </span>
+          <div class="qs-pagination">
+            <button
+              class="qs-btn qs-btn-ghost qs-btn-sm"
+              :disabled="currentPage === 1"
+              @click="currentPage--"
+            >이전</button>
+            <button
+              v-for="p in totalPages"
+              :key="p"
+              :class="['qs-btn', 'qs-btn-sm', p === currentPage ? 'qs-btn-primary' : 'qs-btn-ghost']"
+              @click="currentPage = p"
+            >{{ p }}</button>
+            <button
+              class="qs-btn qs-btn-ghost qs-btn-sm"
+              :disabled="currentPage === totalPages"
+              @click="currentPage++"
+            >다음</button>
+          </div>
         </div>
       </div>
     </main>
@@ -175,12 +195,15 @@ interface Doc {
   createdAt: string | null
 }
 
+const PAGE_SIZE = 10
+
 const router = useRouter()
 const auth = useAuthStore()
 const theme = ref<'light' | 'dark'>('light')
 const search = ref('')
 const isLoading = ref(true)
 const fetchError = ref('')
+const currentPage = ref(1)
 
 const userEmail = computed(() => auth.email ?? '')
 const userInitial = computed(() => userEmail.value.charAt(0).toUpperCase())
@@ -207,6 +230,15 @@ const filteredDocs = computed(() => {
   const q = search.value.toLowerCase()
   return docs.value.filter(d => d.originalFilename.toLowerCase().includes(q))
 })
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredDocs.value.length / PAGE_SIZE)))
+
+const pagedDocs = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE
+  return filteredDocs.value.slice(start, start + PAGE_SIZE)
+})
+
+watch(search, () => { currentPage.value = 1 })
 
 function formatDate(d: string | null) {
   if (!d) return '-'

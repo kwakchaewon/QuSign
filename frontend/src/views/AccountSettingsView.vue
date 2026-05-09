@@ -1,33 +1,6 @@
 <template>
   <div class="qs-page">
-    <!-- ===== Topbar ===== -->
-    <header class="qs-topbar">
-      <div class="qs-topbar-inner">
-        <RouterLink class="qs-topbar-brand" to="/home">
-          <QuSignMark variant="badge" :size="28" />
-          <span class="qs-topbar-name">QuSign</span>
-        </RouterLink>
-        <nav class="qs-topbar-nav">
-          <RouterLink class="qs-nav-link" to="/home">홈</RouterLink>
-          <RouterLink class="qs-nav-link" to="/documents">내 문서</RouterLink>
-          <RouterLink class="qs-nav-link" to="/request">서명 요청</RouterLink>
-          <RouterLink class="qs-nav-link is-active" to="/settings">설정</RouterLink>
-        </nav>
-        <div class="qs-topbar-right">
-          <ThemeToggle :theme="theme" @change="handleThemeToggle" />
-          <div class="qs-user">
-            <div class="qs-user-avatar">{{ userInitial }}</div>
-            <span class="qs-user-email">{{ userEmail }}</span>
-          </div>
-          <button class="qs-icon-btn" title="로그아웃" @click="handleLogout">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </header>
+    <AppTopbar />
 
     <!-- ===== Main ===== -->
     <main class="qs-settings-main">
@@ -379,11 +352,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import QuSignMark from '@/components/ui/QuSignMark.vue'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
-import { useTheme } from '@/composables/useTheme'
+import AppTopbar from '@/components/layout/AppTopbar.vue'
 
 const SECTIONS = [
   { id: 'profile',  num: '01', label: '프로필' },
@@ -396,15 +367,6 @@ const router = useRouter()
 const auth = useAuthStore()
 const userEmail = computed(() => auth.email ?? '')
 const userInitial = computed(() => auth.email?.charAt(0).toUpperCase() ?? '?')
-
-// Theme
-const { theme } = useTheme()
-function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
-
-function handleLogout() {
-  auth.logout()
-  router.push('/login')
-}
 
 // Scroll-spy
 const activeSection = ref('profile')

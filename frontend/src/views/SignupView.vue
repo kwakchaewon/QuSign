@@ -1,15 +1,6 @@
 <template>
   <div class="qs-page qs-layout-centered">
-    <header class="qs-topbar">
-      <RouterLink class="qs-topbar-brand" to="/">
-        <QuSignMark variant="badge" :size="28" />
-        <span class="qs-topbar-name">QuSign</span>
-      </RouterLink>
-      <div class="qs-topbar-right">
-        <a class="qs-link-quiet qs-topbar-help" href="#" @click.prevent>고객지원</a>
-        <ThemeToggle :theme="theme" @change="handleThemeToggle" />
-      </div>
-    </header>
+    <PublicTopbar show-support-link />
 
     <main class="qs-main">
       <section class="qs-card-wrap qs-layout-centered-card">
@@ -105,13 +96,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useTheme } from '@/composables/useTheme'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import PqcBadge from '@/components/ui/PqcBadge.vue'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import SignupForm from '@/components/SignupForm.vue'
+import PublicTopbar from '@/components/layout/PublicTopbar.vue'
 
-const { theme } = useTheme()
 const success = ref({ show: false, email: '' })
 
 const trustItems = [
@@ -119,10 +108,6 @@ const trustItems = [
   { k: '저장방식', v: 'AES-256' },
   { k: '전송', v: 'TLS 1.3' },
 ]
-
-function handleThemeToggle(t: 'light' | 'dark') {
-  theme.value = t
-}
 
 function handleSuccess(email: string) {
   success.value = { show: true, email }

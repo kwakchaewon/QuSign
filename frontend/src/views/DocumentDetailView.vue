@@ -1,35 +1,6 @@
 <template>
   <div class="qs-page qs-page-detail">
-    <!-- Topbar -->
-    <header class="qs-topbar">
-      <div class="qs-topbar-inner">
-        <RouterLink class="qs-topbar-brand" to="/home">
-          <QuSignMark variant="badge" :size="28" />
-          <span class="qs-topbar-name">QuSign</span>
-        </RouterLink>
-        <RouterLink class="qs-back" to="/documents">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M19 12H5M11 18l-6-6 6-6" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="qs-back-text">내 문서</span>
-        </RouterLink>
-        <div class="qs-spacer" />
-        <div class="qs-topbar-right">
-          <span class="qs-user-email">{{ userEmail }}</span>
-          <ThemeToggle :theme="theme" @change="handleThemeToggle" />
-          <button class="qs-btn qs-btn-ghost qs-btn-sm qs-logout" @click="handleLogout">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"
-                stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M10 17l-5-5 5-5M5 12h11"
-                stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span>로그아웃</span>
-          </button>
-        </div>
-      </div>
-    </header>
+    <AppTopbar />
 
     <main class="qs-main">
       <div class="qs-page-head">
@@ -291,12 +262,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import QuSignMark from '@/components/ui/QuSignMark.vue'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useRoute } from 'vue-router'
 import api from '@/lib/api'
-import { useTheme } from '@/composables/useTheme'
+import AppTopbar from '@/components/layout/AppTopbar.vue'
 
 interface SignerDetail {
   email: string
@@ -330,17 +298,11 @@ const OVERALL_BADGE = {
 } as const
 
 const route = useRoute()
-const router = useRouter()
-const auth = useAuthStore()
-
-const { theme } = useTheme()
 const isLoading = ref(true)
 const errorCode = ref<number | null>(null)
 const detail = ref<SignatureRequestDetail | null>(null)
 const hashOpen = ref(false)
 const copiedToken = ref<string | null>(null)
-
-const userEmail = computed(() => auth.email ?? '')
 
 onMounted(async () => {
   try {
@@ -396,13 +358,6 @@ function formatDate(d: string | null) {
   if (isNaN(dt.getTime())) return d
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${dt.getFullYear()}.${pad(dt.getMonth() + 1)}.${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`
-}
-
-function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
-
-function handleLogout() {
-  auth.logout()
-  router.push('/login')
 }
 
 async function downloadSigned(signer: SignerDetail) {

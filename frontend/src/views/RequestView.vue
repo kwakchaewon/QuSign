@@ -1,23 +1,6 @@
 <template>
   <div class="qs-page qs-rq-page">
-    <header class="qs-topbar">
-      <div class="qs-topbar-inner">
-        <RouterLink class="qs-topbar-brand" to="/home">
-          <QuSignMark variant="badge" :size="28" />
-          <span class="qs-topbar-name">서명 요청</span>
-        </RouterLink>
-        <div class="qs-topbar-right">
-          <span class="qs-user-email">{{ userEmail }}</span>
-          <ThemeToggle :theme="theme" @change="handleThemeToggle" />
-          <button class="qs-icon-btn" title="문서 목록" @click="router.push('/documents')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </header>
+    <AppTopbar />
 
     <main class="qs-main">
       <ol class="qs-steps" aria-label="진행 단계">
@@ -302,11 +285,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import QuSignMark from '@/components/ui/QuSignMark.vue'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
-import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
-import { useTheme } from '@/composables/useTheme'
+import AppTopbar from '@/components/layout/AppTopbar.vue'
 
 const MAX_FILES = 5
 const MAX_SIZE = 50 * 1024 * 1024
@@ -329,10 +309,7 @@ interface SignerResult { email: string; link: string }
 interface FileResult { fileName: string; signers: SignerResult[] }
 
 const router = useRouter()
-const auth = useAuthStore()
-const { theme } = useTheme()
 const step = ref(1)
-const userEmail = computed(() => auth.email ?? '')
 
 const fileInputEl = ref<HTMLInputElement | null>(null)
 const isDrag = ref(false)
@@ -348,7 +325,6 @@ const fileResults = ref<FileResult[]>([])
 const copiedKey = ref('')
 const copiedAll = ref(false)
 
-function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
 
 const canGoNext = computed(() =>
   files.value.length > 0 &&

@@ -1,15 +1,6 @@
 <template>
   <div class="qs-page qs-layout-centered">
-    <header class="qs-topbar">
-      <RouterLink class="qs-topbar-brand" to="/">
-        <QuSignMark variant="badge" :size="28" />
-        <span class="qs-topbar-name">QuSign</span>
-      </RouterLink>
-      <div class="qs-topbar-right">
-        <a class="qs-link-quiet qs-topbar-help" href="#" @click.prevent>고객지원</a>
-        <ThemeToggle :theme="theme" @change="handleThemeToggle" />
-      </div>
-    </header>
+    <PublicTopbar show-support-link />
 
     <main class="qs-main">
       <section class="qs-card-wrap">
@@ -68,20 +59,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useTheme } from '@/composables/useTheme'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import PqcBadge from '@/components/ui/PqcBadge.vue'
 import TrustStrip from '@/components/ui/TrustStrip.vue'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import Toast from '@/components/ui/Toast.vue'
 import LoginForm from '@/components/LoginForm.vue'
+import PublicTopbar from '@/components/layout/PublicTopbar.vue'
 
-const { theme } = useTheme()
 const toast = ref({ show: false, email: '' })
-
-function handleThemeToggle(t: 'light' | 'dark') {
-  theme.value = t
-}
 
 function handleLogin(email: string) {
   toast.value = { show: true, email }

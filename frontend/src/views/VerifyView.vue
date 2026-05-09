@@ -1,23 +1,6 @@
 <template>
   <div class="vf-page">
-    <header class="vf-header">
-      <div class="vf-header-inner">
-        <RouterLink class="vf-logo" to="/documents">
-          <QuSignMark variant="badge" :size="24" />
-          <span class="vf-logo-name">QuSign</span>
-        </RouterLink>
-        <div class="vf-header-center">
-          <span class="vf-header-title">무결성 검증</span>
-        </div>
-        <div class="vf-header-right">
-          <div class="vf-pqc">
-            <span class="vf-pqc-dot"></span>
-            ML-DSA-65
-          </div>
-          <ThemeToggle :theme="theme" @change="handleThemeToggle" />
-        </div>
-      </div>
-    </header>
+    <PublicTopbar subtitle="무결성 검증" logo-to="/documents" show-pqc-badge />
 
     <main class="vf-main">
       <!-- Idle state -->
@@ -212,10 +195,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useTheme } from '@/composables/useTheme'
-import QuSignMark from '@/components/ui/QuSignMark.vue'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import api from '@/lib/api'
+import PublicTopbar from '@/components/layout/PublicTopbar.vue'
 
 type Status = 'idle' | 'loading' | 'success' | 'fail'
 type Mode = 'token' | 'file'
@@ -227,7 +208,6 @@ interface VerifyResult {
   documentHash: string
 }
 
-const { theme } = useTheme()
 const status = ref<Status>('idle')
 const mode = ref<Mode>('token')
 const token = ref('')
@@ -237,8 +217,6 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const detailsOpen = ref(false)
 const failReason = ref('')
 const verifyResult = ref<VerifyResult>({ valid: false, signerId: '', signedAt: '', documentHash: '' })
-
-function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
 
 function handleDrop(e: DragEvent) {
   isDragging.value = false

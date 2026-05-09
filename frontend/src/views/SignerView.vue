@@ -1,20 +1,6 @@
 <template>
   <div class="qs-page qs-sg-page">
-    <header class="qs-topbar">
-      <div class="qs-topbar-inner">
-        <RouterLink class="qs-topbar-brand" to="/documents">
-          <QuSignMark variant="badge" :size="24" />
-          <span class="qs-topbar-label">전자서명 요청</span>
-        </RouterLink>
-        <div class="qs-topbar-right">
-          <div class="sg-pqc-pill">
-            <span class="sg-pqc-dot"></span>
-            <span>ML-DSA-65</span>
-          </div>
-          <ThemeToggle :theme="theme" @change="handleThemeToggle" />
-        </div>
-      </div>
-    </header>
+    <PublicTopbar title="전자서명 요청" logo-to="/documents" show-pqc-badge />
 
     <main class="qs-main">
       <ol class="sg-steps" aria-label="서명 진행 단계">
@@ -348,13 +334,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
-import QuSignMark from '@/components/ui/QuSignMark.vue'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
-import { useTheme } from '@/composables/useTheme'
+import PublicTopbar from '@/components/layout/PublicTopbar.vue'
 
-const { theme } = useTheme()
 const route = useRoute()
 const auth = useAuthStore()
 
@@ -384,7 +367,6 @@ const pdfBlobUrl = ref('')
 const pdfFilename = ref('문서.pdf')
 const pdfLoading = ref(false)
 
-function handleThemeToggle(t: 'light' | 'dark') { theme.value = t }
 
 onMounted(() => {
   if (auth.isLoggedIn) step.value = 2

@@ -192,6 +192,47 @@ class SignatureFlowService(
     }
 
     @Transactional(readOnly = true)
+    fun getDetail(documentId: Long, requesterEmail: String): SignatureRequestDetailResponse {
+        val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
+        val document = documentRepository.findByIdAndUser(documentId, requester)
+            ?: throw DocumentNotFoundException()
+
+        val requests = signatureRequestRepository.findByDocumentOrderByCreatedAtAsc(document)
+        val signaturesByRequestId = signatureRepository
+            .findBySignatureRequestIn(requests)
+            .associateBy { it.signatureRequest.id }
+
+        val now = java.time.LocalDateTime.now()
+        val signers = requests.map { req ->
+            val sig = signaturesByRequestId[req.id]
+            val effectiveStatus = when {
+                req.status == "SIGNED" -> "SIGNED"
+                req.expiresAt.isBefore(now) -> "EXPIRED"
+                else -> "PENDING"
+            }
+            SignerDetailDto(
+                email = req.signerEmail,
+                status = effectiveStatus,
+                signedAt = sig?.signedAt?.toString(),
+                signatureToken = if (effectiveStatus == "PENDING") req.token else null,
+            )
+        }
+
+        val first = requests.firstOrNull()
+        return SignatureRequestDetailResponse(
+            id = documentId,
+            documentName = document.originalFilename,
+            hashSha3256 = document.hashSha3256,
+            uploadedAt = document.createdAt?.toString() ?: "",
+            requesterEmail = requester.email,
+            algorithm = "ML-DSA-65",
+            requestedAt = first?.createdAt?.toString() ?: "",
+            expiresAt = first?.expiresAt?.toString() ?: "",
+            signers = signers,
+        )
+    }
+
+    @Transactional(readOnly = true)
     fun getDocument(token: String, signerEmail: String): Pair<ByteArray, String> {
         val req = signatureRequestRepository.findByToken(token)
             ?: throw SignatureRequestNotFoundException()

@@ -17,6 +17,13 @@ import java.nio.charset.StandardCharsets
 @RequestMapping("/api")
 class SignatureController(private val signatureFlowService: SignatureFlowService) {
 
+    @GetMapping("/signature-requests/{id}")
+    fun getDetail(
+        @AuthenticationPrincipal email: String,
+        @PathVariable id: Long,
+    ): ApiResponse<com.qusign.signature.dto.SignatureRequestDetailResponse> =
+        ApiResponse.ok(signatureFlowService.getDetail(id, email))
+
     @PostMapping("/signature-requests")
     @ResponseStatus(HttpStatus.CREATED)
     fun createRequest(

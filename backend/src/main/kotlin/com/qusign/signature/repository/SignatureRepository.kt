@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface SignatureRepository : JpaRepository<Signature, Long> {
     fun findBySignatureRequest(signatureRequest: SignatureRequest): Signature?
+    fun findBySignatureRequestIn(requests: List<SignatureRequest>): List<Signature>
 }

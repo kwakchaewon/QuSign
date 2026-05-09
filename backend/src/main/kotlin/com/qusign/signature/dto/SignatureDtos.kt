@@ -61,3 +61,22 @@ data class VerifyResponse(
     val signedAt: String? = null,
     val documentHash: String? = null,
 )
+
+data class SignerDetailDto(
+    val email: String,
+    val status: String,
+    val signedAt: String?,
+    val signatureToken: String?,
+)
+
+data class SignatureRequestDetailResponse(
+    val id: Long,
+    val documentName: String,
+    val hashSha3256: String,
+    val uploadedAt: String,
+    val requesterEmail: String,
+    val algorithm: String,
+    val requestedAt: String,
+    val expiresAt: String,
+    val signers: List<SignerDetailDto>,
+)

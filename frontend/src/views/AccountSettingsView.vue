@@ -3,11 +3,12 @@
     <!-- ===== Topbar ===== -->
     <header class="qs-topbar">
       <div class="qs-topbar-inner">
-        <RouterLink class="qs-topbar-brand" to="/documents">
+        <RouterLink class="qs-topbar-brand" to="/home">
           <QuSignMark variant="badge" :size="28" />
           <span class="qs-topbar-name">QuSign</span>
         </RouterLink>
         <nav class="qs-topbar-nav">
+          <RouterLink class="qs-nav-link" to="/home">홈</RouterLink>
           <RouterLink class="qs-nav-link" to="/documents">내 문서</RouterLink>
           <RouterLink class="qs-nav-link" to="/request">서명 요청</RouterLink>
           <RouterLink class="qs-nav-link is-active" to="/settings">설정</RouterLink>

@@ -7,7 +7,7 @@
           <span class="qs-topbar-name">QuSign</span>
         </RouterLink>
         <nav class="qs-topbar-nav">
-          <RouterLink class="qs-nav-link is-active" to="/">홈</RouterLink>
+          <RouterLink class="qs-nav-link is-active" to="/home">홈</RouterLink>
           <RouterLink class="qs-nav-link" to="/documents">내 문서</RouterLink>
           <RouterLink class="qs-nav-link" to="/verify">검증</RouterLink>
         </nav>

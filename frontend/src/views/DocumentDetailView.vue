@@ -3,7 +3,7 @@
     <!-- Topbar -->
     <header class="qs-topbar">
       <div class="qs-topbar-inner">
-        <RouterLink class="qs-topbar-brand" to="/documents">
+        <RouterLink class="qs-topbar-brand" to="/home">
           <QuSignMark variant="badge" :size="28" />
           <span class="qs-topbar-name">QuSign</span>
         </RouterLink>

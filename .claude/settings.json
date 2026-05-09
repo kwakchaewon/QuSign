@@ -65,7 +65,9 @@
       "Bash(git -C e:/dev/QuSign add backend/src/test/kotlin/com/qusign/QusignApplicationTests.kt backend/src/test/kotlin/com/qusign/auth/service/AuthServiceTest.kt backend/src/test/kotlin/com/qusign/document/service/DocumentServiceTest.kt backend/src/test/kotlin/com/qusign/signature/service/PdfSignatureServiceTest.kt backend/src/test/kotlin/com/qusign/signature/service/PqcSignatureServiceTest.kt backend/src/test/kotlin/com/qusign/signature/service/SignatureFlowServiceTest.kt)",
       "Bash(git -C e:/dev/QuSign commit -m \"fix: 테스트 MockitoBean EmailService·StorageService 누락 수정\")",
       "Bash(Get-ChildItem -Path \"e:\\\\dev\\\\QuSign\\\\frontend\\\\src\" -Recurse -Include \"*.vue\")",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"e:\\\\dev\\\\QuSign\\\\backend\\\\src\\\\main\\\\kotlin\\\\com\\\\qusign\" -Recurse -Directory)",
+      "PowerShell(ls -r \"e:\\\\dev\\\\QuSign\\\\backend\\\\src\\\\main\\\\kotlin\\\\com\\\\qusign\" -Directory)"
     ]
   },
   "model": "sonnet",

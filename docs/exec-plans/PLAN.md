@@ -369,9 +369,11 @@
 
 #### Step 2. 백엔드
 
-- [ ] `PUT /api/users/password` — 현재 비밀번호 확인 후 변경
-- [ ] `PUT /api/users/notification-settings` — 알림 수신 여부 저장
-- [ ] `DELETE /api/users/me` — 계정 탈퇴 (소프트 딜리트, 서명 이력 보존)
+- [x] `PUT /api/users/password` — 현재 비밀번호 확인 후 변경 (개인키 재암호화 포함)
+- [x] `PUT /api/users/notification-settings` — 알림 수신 여부 저장
+- [x] `DELETE /api/users/me` — 계정 탈퇴 (소프트 딜리트, 서명 이력 보존)
+- [x] `GET /api/users/me` — 프로필 + 알림 설정 조회
+- [x] 탈퇴 계정 로그인 차단 (`AccountDeletedException`) + 전체 테스트 통과
 
 #### Step 3. 프론트엔드
 

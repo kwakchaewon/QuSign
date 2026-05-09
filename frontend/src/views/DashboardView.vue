@@ -110,7 +110,13 @@
         <!-- Doc list -->
         <template v-else>
           <div class="qs-list">
-            <div v-for="doc in filteredDocs" :key="doc.id" class="qs-doc">
+            <div
+              v-for="doc in filteredDocs"
+              :key="doc.id"
+              class="qs-doc"
+              style="cursor:pointer"
+              @click="router.push(`/documents/${doc.id}`)"
+            >
               <div class="qs-doc-icon">
                 <svg width="28" height="36" viewBox="0 0 28 36" fill="none" aria-hidden="true">
                   <rect width="28" height="36" rx="4" fill="var(--color-error-bg)"/>

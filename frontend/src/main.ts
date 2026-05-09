@@ -11,6 +11,7 @@ import './assets/dashboard.css'
 import './assets/request.css'
 import './assets/signer.css'
 import './assets/verify.css'
+import './assets/detail.css'
 
 const app = createApp(App)
 app.use(createPinia())

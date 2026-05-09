@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import SignupView from '../views/SignupView.vue'
 import DashboardView from '../views/DashboardView.vue'
+import DocumentDetailView from '../views/DocumentDetailView.vue'
 import RequestView from '../views/RequestView.vue'
 import SignerView from '../views/SignerView.vue'
 import VerifyView from '../views/VerifyView.vue'
@@ -15,6 +16,7 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginView },
     { path: '/signup', name: 'signup', component: SignupView },
     { path: '/documents', name: 'documents', component: DashboardView },
+    { path: '/documents/:id', name: 'document-detail', component: DocumentDetailView },
     { path: '/request', name: 'request', component: RequestView },
     { path: '/sign/:token?', name: 'sign', component: SignerView },
     { path: '/verify', name: 'verify', component: VerifyView },

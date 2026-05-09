@@ -7,8 +7,8 @@
           <span class="qs-topbar-name">QuSign</span>
         </RouterLink>
         <nav class="qs-topbar-nav">
-          <RouterLink class="qs-nav-link is-active" to="/documents">문서</RouterLink>
-          <a class="qs-nav-link" href="#" @click.prevent>설정</a>
+          <RouterLink class="qs-nav-link is-active" to="/documents">내 문서</RouterLink>
+          <RouterLink class="qs-nav-link" to="/settings">설정</RouterLink>
         </nav>
         <div class="qs-topbar-right">
           <ThemeToggle :theme="theme" @change="handleThemeToggle" />

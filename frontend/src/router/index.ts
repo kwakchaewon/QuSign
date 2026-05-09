@@ -6,8 +6,9 @@ import DocumentDetailView from '../views/DocumentDetailView.vue'
 import RequestView from '../views/RequestView.vue'
 import SignerView from '../views/SignerView.vue'
 import VerifyView from '../views/VerifyView.vue'
+import AccountSettingsView from '../views/AccountSettingsView.vue'
 
-const AUTH_ROUTES = ['/documents', '/request']
+const AUTH_ROUTES = ['/documents', '/request', '/settings']
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +21,7 @@ const router = createRouter({
     { path: '/request', name: 'request', component: RequestView },
     { path: '/sign/:token?', name: 'sign', component: SignerView },
     { path: '/verify', name: 'verify', component: VerifyView },
+    { path: '/settings', name: 'settings', component: AccountSettingsView },
   ],
 })
 

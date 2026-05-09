@@ -42,6 +42,16 @@ class SignatureFlowService(
     @Transactional
     fun requestSignature(requesterEmail: String, dto: CreateSignatureRequestDto): SignatureRequestResponse {
         val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
+        return requestSignatureForUser(requester, dto)
+    }
+
+    @Transactional
+    fun requestSignatureBatch(requesterEmail: String, dto: BatchCreateSignatureRequestDto): List<SignatureRequestResponse> {
+        val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
+        return dto.requests.map { requestSignatureForUser(requester, it) }
+    }
+
+    private fun requestSignatureForUser(requester: User, dto: CreateSignatureRequestDto): SignatureRequestResponse {
         val document = documentRepository.findByIdAndUser(dto.documentId, requester)
             ?: throw DocumentNotFoundException()
 
@@ -59,7 +69,7 @@ class SignatureFlowService(
             to = req.signerEmail,
             token = req.token,
             documentName = document.originalFilename,
-            requesterEmail = requesterEmail,
+            requesterEmail = requester.email,
             expiresAt = req.expiresAt.toString(),
         )
 

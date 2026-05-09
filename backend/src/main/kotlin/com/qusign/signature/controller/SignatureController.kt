@@ -46,6 +46,14 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
     ): ApiResponse<SignatureRequestResponse> =
         ApiResponse.ok(signatureFlowService.requestSignature(email, dto))
 
+    @PostMapping("/signature-requests/batch")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun createRequestBatch(
+        @AuthenticationPrincipal email: String,
+        @Valid @RequestBody dto: BatchCreateSignatureRequestDto,
+    ): ApiResponse<List<SignatureRequestResponse>> =
+        ApiResponse.ok(signatureFlowService.requestSignatureBatch(email, dto))
+
     @PostMapping("/signature-requests/{token}/sign")
     fun sign(
         @AuthenticationPrincipal email: String,

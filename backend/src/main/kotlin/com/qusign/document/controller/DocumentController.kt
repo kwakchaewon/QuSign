@@ -23,6 +23,13 @@ class DocumentController(private val documentService: DocumentService) {
         @RequestParam("file") file: MultipartFile,
     ): ApiResponse<DocumentResponse> = ApiResponse.ok(documentService.upload(email, file))
 
+    @PostMapping("/batch", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @ResponseStatus(HttpStatus.CREATED)
+    fun uploadBatch(
+        @AuthenticationPrincipal email: String,
+        @RequestParam("files") files: List<MultipartFile>,
+    ): ApiResponse<List<DocumentResponse>> = ApiResponse.ok(documentService.uploadBatch(email, files))
+
     @GetMapping
     fun list(@AuthenticationPrincipal email: String): ApiResponse<List<DocumentResponse>> =
         ApiResponse.ok(documentService.list(email))

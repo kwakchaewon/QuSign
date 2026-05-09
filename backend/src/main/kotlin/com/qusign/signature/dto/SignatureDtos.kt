@@ -2,15 +2,22 @@ package com.qusign.signature.dto
 
 import com.qusign.signature.entity.Signature
 import com.qusign.signature.entity.SignatureRequest
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Size
 
 data class CreateSignatureRequestDto(
     @field:NotNull val documentId: Long,
     @field:NotBlank @field:Email val signerEmail: String,
     @field:Min(1) val expirationHours: Long = 72,
+)
+
+data class BatchCreateSignatureRequestDto(
+    @field:NotEmpty @field:Size(max = 25) @field:Valid val requests: List<CreateSignatureRequestDto>,
 )
 
 data class SignDto(

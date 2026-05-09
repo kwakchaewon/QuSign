@@ -1,9 +1,11 @@
 package com.qusign.document.service
 
+import com.qusign.auth.entity.User
 import com.qusign.auth.repository.UserRepository
 import com.qusign.common.storage.StorageService
 import com.qusign.document.dto.DocumentResponse
 import com.qusign.document.entity.Document
+import com.qusign.document.exception.BatchTooManyFilesException
 import com.qusign.document.exception.DocumentNotFoundException
 import com.qusign.document.exception.StorageException
 import com.qusign.document.repository.DocumentRepository
@@ -24,6 +26,18 @@ class DocumentService(
     @Transactional
     fun upload(email: String, file: MultipartFile): DocumentResponse {
         val user = userRepository.findByEmail(email) ?: throw DocumentNotFoundException()
+        return uploadForUser(user, file)
+    }
+
+    @Transactional
+    fun uploadBatch(email: String, files: List<MultipartFile>): List<DocumentResponse> {
+        if (files.isEmpty()) throw DocumentNotFoundException()
+        if (files.size > 5) throw BatchTooManyFilesException()
+        val user = userRepository.findByEmail(email) ?: throw DocumentNotFoundException()
+        return files.map { uploadForUser(user, it) }
+    }
+
+    private fun uploadForUser(user: User, file: MultipartFile): DocumentResponse {
         val bytes = file.bytes
         val hash = sha3256Hex(bytes)
         val key = "documents/${user.id}/${UUID.randomUUID()}/${file.originalFilename ?: "document.pdf"}"

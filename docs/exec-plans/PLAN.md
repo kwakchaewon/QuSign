@@ -238,7 +238,7 @@
   - 파일별 업로드 진행 바
   - 5개 초과 경고 메시지
 - [x] `request-multi.jsx` + `request-multi.css` 다운로드
-- [ ] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
+- [x] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
 
 #### Step 2. 백엔드
 
@@ -284,7 +284,7 @@
   - 상세 페이지 PENDING 서명자 행 — 취소 버튼 위치·스타일
   - 취소 확인 모달 ("취소 후 되돌릴 수 없습니다" + 확인/취소 버튼)
   - 서명자가 취소된 링크 접근 시 안내 화면 (SignerView 내 취소 상태)
-- [ ] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
+- [x] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
 
 #### Step 2. 백엔드
 
@@ -342,7 +342,7 @@
   - 최근 요청 목록 (5건)
   - 빠른 액션 버튼 (서명 요청 생성, 검증)
 - [ ] `dashboard.html` + `dashboard.css` 다운로드
-- [ ] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
+- [x] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
 
 #### Step 2. 백엔드
 
@@ -363,9 +363,9 @@
 
 #### Step 1. Claude Design → UI 설계
 
-- [ ] claude.ai/design에서 계정 설정 목업 생성
-- [ ] `settings.html` + `settings.css` 다운로드
-- [ ] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
+- [x] claude.ai/design에서 계정 설정 목업 생성
+- [x] `settings.html` + `settings.css` 다운로드
+- [x] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
 
 #### Step 2. 백엔드
 
@@ -375,9 +375,9 @@
 
 #### Step 3. 프론트엔드
 
-- [ ] `AccountSettingsView.vue` 구현
-- [ ] 비밀번호 변경 폼 (현재 비밀번호 확인 필수)
-- [ ] 계정 탈퇴 확인 모달
+- [x] `AccountSettingsView.vue` 구현 (라우트 `/settings` 등록, 네비게이션 연결)
+- [x] 비밀번호 변경 폼 (현재 비밀번호 확인 필수, 강도 표시 바 포함)
+- [x] 계정 탈퇴 확인 모달 (이메일 일치 입력 확인)
 
 **완료 기준:** 비밀번호 변경 동작 + 탈퇴 후 로그인 불가 확인
 

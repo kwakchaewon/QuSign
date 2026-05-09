@@ -66,19 +66,19 @@
   border-radius: 16px;
   padding: 24px;
 }
-.qs-card-head { margin-bottom: 20px; }
-.qs-card-title {
+.qs-settings-card .qs-card-head { margin-bottom: 20px; }
+.qs-settings-card .qs-card-title {
   margin: 0 0 4px;
   font-size: 17px; font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text-primary);
 }
-.qs-card-desc {
+.qs-settings-card .qs-card-desc {
   margin: 0;
   font-size: 13px;
   color: var(--text-tertiary);
 }
-.qs-card-hr {
+.qs-settings-card .qs-card-hr {
   height: 0; border: none;
   border-top: 0.5px solid var(--border-default);
   margin: 20px -24px;
@@ -91,11 +91,11 @@
   font-size: 13px; font-weight: 500;
   color: var(--text-secondary);
 }
-.qs-input-wrap {
+.qs-settings-main .qs-input-wrap {
   position: relative;
   display: flex; align-items: center;
 }
-.qs-input {
+.qs-settings-main .qs-input {
   width: 100%;
   height: 46px;
   padding: 0 14px;
@@ -110,24 +110,24 @@
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
   box-sizing: border-box;
 }
-.qs-input::placeholder { color: var(--text-tertiary); }
-.qs-input:hover:not(:disabled):not(:focus) { border-color: var(--border-strong); }
-.qs-input:focus {
+.qs-settings-main .qs-input::placeholder { color: var(--text-tertiary); }
+.qs-settings-main .qs-input:hover:not(:disabled):not(:focus) { border-color: var(--border-strong); }
+.qs-settings-main .qs-input:focus {
   border-color: var(--color-primary-500);
   box-shadow: 0 0 0 3px var(--input-focus-ring);
 }
-.qs-input:disabled {
+.qs-settings-main .qs-input:disabled {
   background: var(--surface-muted);
   color: var(--text-tertiary);
   cursor: not-allowed;
 }
-.qs-input.is-error { border-color: var(--color-error); }
-.qs-input.is-error:focus { box-shadow: 0 0 0 3px var(--input-focus-ring-error); }
-.qs-input-trail {
+.qs-settings-main .qs-input.is-error { border-color: var(--color-error); }
+.qs-settings-main .qs-input.is-error:focus { box-shadow: 0 0 0 3px var(--input-focus-ring-error); }
+.qs-settings-main .qs-input-trail {
   position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
   display: flex; align-items: center; gap: 2px;
 }
-.qs-input-eye {
+.qs-settings-main .qs-input-eye {
   width: 36px; height: 36px;
   border: none; background: transparent;
   border-radius: 8px;
@@ -136,8 +136,8 @@
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.qs-input-eye:hover { background: var(--surface-muted); color: var(--text-primary); }
-.qs-input-with-trail { padding-right: 44px; }
+.qs-settings-main .qs-input-eye:hover { background: var(--surface-muted); color: var(--text-primary); }
+.qs-settings-main .qs-input-with-trail { padding-right: 44px; }
 
 .qs-error-msg {
   display: flex; align-items: center; gap: 6px;
@@ -385,8 +385,8 @@
   margin-bottom: 12px;
 }
 
-/* =============== Toast =============== */
-.qs-toast-wrap {
+/* =============== Toast (settings 전용) =============== */
+.qs-settings-toast-wrap {
   position: fixed;
   bottom: 32px; left: 50%;
   transform: translateX(-50%) translateY(8px);
@@ -395,11 +395,11 @@
   opacity: 0;
   transition: opacity 0.2s, transform 0.2s;
 }
-.qs-toast-wrap.is-show {
+.qs-settings-toast-wrap.is-show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
-.qs-toast {
+.qs-settings-toast {
   display: inline-flex; align-items: center; gap: 10px;
   padding: 12px 18px;
   border-radius: 12px;
@@ -409,7 +409,7 @@
   box-shadow: var(--shadow-lg);
   white-space: nowrap;
 }
-.qs-toast-dot {
+.qs-settings-toast-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
   background: var(--color-success);
@@ -443,8 +443,8 @@
   .qs-settings-main { padding: 20px 16px 64px; }
   .qs-settings-title { font-size: 22px; }
   .qs-settings-card { padding: 20px; border-radius: 14px; }
-  .qs-card-hr { margin: 16px -20px; }
-  .qs-input { height: 44px; }
+  .qs-settings-card .qs-card-hr { margin: 16px -20px; }
+  .qs-settings-main .qs-input { height: 44px; }
   .qs-form-foot { flex-direction: column; align-items: stretch; }
   .qs-form-foot .qs-btn { width: 100%; }
   .qs-form-foot .qs-success-msg { order: 2; justify-content: center; }

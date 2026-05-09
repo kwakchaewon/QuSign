@@ -326,9 +326,9 @@
     </main>
 
     <!-- ===== Toast ===== -->
-    <div :class="['qs-toast-wrap', { 'is-show': !!toast }]" aria-live="polite">
-      <div v-if="toast" class="qs-toast">
-        <span class="qs-toast-dot" aria-hidden="true"></span>
+    <div :class="['qs-settings-toast-wrap', { 'is-show': !!toast }]" aria-live="polite">
+      <div v-if="toast" class="qs-settings-toast">
+        <span class="qs-settings-toast-dot" aria-hidden="true"></span>
         <span>{{ toast }}</span>
       </div>
     </div>

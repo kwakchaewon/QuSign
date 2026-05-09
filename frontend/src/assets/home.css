@@ -1,0 +1,221 @@
+/* QuSign Home — root dashboard, extends dashboard.css tokens */
+
+.qs-home-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+
+/* Welcome */
+.qs-welcome { margin-bottom: 28px; }
+.qs-welcome-title {
+  margin: 0 0 6px;
+  font-size: 26px; font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.qs-welcome-title strong { font-weight: 700; color: var(--color-primary-500); }
+.qs-welcome-date {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}
+
+/* Section header */
+.qs-section { margin-top: 36px; }
+.qs-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.qs-section-title {
+  margin: 0;
+  font-size: 16px; font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.qs-section-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+.qs-section-link:hover { background: var(--surface-muted); color: var(--color-primary-500); }
+
+/* Stats grid */
+.qs-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.qs-stat-card {
+  background: var(--surface-elevated);
+  border: 0.5px solid var(--border-default);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  transition: border-color 0.15s;
+}
+.qs-stat-card:hover { border-color: var(--border-strong); }
+.qs-stat-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+}
+.qs-stat-icon.is-success { background: var(--color-success-bg); color: var(--color-success); }
+.qs-stat-icon.is-warning { background: var(--color-warning-bg); color: var(--color-warning); }
+.qs-stat-icon.is-neutral { background: var(--surface-muted); color: var(--text-tertiary); }
+.qs-stat-icon.is-primary { background: var(--color-info-bg); color: var(--color-primary-500); }
+
+.qs-stat-body { display: flex; align-items: baseline; gap: 8px; }
+.qs-stat-num {
+  font-size: 30px; font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1;
+  font-feature-settings: 'tnum';
+}
+.qs-stat-label {
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Recent list */
+.qs-recent-card {
+  background: var(--surface-elevated);
+  border: 0.5px solid var(--border-default);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.qs-recent-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 0.5px solid var(--border-default);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.qs-recent-row:last-child { border-bottom: none; }
+.qs-recent-row:hover { background: var(--surface-muted); }
+.qs-recent-icon {
+  width: 28px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+}
+.qs-recent-main { min-width: 0; }
+.qs-recent-name {
+  font-size: 14px; font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.qs-recent-sub {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 3px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.qs-recent-time {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.qs-recent-action {
+  background: transparent; border: none; cursor: pointer;
+  font: inherit;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary);
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+.qs-recent-action:hover { background: var(--btn-primary-hover-bg); color: var(--color-primary-500); }
+
+/* Quick actions */
+.qs-quick {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.qs-quick-card {
+  background: var(--surface-elevated);
+  border: 0.5px solid var(--border-default);
+  border-radius: 16px;
+  padding: 22px;
+  display: flex; flex-direction: column; gap: 14px;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.qs-quick-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.qs-quick-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--color-info-bg);
+  color: var(--color-primary-500);
+}
+.qs-quick-card.is-primary .qs-quick-icon {
+  background: var(--color-primary-500);
+  color: #fff;
+}
+.qs-quick-icon.is-success { background: var(--color-success-bg); color: var(--color-success); }
+.qs-quick-icon.is-neutral { background: var(--surface-muted); color: var(--text-secondary); }
+
+.qs-quick-body { flex: 1; }
+.qs-quick-title {
+  margin: 0 0 4px;
+  font-size: 15px; font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.qs-quick-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.55;
+}
+.qs-quick-card .qs-btn { width: 100%; }
+
+/* Skeleton */
+.qs-stat-skel { padding: 18px; }
+.qs-stat-skel .qs-skel-line { margin-top: 10px; }
+
+/* Responsive */
+@media (max-width: 880px) {
+  .qs-quick { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .qs-stats { grid-template-columns: 1fr 1fr; }
+  .qs-home-main { padding: 24px 16px 64px; }
+  .qs-welcome-title { font-size: 22px; }
+  .qs-recent-row {
+    grid-template-columns: 24px 1fr auto;
+    gap: 10px;
+    grid-template-areas:
+      "icon main time"
+      "status status status";
+    row-gap: 8px;
+    padding: 14px;
+  }
+  .qs-recent-icon { grid-area: icon; }
+  .qs-recent-main { grid-area: main; }
+  .qs-recent-time { grid-area: time; }
+  .qs-recent-row .qs-badge { grid-area: status; }
+  .qs-recent-action { display: none; }
+  .qs-stat-num { font-size: 26px; }
+}

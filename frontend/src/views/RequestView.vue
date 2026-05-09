@@ -77,7 +77,7 @@
             </div>
 
             <template v-if="files.length === 0">
-              <p class="qs-drop-title">PDF를 여기에 드래그하거나</p>
+              <p class="qs-drop-title">파일을 여기에 드래그하거나</p>
               <p class="qs-drop-sub">클릭하여 파일 선택 · 최대 5개, 각 50MB</p>
               <span class="qs-drop-pill">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">

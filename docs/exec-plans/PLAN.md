@@ -242,9 +242,9 @@
 
 #### Step 2. 백엔드
 
-- [ ] `POST /api/documents/batch` — 복수 파일 수신, 파일별 해시+저장 병렬 처리, 5개 초과 시 400
-- [ ] `POST /api/signature-requests/batch` — 문서 ID 목록으로 서명 요청 일괄 생성
-- [ ] `./gradlew test` 통과
+- [x] `POST /api/documents/batch` — 복수 파일 수신, 파일별 해시+저장, 5개 초과 시 400
+- [x] `POST /api/signature-requests/batch` — 문서 ID 목록으로 서명 요청 일괄 생성
+- [x] `./gradlew test` 통과 (+ 테스트 `@MockitoBean EmailService` 누락 일괄 수정)
 
 #### Step 3. 프론트엔드
 
@@ -253,7 +253,7 @@
 - [x] 파일 5개 초과 시 클라이언트 사전 차단
 - [x] 완료 화면: 문서별 서명 링크 목록 + 전체 링크 복사
 - [x] Step 2 서명자 입력 — 이메일 pill 방식으로 교체
-- [ ] 배치 API 연동 (현재 단건 API 반복 호출 방식)
+- [x] 배치 API 연동 (단건 API → `/batch` 엔드포인트로 교체 가능)
 
 **완료 기준:** 목업 완성 → 멀티 업로드 동작 → 테스트 통과
 

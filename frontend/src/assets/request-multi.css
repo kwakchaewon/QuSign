@@ -1,0 +1,229 @@
+/* QuSign Request — multi-file extensions */
+
+/* =============== Compact drop zone =============== */
+.qs-drop.is-compact {
+  flex-direction: row;
+  padding: 14px 20px;
+  gap: 14px;
+  justify-content: flex-start;
+  text-align: left;
+  border-radius: 14px;
+}
+.qs-drop.is-compact .qs-drop-icon { margin-bottom: 0; flex-shrink: 0; }
+.qs-drop.is-compact .qs-drop-icon svg { width: 32px; height: 32px; }
+.qs-drop.is-compact .qs-drop-title { margin: 0; font-size: 14px; }
+.qs-drop.is-compact .qs-drop-sub { margin: 0; }
+.qs-drop.is-compact .qs-drop-pill { display: none; }
+.qs-drop-compact-text { display: flex; flex-direction: column; gap: 2px; }
+
+/* Max files reached */
+.qs-drop-max {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 20px 24px;
+  border-radius: 14px;
+  border: 2px dashed var(--border-default);
+  background: var(--surface-muted);
+  text-align: center;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.qs-drop-max-title {
+  font-size: 14px; font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 4px;
+}
+.qs-drop-max-sub {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* =============== Multi-file list =============== */
+.qs-mfile-list {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-top: 12px;
+}
+.qs-mfile {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 0.5px solid var(--border-default);
+  background: var(--surface-muted);
+  animation: qs-fade-up 0.2s ease-out;
+}
+.qs-mfile.is-error {
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
+}
+.qs-mfile-icon {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.qs-mfile-main { min-width: 0; }
+.qs-mfile-name {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  margin-bottom: 4px;
+}
+.qs-mfile-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.qs-mfile-status {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 500;
+}
+.qs-mfile-status.is-uploading { color: var(--color-primary-500); }
+.qs-mfile-status.is-done { color: var(--color-success); }
+.qs-mfile-status.is-error { color: var(--color-error); }
+.qs-mfile-prog {
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--border-default);
+  margin-top: 6px;
+  overflow: hidden;
+}
+.qs-mfile-prog-bar {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--color-primary-500);
+  transition: width 0.2s ease;
+}
+.qs-mfile.is-error .qs-mfile-prog-bar { background: var(--color-error); }
+.qs-mfile-actions {
+  display: flex; align-items: center; gap: 4px;
+  flex-shrink: 0;
+}
+
+/* =============== Signer pills (Step 2) =============== */
+.qs-signer-pills {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-default);
+  background: var(--surface-elevated);
+  min-height: 52px;
+  cursor: text;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.qs-signer-pills:focus-within {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 4px var(--input-focus-ring);
+}
+.qs-signer-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: var(--color-info-bg);
+  border: 0.5px solid var(--border-default);
+  font-size: 13px; font-weight: 500;
+  color: var(--color-primary-600);
+  animation: qs-pop 0.2s ease-out;
+  max-width: 220px;
+}
+[data-theme="dark"] .qs-signer-pill { color: var(--color-primary-400, #60a5fa); }
+.qs-signer-pill-label {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.qs-signer-pill-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: transparent;
+  border: none; cursor: pointer; padding: 0;
+  color: inherit;
+  opacity: 0.6;
+  transition: opacity 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.qs-signer-pill-remove:hover { opacity: 1; background: rgba(0,0,0,0.08); }
+.qs-signer-pills input {
+  border: none; outline: none; background: transparent;
+  font: inherit; font-size: 14px;
+  color: var(--text-primary);
+  min-width: 160px;
+  flex: 1;
+  padding: 4px 0;
+}
+.qs-signer-pills input::placeholder { color: var(--text-tertiary); font-weight: 500; }
+.qs-pill-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* File pills (Step 2 summary) */
+.qs-file-pills {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  margin-top: 6px;
+}
+.qs-file-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 9999px;
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  font-size: 11px; font-weight: 600;
+  max-width: 200px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* =============== Step 3: Per-file link list =============== */
+.qs-link-list {
+  width: 100%; max-width: 520px;
+  text-align: left;
+  margin-bottom: 16px;
+}
+.qs-link-file-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 0.5px solid var(--border-default);
+}
+.qs-link-file-name {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1;
+}
+.qs-link-entries {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.qs-link-entry {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 0.5px solid var(--border-default);
+  background: var(--surface-muted);
+}
+.qs-link-entry-email {
+  font-size: 12px; font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap; flex-shrink: 0;
+  max-width: 130px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.qs-link-entry .qs-link-url {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.qs-copy-all-btn {
+  width: 100%; max-width: 520px;
+  margin-bottom: 24px;
+}
+
+/* spin used for upload/hash spinners */
+@keyframes qs-spin { to { transform: rotate(360deg); } }

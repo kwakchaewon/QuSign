@@ -1,13 +1,19 @@
 package com.qusign.signature.service
 
+import com.qusign.common.email.EmailService
+import com.qusign.common.storage.StorageService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @SpringBootTest
 class PqcSignatureServiceTest {
+
+    @MockitoBean lateinit var storageService: StorageService
+    @MockitoBean lateinit var emailService: EmailService
 
     @Autowired
     lateinit var pqcSignatureService: PqcSignatureService

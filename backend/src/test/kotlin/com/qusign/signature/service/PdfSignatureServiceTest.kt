@@ -1,10 +1,13 @@
 package com.qusign.signature.service
 
+import com.qusign.common.email.EmailService
+import com.qusign.common.storage.StorageService
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -12,6 +15,9 @@ import kotlin.test.assertTrue
 
 @SpringBootTest
 class PdfSignatureServiceTest {
+
+    @MockitoBean lateinit var storageService: StorageService
+    @MockitoBean lateinit var emailService: EmailService
 
     @Autowired lateinit var pdfSignatureService: PdfSignatureService
     @Autowired lateinit var pqcSignatureService: PqcSignatureService

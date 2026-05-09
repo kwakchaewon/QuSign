@@ -1,6 +1,7 @@
 package com.qusign.document.service
 
 import com.qusign.auth.service.AuthService
+import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import com.qusign.document.exception.DocumentNotFoundException
 import org.junit.jupiter.api.BeforeEach
@@ -21,8 +22,8 @@ import kotlin.test.assertTrue
 @Transactional
 class DocumentServiceTest {
 
-    @MockitoBean
-    lateinit var storageService: StorageService
+    @MockitoBean lateinit var storageService: StorageService
+    @MockitoBean lateinit var emailService: EmailService
 
     @Autowired
     lateinit var documentService: DocumentService

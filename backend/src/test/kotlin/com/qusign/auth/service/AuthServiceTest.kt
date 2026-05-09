@@ -3,10 +3,13 @@ package com.qusign.auth.service
 import com.qusign.auth.exception.EmailAlreadyExistsException
 import com.qusign.auth.exception.InvalidCredentialsException
 import com.qusign.auth.repository.UserRepository
+import com.qusign.common.email.EmailService
+import com.qusign.common.storage.StorageService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -14,6 +17,9 @@ import kotlin.test.assertTrue
 @SpringBootTest
 @Transactional
 class AuthServiceTest {
+
+    @MockitoBean lateinit var storageService: StorageService
+    @MockitoBean lateinit var emailService: EmailService
 
     @Autowired lateinit var authService: AuthService
     @Autowired lateinit var jwtService: JwtService

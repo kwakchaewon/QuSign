@@ -1,6 +1,7 @@
 package com.qusign.signature.service
 
 import com.qusign.auth.service.AuthService
+import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import com.qusign.document.service.DocumentService
 import com.qusign.signature.dto.CreateSignatureRequestDto
@@ -28,8 +29,8 @@ import kotlin.test.assertTrue
 @Transactional
 class SignatureFlowServiceTest {
 
-    @MockitoBean
-    lateinit var storageService: StorageService
+    @MockitoBean lateinit var storageService: StorageService
+    @MockitoBean lateinit var emailService: EmailService
 
     @Autowired lateinit var authService: AuthService
     @Autowired lateinit var documentService: DocumentService

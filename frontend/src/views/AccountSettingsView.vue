@@ -79,7 +79,7 @@
           </div>
 
           <!-- ===== 02 보안 ===== -->
-          <div id="sec-security">
+          <div id="sec-security" class="qs-sec-group">
             <!-- 비밀번호 변경 -->
             <section class="qs-settings-card">
               <div class="qs-card-head">
@@ -196,8 +196,6 @@
                 </div>
               </form>
             </section>
-
-            <div style="height: 16px;"></div>
 
             <!-- 보안 토글 -->
             <section class="qs-settings-card">

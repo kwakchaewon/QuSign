@@ -59,6 +59,13 @@
 
 .qs-settings-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 
+.qs-sec-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--surface-muted);
+}
+
 /* =============== Card =============== */
 /* .qs-settings-card — settings 전용. detail.css의 .qs-card와 이름 충돌 방지 */
 .qs-settings-card {

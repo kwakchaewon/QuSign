@@ -13,13 +13,28 @@ class User(
     val email: String,
 
     @Column(nullable = false)
-    val password: String,
+    var password: String,
 
     @Column(name = "encrypted_private_key", nullable = false, columnDefinition = "TEXT")
-    val encryptedPrivateKey: String,
+    var encryptedPrivateKey: String,
 
     @Column(name = "public_key", nullable = false, columnDefinition = "TEXT")
     val publicKey: String,
+
+    @Column(name = "notify_sign_request")
+    var notifySignRequest: Boolean = true,
+
+    @Column(name = "notify_sign_done")
+    var notifySignDone: Boolean = true,
+
+    @Column(name = "notify_weekly")
+    var notifyWeekly: Boolean = false,
+
+    @Column(name = "notify_marketing")
+    var notifyMarketing: Boolean = false,
+
+    @Column(name = "deleted_at")
+    var deletedAt: LocalDateTime? = null,
 
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: LocalDateTime? = null,

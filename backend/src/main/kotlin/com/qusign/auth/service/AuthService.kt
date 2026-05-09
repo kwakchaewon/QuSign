@@ -2,6 +2,7 @@ package com.qusign.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.qusign.auth.entity.User
+import com.qusign.auth.exception.AccountDeletedException
 import com.qusign.auth.exception.EmailAlreadyExistsException
 import com.qusign.auth.exception.InvalidCredentialsException
 import com.qusign.auth.repository.UserRepository
@@ -39,6 +40,7 @@ class AuthService(
 
     fun login(email: String, password: String): String {
         val user = userRepository.findByEmail(email) ?: throw InvalidCredentialsException()
+        if (user.deletedAt != null) throw AccountDeletedException()
         if (!passwordEncoder.matches(password, user.password)) throw InvalidCredentialsException()
         return jwtService.generateToken(email)
     }

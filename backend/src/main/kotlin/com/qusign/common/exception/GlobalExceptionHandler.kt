@@ -1,7 +1,9 @@
 package com.qusign.common.exception
 
+import com.qusign.auth.exception.AccountDeletedException
 import com.qusign.auth.exception.EmailAlreadyExistsException
 import com.qusign.auth.exception.InvalidCredentialsException
+import com.qusign.auth.exception.InvalidCurrentPasswordException
 import com.qusign.common.response.ApiResponse
 import com.qusign.document.exception.BatchTooManyFilesException
 import com.qusign.document.exception.DocumentNotFoundException
@@ -25,6 +27,14 @@ class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun handleInvalidCredentials(e: InvalidCredentialsException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(InvalidCurrentPasswordException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleInvalidCurrentPassword(e: InvalidCurrentPasswordException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(AccountDeletedException::class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    fun handleAccountDeleted(e: AccountDeletedException) = ApiResponse.error(e.message!!)
 
     @ExceptionHandler(DocumentNotFoundException::class)
     @ResponseStatus(HttpStatus.NOT_FOUND)

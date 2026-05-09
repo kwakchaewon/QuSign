@@ -59,7 +59,13 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/actuator/health)",
       "PowerShell($conn = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $pid8080 = $conn.OwningProcess; $name = \\(Get-Process -Id $pid8080 -ErrorAction SilentlyContinue\\).Name; Stop-Process -Id $pid8080 -Force; \"Killed PID $pid8080 \\($name\\)\" } else { \"No process on 8080\" })",
       "Bash(git -C e:/dev/QuSign diff --stat)",
-      "Bash(./gradlew compileKotlin)"
+      "Bash(./gradlew compileKotlin)",
+      "Bash(git -C e:/dev/QuSign add backend/src/main/kotlin/com/qusign/document/exception/DocumentExceptions.kt backend/src/main/kotlin/com/qusign/common/exception/GlobalExceptionHandler.kt backend/src/main/kotlin/com/qusign/document/service/DocumentService.kt backend/src/main/kotlin/com/qusign/document/controller/DocumentController.kt backend/src/main/kotlin/com/qusign/signature/dto/SignatureDtos.kt backend/src/main/kotlin/com/qusign/signature/service/SignatureFlowService.kt backend/src/main/kotlin/com/qusign/signature/controller/SignatureController.kt)",
+      "Bash(git -C e:/dev/QuSign commit -m \"feat: 문서·서명 요청 배치 API 구현\")",
+      "Bash(git -C e:/dev/QuSign add backend/src/test/kotlin/com/qusign/QusignApplicationTests.kt backend/src/test/kotlin/com/qusign/auth/service/AuthServiceTest.kt backend/src/test/kotlin/com/qusign/document/service/DocumentServiceTest.kt backend/src/test/kotlin/com/qusign/signature/service/PdfSignatureServiceTest.kt backend/src/test/kotlin/com/qusign/signature/service/PqcSignatureServiceTest.kt backend/src/test/kotlin/com/qusign/signature/service/SignatureFlowServiceTest.kt)",
+      "Bash(git -C e:/dev/QuSign commit -m \"fix: 테스트 MockitoBean EmailService·StorageService 누락 수정\")",
+      "Bash(Get-ChildItem -Path \"e:\\\\dev\\\\QuSign\\\\frontend\\\\src\" -Recurse -Include \"*.vue\")",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   },
   "model": "sonnet",

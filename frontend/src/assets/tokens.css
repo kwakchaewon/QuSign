@@ -58,6 +58,7 @@
   --surface-bg: #FFFFFF;
   --surface-elevated: #FFFFFF;
   --surface-muted: #F9FAFB;
+  --surface-page: #F2F4F6;
   --surface-overlay: rgba(0,0,0,0.5);
 
   --text-primary: #191F28;
@@ -150,6 +151,7 @@
   --surface-bg: #17181C;
   --surface-elevated: #1E2025;
   --surface-muted: #2A2D34;
+  --surface-page: #17181C;
   --surface-overlay: rgba(0, 0, 0, 0.7);
 
   --text-primary: #F2F4F6;
@@ -192,6 +194,7 @@
     --surface-bg: #17181C;
     --surface-elevated: #1E2025;
     --surface-muted: #2A2D34;
+    --surface-page: #17181C;
     --surface-overlay: rgba(0, 0, 0, 0.7);
     --text-primary: #F2F4F6;
     --text-secondary: #C9CDD2;

@@ -92,6 +92,7 @@
   width: 100%; max-width: 1200px;
   margin: 0 auto;
   padding: 32px 24px 64px;
+  background: var(--surface-page);
 }
 
 .qs-page-head {

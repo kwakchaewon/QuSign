@@ -6,6 +6,7 @@
   max-width: 1024px;
   margin: 0 auto;
   padding: 36px 24px 80px;
+  background: var(--surface-page);
 }
 
 /* Welcome */

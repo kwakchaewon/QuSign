@@ -14,7 +14,7 @@
   max-width: 860px;
   margin: 0 auto;
   padding: 32px 24px 96px;
-  background: var(--surface-muted);
+  background: var(--surface-page);
 }
 .qs-settings-head { margin-bottom: 28px; }
 .qs-settings-title {

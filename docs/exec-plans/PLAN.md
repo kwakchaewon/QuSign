@@ -232,12 +232,12 @@
 
 > **⚠️ 구현 전 반드시 Claude Design에서 목업을 완성한다**
 
-- [ ] claude.ai/design에서 멀티 업로드 화면 목업 생성
+- [x] claude.ai/design에서 멀티 업로드 화면 목업 생성
   - 드롭존: 복수 파일 목록 (파일명 / 크기 / 해시 / 삭제 버튼)
   - 파일 추가 버튼 (5개 미만일 때만 활성)
   - 파일별 업로드 진행 바
   - 5개 초과 경고 메시지
-- [ ] `request-multi.html` + `request-multi.css` 다운로드
+- [x] `request-multi.jsx` + `request-multi.css` 다운로드
 - [ ] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
 
 #### Step 2. 백엔드
@@ -248,11 +248,12 @@
 
 #### Step 3. 프론트엔드
 
-- [ ] RequestView Step 1 멀티 업로드로 교체
-- [ ] 드롭존 복수 파일 드래그앤드롭
-- [ ] 파일 5개 초과 시 클라이언트 사전 차단
-- [ ] 완료 화면: 문서별 서명 링크 목록
-- [ ] 기존 단일 파일 업로드 플로우 하위 호환 유지
+- [x] RequestView Step 1 멀티 업로드로 교체
+- [x] 드롭존 복수 파일 드래그앤드롭 (full → compact → max-reached 전환)
+- [x] 파일 5개 초과 시 클라이언트 사전 차단
+- [x] 완료 화면: 문서별 서명 링크 목록 + 전체 링크 복사
+- [x] Step 2 서명자 입력 — 이메일 pill 방식으로 교체
+- [ ] 배치 API 연동 (현재 단건 API 반복 호출 방식)
 
 **완료 기준:** 목업 완성 → 멀티 업로드 동작 → 테스트 통과
 

@@ -46,20 +46,32 @@
       <div class="qs-list-card">
         <div class="qs-list-toolbar">
           <div class="qs-tabs">
-            <button class="qs-tab is-active">
-              전체
-              <span class="qs-tab-count">{{ docs.length }}</span>
+            <button
+              v-for="tab in TABS" :key="tab.key"
+              :class="['qs-tab', { 'is-active': activeTab === tab.key }]"
+              @click="activeTab = tab.key; currentPage = 1"
+            >
+              {{ tab.label }}
+              <span class="qs-tab-count">{{ tabCount(tab.key) }}</span>
             </button>
           </div>
-          <label class="qs-search">
-            <span class="qs-search-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </span>
-            <input v-model="search" type="search" placeholder="파일명 검색..." aria-label="문서 검색">
-          </label>
+          <div class="qs-toolbar-right">
+            <select v-model="sortKey" class="qs-select" @change="currentPage = 1">
+              <option value="date-desc">최신순</option>
+              <option value="date-asc">오래된순</option>
+              <option value="name-asc">파일명 A-Z</option>
+              <option value="name-desc">파일명 Z-A</option>
+            </select>
+            <label class="qs-search">
+              <span class="qs-search-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                  <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <input v-model="search" type="search" placeholder="파일명 검색..." aria-label="문서 검색">
+            </label>
+          </div>
         </div>
 
         <!-- Loading skeleton -->
@@ -193,9 +205,17 @@ interface Doc {
   originalFilename: string
   hashSha3256: string
   createdAt: string | null
+  signatureStatus: 'NONE' | 'PENDING' | 'SIGNED'
 }
 
 const PAGE_SIZE = 10
+const TABS = [
+  { key: 'ALL',     label: '전체' },
+  { key: 'PENDING', label: '서명 대기' },
+  { key: 'SIGNED',  label: '서명 완료' },
+  { key: 'NONE',    label: '서명 미요청' },
+] as const
+type TabKey = typeof TABS[number]['key']
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -204,6 +224,8 @@ const search = ref('')
 const isLoading = ref(true)
 const fetchError = ref('')
 const currentPage = ref(1)
+const activeTab = ref<TabKey>('ALL')
+const sortKey = ref<'date-desc' | 'date-asc' | 'name-asc' | 'name-desc'>('date-desc')
 
 const userEmail = computed(() => auth.email ?? '')
 const userInitial = computed(() => userEmail.value.charAt(0).toUpperCase())
@@ -225,10 +247,27 @@ watch(theme, (t) => {
   document.documentElement.setAttribute('data-theme', t)
 }, { immediate: true })
 
+function tabCount(key: TabKey) {
+  if (key === 'ALL') return docs.value.length
+  return docs.value.filter(d => d.signatureStatus === key).length
+}
+
 const filteredDocs = computed(() => {
-  if (!search.value.trim()) return docs.value
-  const q = search.value.toLowerCase()
-  return docs.value.filter(d => d.originalFilename.toLowerCase().includes(q))
+  let list = activeTab.value === 'ALL'
+    ? docs.value
+    : docs.value.filter(d => d.signatureStatus === activeTab.value)
+
+  const q = search.value.trim().toLowerCase()
+  if (q) list = list.filter(d => d.originalFilename.toLowerCase().includes(q))
+
+  return [...list].sort((a, b) => {
+    switch (sortKey.value) {
+      case 'date-asc':  return (a.createdAt ?? '').localeCompare(b.createdAt ?? '')
+      case 'name-asc':  return a.originalFilename.localeCompare(b.originalFilename)
+      case 'name-desc': return b.originalFilename.localeCompare(a.originalFilename)
+      default:          return (b.createdAt ?? '').localeCompare(a.createdAt ?? '')
+    }
+  })
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredDocs.value.length / PAGE_SIZE)))
@@ -238,7 +277,7 @@ const pagedDocs = computed(() => {
   return filteredDocs.value.slice(start, start + PAGE_SIZE)
 })
 
-watch(search, () => { currentPage.value = 1 })
+watch([search, sortKey], () => { currentPage.value = 1 })
 
 function formatDate(d: string | null) {
   if (!d) return '-'

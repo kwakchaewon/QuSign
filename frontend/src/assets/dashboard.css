@@ -203,6 +203,25 @@
 }
 [data-theme="dark"] .qs-tab.is-active .qs-tab-count { color: var(--color-primary-500); }
 
+/* Toolbar right */
+.qs-toolbar-right {
+  display: flex; align-items: center; gap: 8px;
+}
+.qs-select {
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 0.5px solid var(--border-default);
+  background: var(--surface-muted);
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.qs-select:focus { border-color: var(--color-primary-500); }
+
 /* Search */
 .qs-search {
   display: flex; align-items: center;

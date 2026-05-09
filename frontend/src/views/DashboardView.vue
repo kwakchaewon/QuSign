@@ -141,10 +141,10 @@
                 </span>
               </div>
               <div class="qs-doc-actions">
-                <RouterLink to="/request" class="qs-btn qs-btn-sm qs-btn-primary">
-                  서명 요청
-                </RouterLink>
-                <button class="qs-btn qs-btn-sm qs-btn-secondary" @click="handleDownload(doc)">
+                <button class="qs-btn qs-btn-sm qs-btn-primary" @click.stop="router.push(`/documents/${doc.id}`)">
+                  상세보기
+                </button>
+                <button class="qs-btn qs-btn-sm qs-btn-secondary" @click.stop="handleDownload(doc)">
                   다운로드
                 </button>
               </div>

@@ -337,21 +337,21 @@
 
 #### Step 1. Claude Design → UI 설계
 
-- [ ] claude.ai/design에서 대시보드 목업 생성
+- [x] claude.ai/design에서 대시보드 목업 생성
   - 상단 요약 카드: 전체 문서 수 / 서명 완료 / 대기 중 / 만료
   - 최근 요청 목록 (5건)
   - 빠른 액션 버튼 (서명 요청 생성, 검증)
-- [ ] `dashboard.html` + `dashboard.css` 다운로드
+- [x] `home.html` + `home.css` + `home.jsx` 다운로드
 - [x] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
 
 #### Step 2. 백엔드
 
-- [ ] `GET /api/dashboard` — 요약 통계 반환 (문서 수, 상태별 카운트)
+- [x] `GET /api/dashboard` — 요약 통계 반환 (문서 수, 상태별 카운트)
 
 #### Step 3. 프론트엔드
 
-- [ ] `DashboardView.vue` 구현 (목업 기반)
-- [ ] 루트 라우트(`/`) → 로그인 시 대시보드, 비로그인 시 랜딩으로 분기
+- [x] `HomeView.vue` 구현 (목업 기반, 라우트 `/home`)
+- [x] 루트 라우트(`/`) → 로그인 시 `/home`, 비로그인 시 `/login`으로 분기
 
 **완료 기준:** 로그인 후 `/` 접속 시 통계 카드 + 최근 요청 목록 표시
 

@@ -296,7 +296,7 @@
                     :class="['qs-switch', { 'is-on': t.value.value }]"
                     :aria-pressed="t.value.value"
                     :aria-label="t.title"
-                    @click="updateToggle(t.key, () => t.value.value = !t.value.value)"></button>
+                    @click="updateToggle(t.key, () => t.value.value = !t.value.value, t.api)"></button>
                 </div>
               </div>
             </section>
@@ -383,6 +383,7 @@ import { useRouter } from 'vue-router'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
+import api from '@/lib/api'
 
 const SECTIONS = [
   { id: 'profile',  num: '01', label: '프로필' },
@@ -443,14 +444,28 @@ function showToast(msg: string) {
 // Toggle helpers
 const toggleBusy = ref<Record<string, boolean>>({})
 const toggleSaved = ref<Record<string, boolean>>({})
-function updateToggle(key: string, setter: () => void) {
+function updateToggle(key: string, setter: () => void, apiCall?: () => Promise<void>) {
   setter()
   toggleBusy.value[key] = true
-  setTimeout(() => {
+  const finish = () => {
     toggleBusy.value[key] = false
     toggleSaved.value[key] = true
     setTimeout(() => { toggleSaved.value[key] = false }, 1600)
-  }, 500)
+  }
+  if (apiCall) {
+    apiCall().then(finish).catch(() => { toggleBusy.value[key] = false })
+  } else {
+    setTimeout(finish, 500)
+  }
+}
+
+function saveNotifySettings() {
+  return api.put('/api/users/notification-settings', {
+    notifySignRequest: notifyReq.value,
+    notifySignDone: notifyDone.value,
+    notifyWeekly: notifyWeekly.value,
+    notifyMarketing: notifyMarketing.value,
+  }).then(() => {})
 }
 
 // Security toggles
@@ -463,11 +478,22 @@ const notifyDone = ref(true)
 const notifyWeekly = ref(false)
 const notifyMarketing = ref(false)
 
+onMounted(async () => {
+  try {
+    const res = await api.get<{ data: { notifySignRequest: boolean; notifySignDone: boolean; notifyWeekly: boolean; notifyMarketing: boolean } }>('/api/users/me')
+    const d = res.data.data
+    notifyReq.value = d.notifySignRequest
+    notifyDone.value = d.notifySignDone
+    notifyWeekly.value = d.notifyWeekly
+    notifyMarketing.value = d.notifyMarketing
+  } catch { /* use defaults */ }
+})
+
 const notifyToggles = [
-  { key: 'notifyReq',       value: notifyReq,       title: '서명 요청 알림',      desc: '다른 사람이 나에게 서명을 요청하면 이메일로 알려드려요.' },
-  { key: 'notifyDone',      value: notifyDone,      title: '서명 완료 알림',      desc: '요청한 서명이 완료되면 이메일로 알려드려요.' },
-  { key: 'notifyWeekly',    value: notifyWeekly,    title: '주간 활동 요약',      desc: '매주 월요일 아침, 한 주의 서명 활동을 정리해 보내드려요.' },
-  { key: 'notifyMarketing', value: notifyMarketing, title: '신제품 소식 · 팁',    desc: '새 기능과 활용 팁을 보내드려요.' },
+  { key: 'notifyReq',       value: notifyReq,       title: '서명 요청 알림',      desc: '다른 사람이 나에게 서명을 요청하면 이메일로 알려드려요.',  api: saveNotifySettings },
+  { key: 'notifyDone',      value: notifyDone,      title: '서명 완료 알림',      desc: '요청한 서명이 완료되면 이메일로 알려드려요.',              api: saveNotifySettings },
+  { key: 'notifyWeekly',    value: notifyWeekly,    title: '주간 활동 요약',      desc: '매주 월요일 아침, 한 주의 서명 활동을 정리해 보내드려요.', api: saveNotifySettings },
+  { key: 'notifyMarketing', value: notifyMarketing, title: '신제품 소식 · 팁',    desc: '새 기능과 활용 팁을 보내드려요.',                          api: saveNotifySettings },
 ]
 
 // Password form
@@ -509,15 +535,20 @@ async function handlePasswordChange() {
   if (!canSubmitPw.value) return
   pwSubmitting.value = true
   pwSuccess.value = false
-  // TODO: await api.put('/api/users/password', { current: pwCurrent.value, next: pwNew.value })
-  await new Promise(r => setTimeout(r, 900))
-  pwSubmitting.value = false
-  pwSuccess.value = true
-  pwCurrent.value = ''
-  pwNew.value = ''
-  pwConfirm.value = ''
-  showToast('비밀번호가 변경되었어요')
-  setTimeout(() => { pwSuccess.value = false }, 3500)
+  try {
+    await api.put('/api/users/password', { currentPassword: pwCurrent.value, newPassword: pwNew.value })
+    pwCurrent.value = ''
+    pwNew.value = ''
+    pwConfirm.value = ''
+    pwSuccess.value = true
+    showToast('비밀번호가 변경되었어요')
+    setTimeout(() => { pwSuccess.value = false }, 3500)
+  } catch (err: any) {
+    const msg = err?.response?.data?.message ?? '비밀번호 변경에 실패했어요'
+    showToast(msg)
+  } finally {
+    pwSubmitting.value = false
+  }
 }
 
 // Delete modal
@@ -537,10 +568,14 @@ function closeDeleteModal() { showDeleteModal.value = false }
 async function confirmDelete() {
   if (!deleteEmailMatch.value) return
   deleteSubmitting.value = true
-  // TODO: await api.delete('/api/users/me')
-  await new Promise(r => setTimeout(r, 900))
-  deleteSubmitting.value = false
-  closeDeleteModal()
-  showToast('계정 삭제 요청이 접수되었어요')
+  try {
+    await api.delete('/api/users/me')
+    auth.logout()
+    router.push('/login')
+  } catch {
+    showToast('계정 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.')
+    deleteSubmitting.value = false
+    closeDeleteModal()
+  }
 }
 </script>

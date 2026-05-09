@@ -233,6 +233,20 @@ class SignatureFlowService(
     }
 
     @Transactional(readOnly = true)
+    fun getSignedDocumentByRequester(documentId: Long, signerEmail: String, requesterEmail: String): Pair<ByteArray, String> {
+        val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
+        val document = documentRepository.findByIdAndUser(documentId, requester)
+            ?: throw DocumentNotFoundException()
+        val req = signatureRequestRepository.findByDocumentAndSignerEmail(document, signerEmail)
+            ?: throw SignatureRequestNotFoundException()
+        if (req.status != "SIGNED") throw SignatureRequestNotFoundException()
+        val signature = signatureRepository.findBySignatureRequest(req)
+            ?: throw SignatureRequestNotFoundException()
+        val bytes = storageService.download(signature.signedStorageKey)
+        return Pair(bytes, document.originalFilename.addQusignedSuffix())
+    }
+
+    @Transactional(readOnly = true)
     fun getDocument(token: String, signerEmail: String): Pair<ByteArray, String> {
         val req = signatureRequestRepository.findByToken(token)
             ?: throw SignatureRequestNotFoundException()

@@ -17,6 +17,20 @@ import java.nio.charset.StandardCharsets
 @RequestMapping("/api")
 class SignatureController(private val signatureFlowService: SignatureFlowService) {
 
+    @GetMapping("/signature-requests/{id}/download")
+    fun downloadSigned(
+        @AuthenticationPrincipal email: String,
+        @PathVariable id: Long,
+        @RequestParam signerEmail: String,
+        response: HttpServletResponse,
+    ) {
+        val (bytes, filename) = signatureFlowService.getSignedDocumentByRequester(id, signerEmail, email)
+        val encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20")
+        response.contentType = "application/pdf"
+        response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''$encodedFilename")
+        response.outputStream.write(bytes)
+    }
+
     @GetMapping("/signature-requests/{id}")
     fun getDetail(
         @AuthenticationPrincipal email: String,

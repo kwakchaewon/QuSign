@@ -9,44 +9,6 @@
 
 .qs-mono { font-family: var(--font-mono); }
 
-/* =============== Topbar (request page) =============== */
-.qs-rq-page .qs-topbar {
-  position: sticky; top: 0; z-index: 50;
-  background: var(--surface-elevated);
-  border-bottom: 0.5px solid var(--border-default);
-  backdrop-filter: saturate(180%) blur(8px);
-}
-.qs-rq-page .qs-topbar-inner {
-  max-width: 880px; margin: 0 auto;
-  height: 64px;
-  padding: 0 24px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.qs-rq-page .qs-topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
-.qs-rq-page .qs-topbar-name {
-  font-size: 17px; font-weight: 600;
-  letter-spacing: -0.01em; color: var(--text-primary);
-}
-.qs-rq-page .qs-topbar-right { display: flex; align-items: center; gap: 12px; }
-.qs-rq-page .qs-user-email {
-  font-size: 13px; font-weight: 500;
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 9999px;
-  border: 0.5px solid var(--border-default);
-}
-.qs-rq-page .qs-icon-btn {
-  width: 36px; height: 36px;
-  border-radius: 10px;
-  border: 0.5px solid var(--border-default);
-  background: var(--surface-elevated);
-  color: var(--text-secondary);
-  display: inline-flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-.qs-rq-page .qs-icon-btn:hover { background: var(--surface-muted); color: var(--text-primary); }
-
 /* =============== Main =============== */
 .qs-rq-page .qs-main {
   flex: 1;

@@ -228,6 +228,7 @@
    Base Reset
    ============================================================ */
 html, body {
+  scrollbar-gutter: stable;
   background: var(--surface-bg);
   color: var(--text-primary);
   font-family: var(--font-sans);

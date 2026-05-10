@@ -312,6 +312,7 @@
 .qs-badge-success { background: var(--badge-success-bg); color: var(--badge-success-text); }
 .qs-badge-warning { background: var(--badge-warning-bg); color: var(--badge-warning-text); }
 .qs-badge-pending { background: var(--badge-pending-bg); color: var(--badge-pending-text); border: 0.5px solid var(--border-default); }
+.qs-badge-error   { background: var(--badge-error-bg);   color: var(--badge-error-text); }
 
 .qs-list-foot {
   padding: 12px 20px;

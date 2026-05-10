@@ -45,6 +45,8 @@
   --badge-warning-text: #C2730E;
   --badge-pending-bg: #F9FAFB;
   --badge-pending-text: #4E5968;
+  --badge-error-bg: rgba(240, 68, 82, 0.10);
+  --badge-error-text: #C0192A;
 
   --btn-primary-hover-bg: rgba(49, 130, 246, 0.08);
   --btn-danger-hover-bg: rgba(240, 68, 82, 0.08);
@@ -175,6 +177,8 @@
   --badge-warning-text: #FFB659;
   --badge-pending-bg: #2A2D34;
   --badge-pending-text: #C9CDD2;
+  --badge-error-bg: rgba(240, 68, 82, 0.18);
+  --badge-error-text: #FF6B77;
 
   --btn-primary-hover-bg: rgba(77, 143, 247, 0.14);
   --btn-danger-hover-bg: rgba(240, 68, 82, 0.14);
@@ -214,6 +218,8 @@
     --badge-warning-text: #FFB659;
     --badge-pending-bg: #2A2D34;
     --badge-pending-text: #C9CDD2;
+    --badge-error-bg: rgba(240, 68, 82, 0.18);
+    --badge-error-text: #FF6B77;
     --btn-primary-hover-bg: rgba(77, 143, 247, 0.14);
     --btn-danger-hover-bg: rgba(240, 68, 82, 0.14);
     --input-focus-ring: rgba(77, 143, 247, 0.25);

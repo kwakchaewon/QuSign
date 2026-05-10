@@ -98,6 +98,28 @@
         </section>
       </template>
 
+      <!-- Error fallback (500 등) -->
+      <template v-else-if="errorCode !== null">
+        <section class="qs-card">
+          <div class="qs-error">
+            <div class="qs-error-illu">
+              <svg width="44" height="44" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                <circle cx="32" cy="32" r="28" stroke="var(--text-tertiary)" stroke-width="2"
+                  fill="var(--surface-elevated)"/>
+                <path d="M32 20v14M32 42v2" stroke="var(--text-tertiary)"
+                  stroke-width="2.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="qs-error-code">ERROR · {{ errorCode }}</div>
+            <h2 class="qs-error-title">불러오기에 실패했습니다</h2>
+            <p class="qs-error-desc">일시적인 오류가 발생했어요. 잠시 후 다시 시도해 주세요.</p>
+            <RouterLink class="qs-btn qs-btn-primary qs-btn-md" to="/documents">
+              내 문서 목록으로
+            </RouterLink>
+          </div>
+        </section>
+      </template>
+
       <!-- Loaded -->
       <template v-else-if="detail">
         <!-- Document card -->
@@ -143,8 +165,8 @@
         <section class="qs-card">
           <div class="qs-signers">
             <div
-              v-for="(signer, i) in detail.signers"
-              :key="i"
+              v-for="signer in detail.signers"
+              :key="signer.email"
               :class="['qs-signer-row', { 'is-expired': signer.status === 'EXPIRED' }]"
             >
               <div :class="['qs-avatar', avatarClass(signer.status)]" aria-hidden="true">
@@ -191,12 +213,12 @@
                   서명된 PDF
                 </button>
                 <button
-                  v-if="signer.status === 'PENDING'"
+                  v-if="signer.status === 'PENDING' && signer.signatureToken"
                   :class="['qs-btn', 'qs-btn-ghost', 'qs-btn-sm',
-                    { 'is-success': copiedToken === signer.signatureToken }]"
+                    { 'is-success': copiedToken !== null && copiedToken === signer.signatureToken }]"
                   @click="copyLink(signer)"
                 >
-                  <template v-if="copiedToken === signer.signatureToken">
+                  <template v-if="copiedToken !== null && copiedToken === signer.signatureToken">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                       <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor"
                         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -347,9 +369,11 @@ function avatarClass(status: SignerDetail['status']) {
 }
 
 function avatarInitials(email: string) {
-  const local = email.split('@')[0]
+  const local = email.split('@')[0] ?? ''
   const parts = local.split(/[._-]/)
-  return (parts[0][0] + (parts[1]?.[0] ?? parts[0][1] ?? '')).toUpperCase()
+  const first = parts[0]?.[0] ?? ''
+  const second = parts[1]?.[0] ?? parts[0]?.[1] ?? ''
+  return (first + second).toUpperCase()
 }
 
 function formatDate(d: string | null) {

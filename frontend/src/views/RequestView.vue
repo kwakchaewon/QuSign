@@ -363,7 +363,7 @@ function addFiles(newFiles: File[]) {
       errorMsg: '',
     }
     files.value.push(entry)
-    uploadFile(entry)
+    uploadFile(files.value[files.value.length - 1])
   }
 }
 

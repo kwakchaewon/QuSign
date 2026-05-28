@@ -26,12 +26,12 @@
 
 **목표:** Kotlin 문법을 익히고 바로 프로젝트 뼈대를 만든다
 
-- [ ] null safety 이해 (`?.` `!!` `?:`)
-- [ ] data class 개념 및 사용법
-- [ ] extension function 개념 및 사용법
-- [ ] when expression 사용법
+- [ ] null safety 이해 (`?.` `!!` `?:`) → [`docs/learning-materials/01-null-safety.md`](../learning-materials/01-null-safety.md)
+- [ ] data class 개념 및 사용법 → [`docs/learning-materials/02-data-class.md`](../learning-materials/02-data-class.md)
+- [ ] extension function 개념 및 사용법 → [`docs/learning-materials/03-extension-function.md`](../learning-materials/03-extension-function.md)
+- [ ] when expression 사용법 → [`docs/learning-materials/04-when-expression.md`](../learning-materials/04-when-expression.md)
 - [ ] Kotlin 공식 문서 Basics 섹션 완독
-- [ ] coroutine 기초 개념 파악 (suspend, launch) — 깊이는 나중에
+- [ ] coroutine 기초 개념 파악 (suspend, launch) — 깊이는 나중에 → [`docs/learning-materials/05-coroutines-basics.md`](../learning-materials/05-coroutines-basics.md)
 - [x] **→ 즉시 적용:** Gradle Kotlin DSL 기반 Spring Boot 3.5 프로젝트 생성
 - [x] **→ 즉시 적용:** Logback JSON 구조화 로그 설정
 - [x] **→ 즉시 적용:** GitHub 레포지토리 생성 + 초기 커밋

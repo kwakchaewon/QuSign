@@ -1,5 +1,40 @@
 # Kotlin Null Safety
 
+## 사전 개념: val과 var
+
+Kotlin에서 변수를 선언할 때 쓰는 두 가지 키워드입니다.
+
+| 키워드 | 의미 | 재할당 |
+|---|---|---|
+| `val` | value — 불변 참조 | 불가 |
+| `var` | variable — 가변 참조 | 가능 |
+
+```kotlin
+val name = "Alice"   // 재할당 불가
+name = "Bob"         // 컴파일 에러
+
+var count = 0        // 재할당 가능
+count = 1            // OK
+```
+
+타입은 명시하거나 컴파일러가 추론합니다.
+
+```kotlin
+val name: String = "Alice"   // 타입 명시
+val name = "Alice"           // String으로 자동 추론 (동일)
+```
+
+> **val은 참조가 고정되는 것**이지, 객체 내부까지 불변을 보장하지 않습니다.
+> ```kotlin
+> val list = mutableListOf("a", "b")
+> list = mutableListOf("c")   // 에러 — 참조 재할당 불가
+> list.add("c")               // OK — 내부 값 변경은 가능
+> ```
+
+Kotlin에서는 변경이 필요할 때만 `var`을 쓰고, 기본적으로 `val`을 권장합니다.
+
+---
+
 ## 이론
 
 Kotlin은 컴파일 타임에 NullPointerException을 방지하도록 설계됐습니다.

@@ -1,5 +1,34 @@
 # Kotlin Data Class
 
+## 사전 개념: 보일러플레이트(Boilerplate)
+
+반복적으로 써야 하지만 실제 로직과는 무관한 **판에 박힌 코드**를 말합니다.
+
+Java에서 단순히 데이터를 담는 클래스를 만들려면:
+
+```java
+// Java — 보일러플레이트 덩어리
+public class User {
+    private String name;
+    private int age;
+
+    public User(String name, int age) { this.name = name; this.age = age; }
+    public String getName() { return name; }
+    public int getAge() { return age; }
+
+    @Override public boolean equals(Object o) { ... }
+    @Override public int hashCode() { ... }
+    @Override public String toString() { ... }
+}
+```
+
+이 코드의 대부분은 "User는 name과 age를 가진다"는 사실과 직접 관련이 없습니다.
+매번 똑같은 패턴을 반복해서 작성해야 하는 부분이 보일러플레이트입니다.
+
+> 이름의 유래: 과거 신문사가 변경 없이 그대로 찍어내던 철제 인쇄판(boilerplate)에서 왔습니다.
+
+---
+
 ## 이론
 
 `data class`는 데이터를 담는 목적의 클래스에 보일러플레이트를 자동 생성해줍니다.

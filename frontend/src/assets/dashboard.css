@@ -13,6 +13,7 @@
   backdrop-filter: saturate(180%) blur(8px);
 }
 .qs-topbar-inner {
+  position: relative;
   max-width: 1200px; margin: 0 auto;
   height: 64px;
   padding: 0 24px;

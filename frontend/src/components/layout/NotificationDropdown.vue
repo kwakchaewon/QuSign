@@ -119,11 +119,12 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 </script>
 
 <style scoped>
-/* 벨 버튼 래퍼 — 배지 기준점만 제공 */
+/* 벨 버튼 래퍼 — static으로 두어 패널이 qs-topbar-inner 기준으로 위치 */
 .qs-notif-wrap {
-  position: relative;
+  position: static;
 }
 
+/* 배지 기준점은 버튼 자체 */
 .qs-notif-btn {
   position: relative;
 }
@@ -146,11 +147,12 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   pointer-events: none;
 }
 
-/* 패널 — 뷰포트 fixed, 토바 높이(64px) 아래 + 우측 패딩(24px) 정렬 */
+/* 패널 — qs-topbar-inner 기준 absolute, 우측 패딩 끝과 정렬 */
 .qs-notif-panel {
-  position: fixed;
-  top: 68px;
-  right: 24px;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
   width: 340px;
   max-height: 480px;
   overflow-y: auto;

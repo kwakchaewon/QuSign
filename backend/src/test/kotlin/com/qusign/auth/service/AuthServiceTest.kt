@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Transactional
 import kotlin.test.assertNotNull
@@ -20,6 +21,7 @@ class AuthServiceTest {
 
     @MockitoBean lateinit var storageService: StorageService
     @MockitoBean lateinit var emailService: EmailService
+    @MockitoBean lateinit var redisMessageListenerContainer: RedisMessageListenerContainer
 
     @Autowired lateinit var authService: AuthService
     @Autowired lateinit var jwtService: JwtService

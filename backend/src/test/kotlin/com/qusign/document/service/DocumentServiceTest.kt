@@ -12,6 +12,7 @@ import org.mockito.kotlin.doNothing
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.transaction.annotation.Transactional
@@ -24,6 +25,7 @@ class DocumentServiceTest {
 
     @MockitoBean lateinit var storageService: StorageService
     @MockitoBean lateinit var emailService: EmailService
+    @MockitoBean lateinit var redisMessageListenerContainer: RedisMessageListenerContainer
 
     @Autowired
     lateinit var documentService: DocumentService

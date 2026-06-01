@@ -4,6 +4,7 @@ import com.qusign.auth.service.AuthService
 import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import com.qusign.document.service.DocumentService
+import com.qusign.notification.service.NotificationService
 import com.qusign.signature.dto.CreateSignatureRequestDto
 import com.qusign.signature.dto.VerifyResponse
 import com.qusign.signature.exception.SignatureRequestAlreadySignedException
@@ -21,6 +22,7 @@ import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Transactional
@@ -33,6 +35,8 @@ class SignatureFlowServiceTest {
 
     @MockitoBean lateinit var storageService: StorageService
     @MockitoBean lateinit var emailService: EmailService
+    @MockitoBean lateinit var notificationService: NotificationService
+    @MockitoBean lateinit var redisMessageListenerContainer: RedisMessageListenerContainer
 
     @Autowired lateinit var authService: AuthService
     @Autowired lateinit var documentService: DocumentService

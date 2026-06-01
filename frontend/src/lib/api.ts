@@ -1,4 +1,7 @@
 import axios from 'axios'
+import { useToast } from '@/composables/useToast'
+
+const { showError } = useToast()
 
 const api = axios.create({
   baseURL: 'http://localhost:8080',
@@ -18,6 +21,10 @@ api.interceptors.response.use(
       localStorage.removeItem('qusign:token')
       localStorage.removeItem('qusign:email')
       window.location.href = '/login'
+    } else if (!err.response) {
+      showError('네트워크 연결을 확인해주세요.')
+    } else if (err.response.status >= 500) {
+      showError('서버 오류가 발생했어요. 잠시 후 다시 시도해주세요.')
     }
     return Promise.reject(err)
   },

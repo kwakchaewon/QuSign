@@ -283,7 +283,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/lib/api'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
@@ -325,6 +325,12 @@ const fileResults = ref<FileResult[]>([])
 const copiedKey = ref('')
 const copiedAll = ref(false)
 
+function handleBeforeUnload(e: BeforeUnloadEvent) {
+  const isActive = files.value.some(f => f.status === 'uploading') || isSending.value
+  if (isActive) e.preventDefault()
+}
+onMounted(() => window.addEventListener('beforeunload', handleBeforeUnload))
+onUnmounted(() => window.removeEventListener('beforeunload', handleBeforeUnload))
 
 const canGoNext = computed(() =>
   files.value.length > 0 &&

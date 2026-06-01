@@ -504,6 +504,7 @@ button { font: inherit; }
 }
 .qs-toast-t { margin: 0 0 2px; font-size: 14px; font-weight: 600; color: var(--text-primary); }
 .qs-toast-d { margin: 0; font-size: 13px; color: var(--text-secondary); }
+.qs-toast-ic.is-error { background: var(--color-error); }
 
 /* =============== Responsive =============== */
 @media (max-width: 520px) {

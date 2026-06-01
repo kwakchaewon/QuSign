@@ -231,7 +231,7 @@
               <h3 class="qs-quick-title">계정 관리</h3>
               <p class="qs-quick-desc">비밀번호 변경, 알림·보안 설정을 관리합니다.</p>
             </div>
-            <RouterLink class="qs-btn qs-btn-ghost qs-btn-md" to="/settings">
+            <RouterLink class="qs-btn qs-btn-secondary qs-btn-md" to="/settings">
               <span>설정으로</span>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                 <path d="M3 6h6m-2-3l3 3-3 3" stroke="currentColor" stroke-width="1.6"

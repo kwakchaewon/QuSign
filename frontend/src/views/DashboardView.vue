@@ -118,8 +118,6 @@
                 <div class="qs-doc-name">{{ doc.originalFilename }}</div>
                 <div class="qs-doc-meta">
                   <span>{{ formatDate(doc.createdAt) }}</span>
-                  <span class="qs-dot-sep">·</span>
-                  <span class="qs-doc-signer">{{ doc.hashSha3256.slice(0, 12) }}…</span>
                 </div>
               </div>
               <div class="qs-doc-status">

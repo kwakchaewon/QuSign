@@ -9,6 +9,7 @@ import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import com.qusign.document.exception.DocumentNotFoundException
 import com.qusign.document.repository.DocumentRepository
+import com.qusign.notification.service.NotificationService
 import com.qusign.signature.dto.*
 import com.qusign.signature.entity.Signature
 import com.qusign.signature.entity.SignatureRequest
@@ -37,6 +38,7 @@ class SignatureFlowService(
     private val keyEncryptionService: KeyEncryptionService,
     private val objectMapper: ObjectMapper,
     private val emailService: EmailService,
+    private val notificationService: NotificationService,
 ) {
 
     @Transactional
@@ -78,6 +80,18 @@ class SignatureFlowService(
             expiresAt = req.expiresAt.toString(),
         )
 
+        // 서명자가 가입한 사용자인 경우 인앱 알림 발송
+        val signer = userRepository.findByEmail(req.signerEmail)
+        if (signer != null && signer.notifySignRequest) {
+            notificationService.createAndPublish(
+                userId = signer.id,
+                type = NotificationService.TYPE_SIGN_REQUEST,
+                title = "서명 요청",
+                message = "${requester.email}님이 '${document.originalFilename}' 서명을 요청했습니다.",
+                referenceId = req.id,
+            )
+        }
+
         return SignatureRequestResponse(req)
     }
 
@@ -118,6 +132,19 @@ class SignatureFlowService(
         )
 
         req.status = "SIGNED"
+
+        // 서명 완료 — 요청자에게 인앱 알림 발송
+        val requester = req.requester
+        if (requester.notifySignDone) {
+            notificationService.createAndPublish(
+                userId = requester.id,
+                type = NotificationService.TYPE_SIGN_DONE,
+                title = "서명 완료",
+                message = "${signerEmail}님이 '${req.document.originalFilename}'에 서명을 완료했습니다.",
+                referenceId = req.document.id,
+            )
+        }
+
         return SignatureResponse(signature)
     }
 
@@ -258,6 +285,18 @@ class SignatureFlowService(
             ?: throw SignatureRequestNotFoundException()
         if (req.status != "PENDING") throw SignatureRequestNotCancellableException()
         req.status = "CANCELLED"
+
+        // 서명자가 가입한 사용자인 경우 취소 알림 발송
+        val signer = userRepository.findByEmail(signerEmail)
+        if (signer != null) {
+            notificationService.createAndPublish(
+                userId = signer.id,
+                type = NotificationService.TYPE_SIGN_CANCELLED,
+                title = "서명 요청 취소",
+                message = "${requester.email}님이 '${document.originalFilename}' 서명 요청을 취소했습니다.",
+                referenceId = req.id,
+            )
+        }
     }
 
     @Transactional(readOnly = true)

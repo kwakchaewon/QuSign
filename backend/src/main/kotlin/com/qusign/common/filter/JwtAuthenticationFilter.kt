@@ -29,8 +29,9 @@ class JwtAuthenticationFilter(private val jwtService: JwtService) : OncePerReque
     }
 
     private fun extractToken(request: HttpServletRequest): String? {
-        val header = request.getHeader("Authorization") ?: return null
-        if (!header.startsWith("Bearer ")) return null
-        return header.substring(7)
+        val header = request.getHeader("Authorization")
+        if (header != null && header.startsWith("Bearer ")) return header.substring(7)
+        // SSE 스트림 엔드포인트: EventSource는 커스텀 헤더 불가 → 쿼리 파라미터 허용
+        return request.getParameter("token")
     }
 }

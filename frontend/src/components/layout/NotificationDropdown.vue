@@ -23,9 +23,11 @@
             class="qs-notif-read-all"
             @click="handleMarkAllAsRead"
           >전체 읽음</button>
+          <!-- TODO: Claude Design 목업 완성 후 복원
           <RouterLink class="qs-notif-view-all" to="/notifications" @click="isOpen = false">
             전체 보기
           </RouterLink>
+          -->
         </div>
       </div>
 

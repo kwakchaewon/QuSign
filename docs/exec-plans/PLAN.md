@@ -434,8 +434,12 @@
 
 #### Step 3. 알림 목록 전체 페이지
 
-- [x] `/notifications` 라우트 — 전체 알림 이력 (페이지네이션)
-- [x] 헤더 드롭다운 "전체 보기" 링크
+- [x] `/notifications` 라우트 — 전체 알림 이력 (페이지네이션), `NotificationsView.vue` 구현
+- [ ] 헤더 드롭다운 "전체 보기" 링크 복원 (현재 주석 처리)
+
+> **⏸ 보류:** "전체 보기" 버튼 및 `NotificationsView.vue` UI는 Claude Design 목업 완성 후 복원.
+> 백엔드 API(`GET /api/notifications?page=N`)와 라우트(`/notifications`)는 유지.
+> 복원 시 `NotificationDropdown.vue`의 `<!-- TODO: Claude Design 목업 완성 후 복원 -->` 주석 해제.
 
 **완료 기준:** 알림 설정 OFF 시 해당 타입 알림 미생성 + 타입별 아이콘 표시
 

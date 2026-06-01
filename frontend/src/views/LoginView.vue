@@ -46,10 +46,13 @@
 
         <p class="qs-legal">
           로그인하면
-          <a href="#" @click.prevent>이용약관</a>과
-          <a href="#" @click.prevent>개인정보처리방침</a>에
+          <a href="#" @click.prevent="showTerms = true">이용약관</a>과
+          <a href="#" @click.prevent="showPrivacy = true">개인정보처리방침</a>에
           동의한 것으로 간주됩니다.
         </p>
+
+        <TermsModal v-model="showTerms" type="terms" />
+        <TermsModal v-model="showPrivacy" type="privacy" />
       </section>
     </main>
 
@@ -65,8 +68,11 @@ import TrustStrip from '@/components/ui/TrustStrip.vue'
 import Toast from '@/components/ui/Toast.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import PublicTopbar from '@/components/layout/PublicTopbar.vue'
+import TermsModal from '@/components/ui/TermsModal.vue'
 
 const toast = ref({ show: false, email: '' })
+const showTerms = ref(false)
+const showPrivacy = ref(false)
 
 function handleLogin(email: string) {
   toast.value = { show: true, email }

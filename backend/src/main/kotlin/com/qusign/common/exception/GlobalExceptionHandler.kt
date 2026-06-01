@@ -7,7 +7,9 @@ import com.qusign.auth.exception.InvalidCurrentPasswordException
 import com.qusign.common.response.ApiResponse
 import com.qusign.document.exception.BatchTooManyFilesException
 import com.qusign.document.exception.DocumentNotFoundException
+import com.qusign.document.exception.InvalidFileTypeException
 import com.qusign.document.exception.StorageException
+import com.qusign.signature.exception.DuplicateSignatureRequestException
 import com.qusign.signature.exception.*
 import org.springframework.http.HttpStatus
 import org.springframework.validation.FieldError
@@ -40,6 +42,10 @@ class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     fun handleDocumentNotFound(e: DocumentNotFoundException) = ApiResponse.error(e.message!!)
 
+    @ExceptionHandler(InvalidFileTypeException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleInvalidFileType(e: InvalidFileTypeException) = ApiResponse.error(e.message!!)
+
     @ExceptionHandler(BatchTooManyFilesException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleBatchTooMany(e: BatchTooManyFilesException) = ApiResponse.error(e.message!!)
@@ -65,6 +71,10 @@ class GlobalExceptionHandler {
     @ExceptionHandler(SignatureRequestNotFoundException::class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     fun handleSignatureRequestNotFound(e: SignatureRequestNotFoundException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(DuplicateSignatureRequestException::class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    fun handleDuplicateSignatureRequest(e: DuplicateSignatureRequestException) = ApiResponse.error(e.message!!)
 
     @ExceptionHandler(SignatureRequestExpiredException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

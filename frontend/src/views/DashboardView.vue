@@ -116,9 +116,6 @@
               </div>
               <div class="qs-doc-main">
                 <div class="qs-doc-name">{{ doc.originalFilename }}</div>
-                <div class="qs-doc-meta">
-                  <span>{{ formatDate(doc.createdAt) }}</span>
-                </div>
               </div>
               <div class="qs-doc-status">
                 <span class="qs-badge qs-badge-pending">

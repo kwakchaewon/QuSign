@@ -75,10 +75,7 @@ async function handleItemClick(n: Notification) {
   if (!n.isRead) await store.markAsRead(n.id)
   isOpen.value = false
   if (n.referenceId) {
-    const path = n.type === 'SIGN_REQUEST' || n.type === 'SIGN_CANCELLED' || n.type === 'SIGN_EXPIRING_SOON'
-      ? `/documents/${n.referenceId}`
-      : `/documents/${n.referenceId}`
-    router.push(path)
+    router.push(`/documents/${n.referenceId}`)
   }
 }
 
@@ -122,6 +119,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 </script>
 
 <style scoped>
+/* 벨 버튼 래퍼 — 배지 기준점만 제공 */
 .qs-notif-wrap {
   position: relative;
 }
@@ -130,6 +128,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   position: relative;
 }
 
+/* 미읽음 배지 */
 .qs-notif-badge {
   position: absolute;
   top: -4px;
@@ -138,7 +137,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   height: 16px;
   padding: 0 3px;
   border-radius: 8px;
-  background: var(--qs-danger, #ef4444);
+  background: var(--color-error);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -147,36 +146,38 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   pointer-events: none;
 }
 
+/* 패널 — 뷰포트 fixed, 토바 높이(64px) 아래 + 우측 패딩(24px) 정렬 */
 .qs-notif-panel {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
+  position: fixed;
+  top: 68px;
+  right: 24px;
   width: 340px;
   max-height: 480px;
   overflow-y: auto;
-  border-radius: 12px;
-  background: var(--qs-surface, #fff);
-  border: 1px solid var(--qs-border, #e5e7eb);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  z-index: 200;
+  border-radius: var(--radius-lg, 14px);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-dropdown, 100);
 }
 
+/* 헤더 */
 .qs-notif-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px 10px;
-  border-bottom: 1px solid var(--qs-border, #e5e7eb);
+  border-bottom: 1px solid var(--border-default);
   position: sticky;
   top: 0;
-  background: var(--qs-surface, #fff);
+  background: var(--surface-elevated);
   z-index: 1;
 }
 
 .qs-notif-header-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--qs-text, #111827);
+  color: var(--text-primary);
 }
 
 .qs-notif-header-actions {
@@ -187,27 +188,26 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 
 .qs-notif-read-all {
   font-size: 12px;
-  color: var(--qs-primary, #6366f1);
+  color: var(--color-primary-500);
   background: none;
   border: none;
   cursor: pointer;
   padding: 2px 4px;
 }
-.qs-notif-read-all:hover {
-  text-decoration: underline;
-}
+.qs-notif-read-all:hover { text-decoration: underline; }
 
 .qs-notif-view-all {
   font-size: 12px;
-  color: var(--qs-text-muted, #6b7280);
+  color: var(--text-secondary);
   text-decoration: none;
   padding: 2px 4px;
 }
 .qs-notif-view-all:hover {
   text-decoration: underline;
-  color: var(--qs-text, #111827);
+  color: var(--text-primary);
 }
 
+/* 목록 */
 .qs-notif-list {
   list-style: none;
   margin: 0;
@@ -220,19 +220,15 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   gap: 10px;
   padding: 12px 16px;
   cursor: pointer;
-  border-bottom: 1px solid var(--qs-border-subtle, #f3f4f6);
-  transition: background 0.15s;
+  border-bottom: 1px solid var(--border-default);
+  transition: background var(--duration-fast, 0.15s);
 }
-.qs-notif-item:hover {
-  background: var(--qs-hover, #f9fafb);
-}
-.qs-notif-item.is-unread {
-  background: var(--qs-unread-bg, #f0f0ff);
-}
-.qs-notif-item.is-unread:hover {
-  background: var(--qs-unread-hover, #e8e8ff);
-}
+.qs-notif-item:last-child { border-bottom: none; }
+.qs-notif-item:hover { background: var(--surface-muted); }
+.qs-notif-item.is-unread { background: var(--color-info-bg); }
+.qs-notif-item.is-unread:hover { background: var(--color-info-bg); filter: brightness(0.96); }
 
+/* 아이콘 — 다크 대응 시맨틱 토큰 */
 .qs-notif-icon {
   display: flex;
   align-items: center;
@@ -242,29 +238,27 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   border-radius: 10px;
   font-size: 16px;
   flex-shrink: 0;
-  background: var(--qs-hover, #f3f4f6);
+  background: var(--surface-muted);
 }
-.qs-notif-icon[data-type="SIGN_DONE"]         { background: #dcfce7; }
-.qs-notif-icon[data-type="SIGN_REQUEST"]      { background: #ede9fe; }
-.qs-notif-icon[data-type="SIGN_CANCELLED"]    { background: #fee2e2; }
-.qs-notif-icon[data-type="SIGN_EXPIRING_SOON"]{ background: #fef3c7; }
-.qs-notif-icon[data-type="SIGN_EXPIRED"]      { background: #f3f4f6; }
+.qs-notif-icon[data-type="SIGN_DONE"]          { background: var(--color-success-bg); }
+.qs-notif-icon[data-type="SIGN_REQUEST"]       { background: var(--color-info-bg); }
+.qs-notif-icon[data-type="SIGN_CANCELLED"]     { background: var(--color-error-bg); }
+.qs-notif-icon[data-type="SIGN_EXPIRING_SOON"] { background: var(--color-warning-bg); }
+.qs-notif-icon[data-type="SIGN_EXPIRED"]       { background: var(--surface-muted); }
 
-.qs-notif-body {
-  flex: 1;
-  min-width: 0;
-}
+/* 본문 */
+.qs-notif-body { flex: 1; min-width: 0; }
 
 .qs-notif-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--qs-text, #111827);
+  color: var(--text-primary);
   margin: 0 0 2px;
 }
 
 .qs-notif-msg {
   font-size: 12px;
-  color: var(--qs-text-muted, #6b7280);
+  color: var(--text-secondary);
   margin: 0 0 4px;
   line-height: 1.4;
   word-break: break-word;
@@ -272,22 +266,23 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 
 .qs-notif-time {
   font-size: 11px;
-  color: var(--qs-text-faint, #9ca3af);
+  color: var(--text-tertiary);
 }
 
 .qs-notif-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--qs-primary, #6366f1);
+  background: var(--color-primary-500);
   flex-shrink: 0;
   margin-top: 5px;
 }
 
+/* 빈 상태 */
 .qs-notif-empty {
   padding: 32px 16px;
   text-align: center;
   font-size: 13px;
-  color: var(--qs-text-muted, #6b7280);
+  color: var(--text-secondary);
 }
 </style>

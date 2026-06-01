@@ -237,6 +237,17 @@
                     서명 링크 복사
                   </template>
                 </button>
+                <button
+                  v-if="signer.status === 'PENDING'"
+                  class="qs-btn qs-btn-danger-ghost qs-btn-sm"
+                  @click="openCancelModal(signer)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M5.6 5.6l12.8 12.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                  요청 취소
+                </button>
                 <span v-if="signer.status === 'EXPIRED'" class="qs-signer-disabled">서명 불가</span>
               </div>
             </div>
@@ -279,11 +290,75 @@
         </section>
       </template>
     </main>
+
+    <!-- Cancel confirm modal -->
+    <Teleport to="body">
+      <div
+        v-if="showCancelModal && cancelTarget"
+        class="qs-modal-backdrop"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cancel-modal-title"
+        @click.self="closeCancelModal"
+      >
+        <div class="qs-modal">
+          <div class="qs-modal-icon-warn" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3l10 18H2L12 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M12 10v5M12 18v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 id="cancel-modal-title" class="qs-modal-title">서명 요청을 취소하시겠어요?</h3>
+          <p class="qs-modal-desc">
+            <strong>{{ cancelTarget.email }}</strong>에게 보낸 서명 요청이 취소됩니다.<br />
+            취소 후에는 되돌릴 수 없으며, 서명 링크가 즉시 만료됩니다.
+          </p>
+          <div class="qs-modal-warnbox">
+            <span class="qs-modal-warnbox-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M12 3l10 18H2L12 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+                <path d="M12 10v4M12 17v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span>서명자가 링크를 클릭해도 서명할 수 없게 됩니다.</span>
+          </div>
+          <div class="qs-modal-actions">
+            <button
+              type="button"
+              class="qs-btn qs-btn-secondary qs-btn-md"
+              :disabled="cancelSubmitting"
+              @click="closeCancelModal"
+            >
+              닫기
+            </button>
+            <button
+              type="button"
+              class="qs-btn qs-btn-danger qs-btn-md"
+              :disabled="cancelSubmitting"
+              @click="confirmCancel"
+            >
+              <span v-if="cancelSubmitting" class="qs-btn-spinner" aria-hidden="true" />
+              <span>{{ cancelSubmitting ? '취소 처리 중…' : '취소하기' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Toast -->
+    <Teleport to="body">
+      <div :class="['qs-toast-wrap', { 'is-show': toastVisible }]" aria-live="polite">
+        <div v-if="toastVisible" class="qs-toast">
+          <span class="qs-toast-dot" aria-hidden="true" />
+          <span>{{ toastText }}</span>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/lib/api'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
@@ -325,6 +400,67 @@ const errorCode = ref<number | null>(null)
 const detail = ref<SignatureRequestDetail | null>(null)
 const hashOpen = ref(false)
 const copiedToken = ref<string | null>(null)
+
+// Cancel modal
+const showCancelModal = ref(false)
+const cancelTarget = ref<SignerDetail | null>(null)
+const cancelSubmitting = ref(false)
+
+// Toast
+const toastVisible = ref(false)
+const toastText = ref('')
+let toastTimer: ReturnType<typeof setTimeout> | null = null
+
+function openCancelModal(signer: SignerDetail) {
+  cancelTarget.value = signer
+  showCancelModal.value = true
+}
+
+function closeCancelModal() {
+  if (cancelSubmitting.value) return
+  showCancelModal.value = false
+  cancelTarget.value = null
+}
+
+async function confirmCancel() {
+  if (!detail.value || !cancelTarget.value) return
+  cancelSubmitting.value = true
+  try {
+    await api.post(
+      `/api/signature-requests/${detail.value.id}/signers/${encodeURIComponent(cancelTarget.value.email)}/cancel`
+    )
+    const target = cancelTarget.value.email
+    const signer = detail.value.signers.find(s => s.email === target)
+    if (signer) signer.status = 'EXPIRED'
+    showToastMsg(`${target}에게 보낸 요청이 취소되었어요`)
+    closeCancelModal()
+  } catch {
+    closeCancelModal()
+  } finally {
+    cancelSubmitting.value = false
+  }
+}
+
+function showToastMsg(text: string) {
+  toastText.value = text
+  toastVisible.value = true
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { toastVisible.value = false }, 2800)
+}
+
+function onEscKey(e: KeyboardEvent) {
+  if (e.key === 'Escape' && showCancelModal.value && !cancelSubmitting.value) closeCancelModal()
+}
+
+watch(showCancelModal, (open) => {
+  if (open) document.addEventListener('keydown', onEscKey)
+  else document.removeEventListener('keydown', onEscKey)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onEscKey)
+  if (toastTimer) clearTimeout(toastTimer)
+})
 
 onMounted(async () => {
   try {

@@ -23,6 +23,11 @@ export const useNotificationStore = defineStore('notification', () => {
     unreadCount.value = notifications.value.filter((n) => !n.isRead).length
   }
 
+  async function fetchPage(page: number): Promise<Notification[]> {
+    const res = await api.get<{ data: Notification[] }>('/api/notifications', { params: { page } })
+    return res.data.data ?? []
+  }
+
   async function markAsRead(id: number) {
     await api.put(`/api/notifications/${id}/read`)
     const n = notifications.value.find((n) => n.id === id)
@@ -68,6 +73,7 @@ export const useNotificationStore = defineStore('notification', () => {
     notifications,
     unreadCount,
     fetchNotifications,
+    fetchPage,
     markAsRead,
     markAllAsRead,
     connectSSE,

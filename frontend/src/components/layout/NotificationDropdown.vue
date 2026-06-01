@@ -17,11 +17,16 @@
     <div v-if="isOpen" class="qs-notif-panel">
       <div class="qs-notif-header">
         <span class="qs-notif-header-title">알림</span>
-        <button
-          v-if="unreadCount > 0"
-          class="qs-notif-read-all"
-          @click="handleMarkAllAsRead"
-        >전체 읽음</button>
+        <div class="qs-notif-header-actions">
+          <button
+            v-if="unreadCount > 0"
+            class="qs-notif-read-all"
+            @click="handleMarkAllAsRead"
+          >전체 읽음</button>
+          <RouterLink class="qs-notif-view-all" to="/notifications" @click="isOpen = false">
+            전체 보기
+          </RouterLink>
+        </div>
       </div>
 
       <ul v-if="notifications.length > 0" class="qs-notif-list">
@@ -174,6 +179,12 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   color: var(--qs-text, #111827);
 }
 
+.qs-notif-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .qs-notif-read-all {
   font-size: 12px;
   color: var(--qs-primary, #6366f1);
@@ -184,6 +195,17 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 }
 .qs-notif-read-all:hover {
   text-decoration: underline;
+}
+
+.qs-notif-view-all {
+  font-size: 12px;
+  color: var(--qs-text-muted, #6b7280);
+  text-decoration: none;
+  padding: 2px 4px;
+}
+.qs-notif-view-all:hover {
+  text-decoration: underline;
+  color: var(--qs-text, #111827);
 }
 
 .qs-notif-list {
@@ -212,10 +234,21 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 }
 
 .qs-notif-icon {
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 16px;
   flex-shrink: 0;
-  margin-top: 1px;
+  background: var(--qs-hover, #f3f4f6);
 }
+.qs-notif-icon[data-type="SIGN_DONE"]         { background: #dcfce7; }
+.qs-notif-icon[data-type="SIGN_REQUEST"]      { background: #ede9fe; }
+.qs-notif-icon[data-type="SIGN_CANCELLED"]    { background: #fee2e2; }
+.qs-notif-icon[data-type="SIGN_EXPIRING_SOON"]{ background: #fef3c7; }
+.qs-notif-icon[data-type="SIGN_EXPIRED"]      { background: #f3f4f6; }
 
 .qs-notif-body {
   flex: 1;

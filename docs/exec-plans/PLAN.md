@@ -241,16 +241,63 @@
 
 ---
 
-### 4-5. 서명 완료 알림 → 요청자
+### 4-5. Redis 기반 실시간 인앱 알림 시스템
 
-**목표:** 서명자가 서명을 완료했을 때 요청자에게 이메일로 즉시 알린다
+**목표:** 주요 서명 이벤트를 Redis Pub/Sub + SSE로 실시간 헤더 알림 센터에 표시한다
 
-- [ ] 서명 실행 서비스 — 서명 완료 후 요청자 이메일 발송 트리거
-- [ ] 로컬: 콘솔 로그 출력 (`@Profile("local")`)
-- [ ] 이메일 내용: 문서명, 서명자 이메일, 서명 일시, 상세 페이지 링크
+> 이메일 알림은 6단계 SES 연동 시 추가. 이 단계는 인앱 알림에 집중한다.
+
+#### 알림 타입
+
+| 타입 | 수신자 | 트리거 |
+|---|---|---|
+| `SIGN_DONE` | 요청자 | 서명자가 서명 완료 |
+| `SIGN_REQUEST` | 서명자 (가입자인 경우) | 서명 요청 수신 |
+| `SIGN_CANCELLED` | 서명자 (가입자인 경우) | 요청자가 서명 취소 |
+| `SIGN_EXPIRING_SOON` | 서명자 (가입자인 경우) | 만료 D-1 스케줄러 |
+| `SIGN_EXPIRED` | 요청자 | 서명 기한 만료 (스케줄러) |
+
+#### Step 1. 백엔드 — DB + Redis 기반
+
+- [ ] Flyway `V4__add_notifications.sql` — `notifications` 테이블
+  - `id`, `user_id` (FK), `type` (ENUM), `title`, `message`, `reference_id` (signature_request.id), `is_read`, `created_at`
+- [ ] `Notification` 엔티티 + `NotificationRepository`
+- [ ] Redis 의존성 추가 (`spring-boot-starter-data-redis`) + `RedisConfig`
+- [ ] `NotificationService`
+  - `createAndPublish(userId, type, title, message, referenceId)` — DB 저장 → Redis 채널 발행
+  - `getNotifications(userId)` — 최근 50건 조회
+  - `markAsRead(id, userId)` — 읽음 처리
+  - `markAllAsRead(userId)` — 전체 읽음
+  - `getUnreadCount(userId)` — 미읽음 개수
+- [ ] SSE 엔드포인트: `GET /api/notifications/stream` — Redis 구독 → `SseEmitter` push
+- [ ] REST 엔드포인트:
+  - `GET /api/notifications` — 알림 목록
+  - `PUT /api/notifications/{id}/read` — 읽음 처리
+  - `PUT /api/notifications/read-all` — 전체 읽음
+  - `GET /api/notifications/unread-count` — 미읽음 개수
+
+#### Step 2. 알림 발생 지점 연결
+
+- [ ] `SignatureFlowService.sign()` 완료 → `SIGN_DONE` (요청자)
+- [ ] `SignatureFlowService.requestSignature()` → `SIGN_REQUEST` (서명자가 가입자인 경우)
+- [ ] 취소 서비스 → `SIGN_CANCELLED` (서명자가 가입자인 경우)
+- [ ] `@Scheduled` 스케줄러 — 만료 D-1 → `SIGN_EXPIRING_SOON` / 만료 → `SIGN_EXPIRED`
+
+#### Step 3. 프론트엔드
+
+- [ ] `notificationStore` (Pinia) — `notifications`, `unreadCount`, SSE 연결 관리
+- [ ] SSE 클라이언트 (`EventSource /api/notifications/stream`) — 새 알림 실시간 수신
+- [ ] `AppTopbar.vue` — 벨 아이콘 + 미읽음 배지 (숫자)
+- [ ] `NotificationDropdown.vue` — 알림 목록, 클릭 시 해당 상세 페이지 이동, 전체 읽음 버튼
+- [ ] Docker Compose에 Redis 컨테이너 추가
+
+#### 인프라 변경
+
+- [ ] `docker-compose.yml` — Redis 컨테이너 추가 (`redis:7-alpine`, 포트 6379)
+- [ ] `application-local.yml` — Redis 연결 설정
 - [ ] `./gradlew test` 통과
 
-**완료 기준:** 서명 완료 시 요청자 이메일(또는 콘솔 로그) 수신 확인
+**완료 기준:** 서명 완료 시 헤더 벨 아이콘에 미읽음 배지 표시 + 드롭다운에서 알림 확인 + 클릭 시 상세 페이지 이동
 
 ---
 
@@ -367,29 +414,30 @@
 
 ---
 
-### 4-11. 인앱 알림
+### 4-11. 알림 시스템 고도화
 
-**목표:** 서명 완료·만료 등 주요 이벤트를 헤더 알림 센터로 표시한다
+**목표:** 4-5에서 구축한 Redis 알림 기반 위에 UX 개선 및 설정 연동을 완성한다
 
-#### Step 1. Claude Design → UI 설계
+> 4-5 완료 후 진행. Redis + SSE 기반은 4-5에서 구현됨.
 
-- [ ] claude.ai/design에서 알림 센터 목업 생성 (헤더 벨 아이콘 + 드롭다운)
-- [ ] `harness/DESIGN_PROMPTS.md`에 프롬프트 기록
+#### Step 1. UX 개선
 
-#### Step 2. 백엔드
+- [ ] 알림 드롭다운 — 타입별 아이콘·색상 구분 (서명 완료 / 요청 / 취소 / 만료)
+- [ ] 알림 클릭 시 읽음 처리 + 상세 페이지 동시 이동
+- [ ] 알림 없을 때 빈 상태 메시지 ("새로운 알림이 없습니다")
+- [ ] 알림 드롭다운 외부 클릭 시 닫힘 처리
 
-- [ ] `Notification` 엔티티 — `type`, `message`, `isRead`, `createdAt`
-- [ ] 서명 완료 / 요청 취소 / 만료 D-1 이벤트 시 알림 레코드 생성
-- [ ] `GET /api/notifications` — 읽지 않은 알림 목록
-- [ ] `PUT /api/notifications/{id}/read` — 읽음 처리
+#### Step 2. 설정 연동
 
-#### Step 3. 프론트엔드
+- [ ] 계정 설정(4-10) `notifySignRequest` / `notifySignDone` 토글 — 알림 생성 여부 실제 반영
+- [ ] 알림 발생 전 사용자 설정 확인 (`NotificationService`에서 `User.notify*` 체크)
 
-- [ ] 헤더 벨 아이콘 + 미읽음 배지
-- [ ] 알림 드롭다운 — 클릭 시 해당 문서 상세로 이동
-- [ ] 이메일 알림 수신 토글 (계정 설정 4-10과 연동)
+#### Step 3. 알림 목록 전체 페이지 (선택)
 
-**완료 기준:** 서명 완료 시 헤더에 미읽음 알림 표시 + 클릭 시 상세 페이지 이동
+- [ ] `/notifications` 라우트 — 전체 알림 이력 (페이지네이션)
+- [ ] 헤더 드롭다운 "전체 보기" 링크
+
+**완료 기준:** 알림 설정 OFF 시 해당 타입 알림 미생성 + 타입별 아이콘 표시
 
 ---
 

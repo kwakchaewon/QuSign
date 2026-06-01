@@ -26,9 +26,12 @@ class NotificationController(
     }
 
     @GetMapping
-    fun getNotifications(authentication: Authentication): ApiResponse<List<NotificationResponse>> {
+    fun getNotifications(
+        @RequestParam(defaultValue = "0") page: Int,
+        authentication: Authentication,
+    ): ApiResponse<List<NotificationResponse>> {
         val userId = resolveUserId(authentication)
-        return ApiResponse.ok(notificationService.getNotifications(userId))
+        return ApiResponse.ok(notificationService.getNotifications(userId, page))
     }
 
     @PutMapping("/{id}/read")

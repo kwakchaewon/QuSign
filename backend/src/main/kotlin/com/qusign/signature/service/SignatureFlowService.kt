@@ -80,9 +80,9 @@ class SignatureFlowService(
             expiresAt = req.expiresAt.toString(),
         )
 
-        // 서명자가 가입한 사용자인 경우 인앱 알림 발송
+        // 서명자가 가입한 사용자인 경우 인앱 알림 발송 (설정 체크는 NotificationService 내부)
         val signer = userRepository.findByEmail(req.signerEmail)
-        if (signer != null && signer.notifySignRequest) {
+        if (signer != null) {
             notificationService.createAndPublish(
                 userId = signer.id,
                 type = NotificationService.TYPE_SIGN_REQUEST,
@@ -133,17 +133,14 @@ class SignatureFlowService(
 
         req.status = "SIGNED"
 
-        // 서명 완료 — 요청자에게 인앱 알림 발송
-        val requester = req.requester
-        if (requester.notifySignDone) {
-            notificationService.createAndPublish(
-                userId = requester.id,
-                type = NotificationService.TYPE_SIGN_DONE,
-                title = "서명 완료",
-                message = "${signerEmail}님이 '${req.document.originalFilename}'에 서명을 완료했습니다.",
-                referenceId = req.document.id,
-            )
-        }
+        // 서명 완료 — 요청자에게 인앱 알림 발송 (설정 체크는 NotificationService 내부)
+        notificationService.createAndPublish(
+            userId = req.requester.id,
+            type = NotificationService.TYPE_SIGN_DONE,
+            title = "서명 완료",
+            message = "${signerEmail}님이 '${req.document.originalFilename}'에 서명을 완료했습니다.",
+            referenceId = req.document.id,
+        )
 
         return SignatureResponse(signature)
     }
@@ -286,9 +283,8 @@ class SignatureFlowService(
         if (req.status != "PENDING") throw SignatureRequestNotCancellableException()
         req.status = "CANCELLED"
 
-        // 서명자가 가입한 사용자인 경우 취소 알림 발송
-        val signer = userRepository.findByEmail(signerEmail)
-        if (signer != null) {
+        // 서명자가 가입한 사용자인 경우 취소 알림 발송 (설정 체크는 NotificationService 내부)
+        userRepository.findByEmail(signerEmail)?.let { signer ->
             notificationService.createAndPublish(
                 userId = signer.id,
                 type = NotificationService.TYPE_SIGN_CANCELLED,

@@ -40,6 +40,7 @@ class NotificationService(
         referenceId: Long? = null,
     ) {
         val user = userRepository.findById(userId).orElse(null) ?: return
+        if (!isEnabled(user, type)) return
         val notification = notificationRepository.save(
             Notification(
                 user = user,
@@ -54,9 +55,9 @@ class NotificationService(
     }
 
     @Transactional(readOnly = true)
-    fun getNotifications(userId: Long): List<NotificationResponse> =
+    fun getNotifications(userId: Long, page: Int = 0): List<NotificationResponse> =
         notificationRepository
-            .findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(0, PAGE_SIZE))
+            .findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, PAGE_SIZE))
             .map { NotificationResponse(it) }
 
     @Transactional
@@ -74,4 +75,11 @@ class NotificationService(
     @Transactional(readOnly = true)
     fun getUnreadCount(userId: Long): Long =
         notificationRepository.countByUserIdAndIsRead(userId, false)
+
+    private fun isEnabled(user: com.qusign.auth.entity.User, type: String): Boolean = when (type) {
+        TYPE_SIGN_DONE, TYPE_SIGN_EXPIRED     -> user.notifySignDone
+        TYPE_SIGN_REQUEST, TYPE_SIGN_CANCELLED,
+        TYPE_SIGN_EXPIRING_SOON               -> user.notifySignRequest
+        else                                  -> true
+    }
 }

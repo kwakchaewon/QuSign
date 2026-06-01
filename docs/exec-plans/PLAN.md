@@ -270,9 +270,9 @@
 
 #### Step 2. 백엔드
 
-- [ ] `POST /api/signature-requests/{id}/signers/{email}/cancel` — 요청자 본인 + PENDING 상태만 허용
-- [ ] 취소된 토큰으로 서명 시도 시 410 Gone 반환
-- [ ] `./gradlew test` 통과
+- [x] `POST /api/signature-requests/{id}/signers/{email}/cancel` — 요청자 본인 + PENDING 상태만 허용
+- [x] 취소된 토큰으로 서명 시도 시 410 Gone 반환
+- [x] `./gradlew test` 통과
 
 #### Step 3. 프론트엔드
 

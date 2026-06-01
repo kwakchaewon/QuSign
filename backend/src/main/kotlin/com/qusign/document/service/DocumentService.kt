@@ -7,6 +7,7 @@ import com.qusign.document.dto.DocumentResponse
 import com.qusign.document.entity.Document
 import com.qusign.document.exception.BatchTooManyFilesException
 import com.qusign.document.exception.DocumentNotFoundException
+import com.qusign.document.exception.InvalidFileTypeException
 import com.qusign.document.exception.StorageException
 import com.qusign.document.repository.DocumentRepository
 import com.qusign.signature.repository.SignatureRequestRepository
@@ -39,6 +40,7 @@ class DocumentService(
 
     private fun uploadForUser(user: User, file: MultipartFile): DocumentResponse {
         val bytes = file.bytes
+        if (!isPdf(bytes)) throw InvalidFileTypeException()
         val hash = sha3256Hex(bytes)
         val key = "documents/${user.id}/${UUID.randomUUID()}/${file.originalFilename ?: "document.pdf"}"
 
@@ -86,6 +88,13 @@ class DocumentService(
             throw StorageException("파일 다운로드 실패", e)
         }
     }
+
+    private fun isPdf(bytes: ByteArray): Boolean =
+        bytes.size >= 4 &&
+        bytes[0] == 0x25.toByte() && // %
+        bytes[1] == 0x50.toByte() && // P
+        bytes[2] == 0x44.toByte() && // D
+        bytes[3] == 0x46.toByte()    // F
 
     private fun sha3256Hex(bytes: ByteArray): String {
         val digest = MessageDigest.getInstance("SHA3-256")

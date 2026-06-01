@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/lib/api'
+import { useNotificationStore } from '@/stores/notification'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('qusign:token'))
@@ -18,6 +19,10 @@ export const useAuthStore = defineStore('auth', () => {
     email.value = emailVal
     localStorage.setItem('qusign:token', accessToken)
     localStorage.setItem('qusign:email', emailVal)
+
+    const notificationStore = useNotificationStore()
+    await notificationStore.fetchNotifications()
+    notificationStore.connectSSE(accessToken)
   }
 
   async function register(emailVal: string, password: string) {
@@ -25,6 +30,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function logout() {
+    const notificationStore = useNotificationStore()
+    notificationStore.disconnectSSE()
+
     token.value = null
     email.value = null
     localStorage.removeItem('qusign:token')

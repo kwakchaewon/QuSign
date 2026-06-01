@@ -21,7 +21,20 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notification'
 
 const { message } = useToast()
+const auth = useAuthStore()
+const notificationStore = useNotificationStore()
+
+// 페이지 새로고침 시 기존 토큰으로 알림 초기화
+onMounted(async () => {
+  if (auth.isLoggedIn && auth.token) {
+    await notificationStore.fetchNotifications()
+    notificationStore.connectSSE(auth.token)
+  }
+})
 </script>

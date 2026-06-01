@@ -13,6 +13,7 @@
       </nav>
       <div class="qs-topbar-right">
         <ThemeToggle :theme="theme" @change="setTheme" />
+        <NotificationDropdown />
         <div class="qs-user">
           <div class="qs-user-avatar" aria-hidden="true">{{ userInitial }}</div>
           <span class="qs-user-email">{{ userEmail }}</span>
@@ -33,6 +34,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import QuSignMark from '@/components/ui/QuSignMark.vue'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
+import NotificationDropdown from '@/components/layout/NotificationDropdown.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
 

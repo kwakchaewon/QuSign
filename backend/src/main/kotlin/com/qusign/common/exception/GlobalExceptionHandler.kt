@@ -100,6 +100,14 @@ class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleNoQuSignMetadata(e: NoQuSignMetadataException) = ApiResponse.error(e.message!!)
 
+    @ExceptionHandler(SignatureRequestCancelledException::class)
+    @ResponseStatus(HttpStatus.GONE)
+    fun handleCancelled(e: SignatureRequestCancelledException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(SignatureRequestNotCancellableException::class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    fun handleNotCancellable(e: SignatureRequestNotCancellableException) = ApiResponse.error(e.message!!)
+
     @ExceptionHandler(Exception::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     fun handleUnexpected(e: Exception) = ApiResponse.error("서버 오류가 발생했습니다")

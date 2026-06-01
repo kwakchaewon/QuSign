@@ -88,6 +88,16 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         response.outputStream.write(bytes)
     }
 
+    @PostMapping("/signature-requests/{id}/signers/{email}/cancel")
+    fun cancelSigner(
+        @AuthenticationPrincipal requesterEmail: String,
+        @PathVariable id: Long,
+        @PathVariable email: String,
+    ): ApiResponse<Unit> {
+        signatureFlowService.cancelSigner(id, email, requesterEmail)
+        return ApiResponse.ok(Unit)
+    }
+
     @PostMapping("/verify")
     fun verify(
         @Valid @RequestBody dto: VerifyRequest,

@@ -86,6 +86,7 @@ class SignatureFlowService(
         val req = signatureRequestRepository.findByToken(token)
             ?: throw SignatureRequestNotFoundException()
 
+        if (req.status == "CANCELLED") throw SignatureRequestCancelledException()
         if (req.expiresAt.isBefore(LocalDateTime.now())) throw SignatureRequestExpiredException()
         if (req.status == "SIGNED") throw SignatureRequestAlreadySignedException()
         if (!req.signerEmail.equals(signerEmail, ignoreCase = true)) throw UnauthorizedSignerException()
@@ -222,6 +223,7 @@ class SignatureFlowService(
             val sig = signaturesByRequestId[req.id]
             val effectiveStatus = when {
                 req.status == "SIGNED" -> "SIGNED"
+                req.status == "CANCELLED" -> "CANCELLED"
                 req.expiresAt.isBefore(now) -> "EXPIRED"
                 else -> "PENDING"
             }
@@ -245,6 +247,17 @@ class SignatureFlowService(
             expiresAt = first?.expiresAt?.toString() ?: "",
             signers = signers,
         )
+    }
+
+    @Transactional
+    fun cancelSigner(documentId: Long, signerEmail: String, requesterEmail: String) {
+        val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
+        val document = documentRepository.findByIdAndUser(documentId, requester)
+            ?: throw DocumentNotFoundException()
+        val req = signatureRequestRepository.findByDocumentAndSignerEmail(document, signerEmail)
+            ?: throw SignatureRequestNotFoundException()
+        if (req.status != "PENDING") throw SignatureRequestNotCancellableException()
+        req.status = "CANCELLED"
     }
 
     @Transactional(readOnly = true)

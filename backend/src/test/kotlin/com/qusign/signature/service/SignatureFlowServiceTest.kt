@@ -7,6 +7,8 @@ import com.qusign.document.service.DocumentService
 import com.qusign.signature.dto.CreateSignatureRequestDto
 import com.qusign.signature.dto.VerifyResponse
 import com.qusign.signature.exception.SignatureRequestAlreadySignedException
+import com.qusign.signature.exception.SignatureRequestCancelledException
+import com.qusign.signature.exception.SignatureRequestNotCancellableException
 import com.qusign.signature.exception.SignatureRequestNotFoundException
 import com.qusign.signature.exception.UnauthorizedSignerException
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -120,6 +122,39 @@ class SignatureFlowServiceTest {
 
         assertThrows<SignatureRequestAlreadySignedException> {
             signatureFlowService.sign(req.token, "signer4@qusign.com", "pw1234!")
+        }
+    }
+
+    @Test
+    fun `서명 요청 취소 성공`() {
+        authService.register("req6@qusign.com", "pw1234!")
+        authService.register("signer6@qusign.com", "pw1234!")
+        val doc = documentService.upload("req6@qusign.com", pdf())
+        val req = signatureFlowService.requestSignature(
+            "req6@qusign.com",
+            CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer6@qusign.com"),
+        )
+
+        signatureFlowService.cancelSigner(doc.id, "signer6@qusign.com", "req6@qusign.com")
+
+        assertThrows<SignatureRequestCancelledException> {
+            signatureFlowService.sign(req.token, "signer6@qusign.com", "pw1234!")
+        }
+    }
+
+    @Test
+    fun `이미 서명된 요청 취소 시 예외`() {
+        authService.register("req7@qusign.com", "pw1234!")
+        authService.register("signer7@qusign.com", "pw1234!")
+        val doc = documentService.upload("req7@qusign.com", pdf())
+        val req = signatureFlowService.requestSignature(
+            "req7@qusign.com",
+            CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer7@qusign.com"),
+        )
+        signatureFlowService.sign(req.token, "signer7@qusign.com", "pw1234!")
+
+        assertThrows<SignatureRequestNotCancellableException> {
+            signatureFlowService.cancelSigner(doc.id, "signer7@qusign.com", "req7@qusign.com")
         }
     }
 

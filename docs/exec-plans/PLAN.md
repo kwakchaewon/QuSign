@@ -262,7 +262,7 @@
 
 > **⚠️ 구현 전 반드시 Claude Design에서 목업을 완성한다**
 
-- [ ] claude.ai/design에서 목업 생성
+- [x] claude.ai/design에서 목업 생성
   - 상세 페이지 PENDING 서명자 행 — 취소 버튼 위치·스타일
   - 취소 확인 모달 ("취소 후 되돌릴 수 없습니다" + 확인/취소 버튼)
   - 서명자가 취소된 링크 접근 시 안내 화면 (SignerView 내 취소 상태)
@@ -270,15 +270,15 @@
 
 #### Step 2. 백엔드
 
-- [ ] `DELETE /api/signature-requests/{id}` — 요청자 본인 + PENDING 상태만 허용
+- [ ] `POST /api/signature-requests/{id}/signers/{email}/cancel` — 요청자 본인 + PENDING 상태만 허용
 - [ ] 취소된 토큰으로 서명 시도 시 410 Gone 반환
 - [ ] `./gradlew test` 통과
 
 #### Step 3. 프론트엔드
 
-- [ ] 상세 페이지 취소 버튼 (PENDING 상태일 때만 표시)
-- [ ] 취소 확인 모달 구현
-- [ ] SignerView — 취소된 요청 접근 시 안내 화면 표시
+- [x] 상세 페이지 취소 버튼 (PENDING 상태일 때만 표시)
+- [x] 취소 확인 모달 구현
+- [x] SignerView — 취소된 요청 접근 시 안내 화면 표시
 
 **완료 기준:** 취소 후 서명 링크 접근 시 "취소된 요청" 안내 화면 표시
 

@@ -259,18 +259,18 @@
 
 #### Step 1. 백엔드 — DB + Redis 기반
 
-- [ ] Flyway `V4__add_notifications.sql` — `notifications` 테이블
+- [x] Flyway `V4__add_notifications.sql` — `notifications` 테이블
   - `id`, `user_id` (FK), `type` (ENUM), `title`, `message`, `reference_id` (signature_request.id), `is_read`, `created_at`
-- [ ] `Notification` 엔티티 + `NotificationRepository`
-- [ ] Redis 의존성 추가 (`spring-boot-starter-data-redis`) + `RedisConfig`
-- [ ] `NotificationService`
+- [x] `Notification` 엔티티 + `NotificationRepository`
+- [x] Redis 의존성 추가 (`spring-boot-starter-data-redis`) + `RedisConfig`
+- [x] `NotificationService`
   - `createAndPublish(userId, type, title, message, referenceId)` — DB 저장 → Redis 채널 발행
   - `getNotifications(userId)` — 최근 50건 조회
   - `markAsRead(id, userId)` — 읽음 처리
   - `markAllAsRead(userId)` — 전체 읽음
   - `getUnreadCount(userId)` — 미읽음 개수
-- [ ] SSE 엔드포인트: `GET /api/notifications/stream` — Redis 구독 → `SseEmitter` push
-- [ ] REST 엔드포인트:
+- [x] SSE 엔드포인트: `GET /api/notifications/stream` — Redis 구독 → `SseEmitter` push
+- [x] REST 엔드포인트:
   - `GET /api/notifications` — 알림 목록
   - `PUT /api/notifications/{id}/read` — 읽음 처리
   - `PUT /api/notifications/read-all` — 전체 읽음
@@ -278,24 +278,24 @@
 
 #### Step 2. 알림 발생 지점 연결
 
-- [ ] `SignatureFlowService.sign()` 완료 → `SIGN_DONE` (요청자)
-- [ ] `SignatureFlowService.requestSignature()` → `SIGN_REQUEST` (서명자가 가입자인 경우)
-- [ ] 취소 서비스 → `SIGN_CANCELLED` (서명자가 가입자인 경우)
-- [ ] `@Scheduled` 스케줄러 — 만료 D-1 → `SIGN_EXPIRING_SOON` / 만료 → `SIGN_EXPIRED`
+- [x] `SignatureFlowService.sign()` 완료 → `SIGN_DONE` (요청자)
+- [x] `SignatureFlowService.requestSignature()` → `SIGN_REQUEST` (서명자가 가입자인 경우)
+- [x] 취소 서비스 → `SIGN_CANCELLED` (서명자가 가입자인 경우)
+- [x] `@Scheduled` 스케줄러 — 만료 D-1 → `SIGN_EXPIRING_SOON` / 만료 → `SIGN_EXPIRED`
 
 #### Step 3. 프론트엔드
 
-- [ ] `notificationStore` (Pinia) — `notifications`, `unreadCount`, SSE 연결 관리
-- [ ] SSE 클라이언트 (`EventSource /api/notifications/stream`) — 새 알림 실시간 수신
-- [ ] `AppTopbar.vue` — 벨 아이콘 + 미읽음 배지 (숫자)
-- [ ] `NotificationDropdown.vue` — 알림 목록, 클릭 시 해당 상세 페이지 이동, 전체 읽음 버튼
-- [ ] Docker Compose에 Redis 컨테이너 추가
+- [x] `notificationStore` (Pinia) — `notifications`, `unreadCount`, SSE 연결 관리
+- [x] SSE 클라이언트 (`EventSource /api/notifications/stream`) — 새 알림 실시간 수신
+- [x] `AppTopbar.vue` — 벨 아이콘 + 미읽음 배지 (숫자)
+- [x] `NotificationDropdown.vue` — 알림 목록, 클릭 시 해당 상세 페이지 이동, 전체 읽음 버튼
+- [x] Docker Compose에 Redis 컨테이너 추가
 
 #### 인프라 변경
 
-- [ ] `docker-compose.yml` — Redis 컨테이너 추가 (`redis:7-alpine`, 포트 6379)
-- [ ] `application-local.yml` — Redis 연결 설정
-- [ ] `./gradlew test` 통과
+- [x] `docker-compose.yml` — Redis 컨테이너 추가 (`redis:7-alpine`, 포트 6379)
+- [x] `application-local.yml` — Redis 연결 설정
+- [x] `./gradlew test` 통과
 
 **완료 기준:** 서명 완료 시 헤더 벨 아이콘에 미읽음 배지 표시 + 드롭다운에서 알림 확인 + 클릭 시 상세 페이지 이동
 

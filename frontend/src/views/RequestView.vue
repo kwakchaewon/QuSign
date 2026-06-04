@@ -160,7 +160,7 @@
             <div class="qs-file-main">
               <div class="qs-file-name">{{ files.length }}개 파일 업로드됨</div>
               <div class="qs-file-pills">
-                <span v-for="f in files" :key="f.id" class="qs-file-pill">{{ f.name }}</span>
+                <span v-for="f in files" :key="f.id" class="qs-file-pill" :title="f.name">{{ truncateFileName(f.name) }}</span>
               </div>
             </div>
           </div>
@@ -172,22 +172,37 @@
               <span class="qs-section-meta">{{ signerPills.length }}/5명</span>
             </div>
 
-            <div class="qs-signer-pills" @click="signerInputEl?.focus()">
-              <span v-for="(pill, i) in signerPills" :key="i" class="qs-signer-pill">
-                <span class="qs-signer-pill-label">{{ pill.email }}</span>
-                <button class="qs-signer-pill-remove" @click.stop="signerPills.splice(i, 1)">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5"
-                      stroke-linecap="round"/>
-                  </svg>
+            <div class="qs-signer-wrap">
+              <div class="qs-signer-pills" @click="signerInputEl?.focus()">
+                <span v-for="(pill, i) in signerPills" :key="i" class="qs-signer-pill">
+                  <span class="qs-signer-pill-label">{{ pill.email }}</span>
+                  <button class="qs-signer-pill-remove" @click.stop="signerPills.splice(i, 1)">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </span>
+                <input v-if="signerPills.length < 5"
+                  ref="signerInputEl"
+                  v-model="signerInputVal"
+                  type="email"
+                  autocomplete="off"
+                  placeholder="이메일 입력 후 Enter"
+                  @input="onSignerInput"
+                  @keydown="handleSignerKeydown"
+                  @blur="onSignerBlur">
+              </div>
+              <div v-if="showDropdown" class="qs-signer-dropdown">
+                <button
+                  v-for="(email, idx) in searchResults"
+                  :key="email"
+                  class="qs-signer-dropdown-item"
+                  :class="{ 'is-active': idx === dropdownIndex }"
+                  @mousedown.prevent="selectSearchResult(email)">
+                  {{ email }}
                 </button>
-              </span>
-              <input v-if="signerPills.length < 5"
-                ref="signerInputEl"
-                v-model="signerInputVal"
-                type="email"
-                placeholder="이메일 입력 후 Enter"
-                @keydown="handleSignerKeydown">
+              </div>
             </div>
             <p v-if="signerError" class="qs-help is-error">{{ signerError }}</p>
             <p class="qs-pill-hint">Enter 또는 쉼표로 서명자 추가 · 최대 5명</p>
@@ -319,6 +334,10 @@ const signerInputEl = ref<HTMLInputElement | null>(null)
 const signerInputVal = ref('')
 const signerPills = ref<SignerPill[]>([])
 const signerError = ref('')
+const searchResults = ref<string[]>([])
+const showDropdown = ref(false)
+const dropdownIndex = ref(-1)
+let searchTimer: ReturnType<typeof setTimeout> | null = null
 const message = ref('')
 const isSending = ref(false)
 const fileResults = ref<FileResult[]>([])
@@ -411,6 +430,17 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
+function truncateFileName(name: string, maxLen = 28): string {
+  if (name.length <= maxLen) return name
+  const lastDot = name.lastIndexOf('.')
+  if (lastDot <= 0) return name.slice(0, maxLen - 3) + '...'
+  const ext = name.slice(lastDot)
+  const base = name.slice(0, lastDot)
+  const allowedBase = maxLen - 3 - ext.length
+  if (allowedBase <= 0) return name.slice(0, maxLen - 3) + '...'
+  return base.slice(0, allowedBase) + '...' + ext
+}
+
 function fileStatusClass(f: FileEntry) {
   if (f.status === 'error') return 'is-error'
   if (f.status === 'uploading') return 'is-uploading'
@@ -425,14 +455,66 @@ function fileStatusText(f: FileEntry) {
   return '대기 중'
 }
 
+function onSignerInput() {
+  const val = signerInputVal.value.trim()
+  dropdownIndex.value = -1
+  if (searchTimer) clearTimeout(searchTimer)
+  if (val.length < 2) { searchResults.value = []; showDropdown.value = false; return }
+  searchTimer = setTimeout(async () => {
+    try {
+      const res = await api.get<{ data: string[] }>('/api/users/search', { params: { q: val } })
+      searchResults.value = res.data.data.filter((e: string) => !signerPills.value.some(p => p.email === e))
+      showDropdown.value = searchResults.value.length > 0
+    } catch {
+      searchResults.value = []
+      showDropdown.value = false
+    }
+  }, 300)
+}
+
+function onSignerBlur() {
+  setTimeout(() => { showDropdown.value = false }, 150)
+}
+
+function selectSearchResult(email: string) {
+  if (signerPills.value.some(p => p.email === email)) {
+    signerError.value = '이미 추가된 이메일입니다'
+    return
+  }
+  signerPills.value.push({ email })
+  signerInputVal.value = ''
+  signerError.value = ''
+  searchResults.value = []
+  showDropdown.value = false
+  dropdownIndex.value = -1
+}
+
 function handleSignerKeydown(e: KeyboardEvent) {
+  if (showDropdown.value) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      dropdownIndex.value = Math.min(dropdownIndex.value + 1, searchResults.value.length - 1)
+      return
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      dropdownIndex.value = Math.max(dropdownIndex.value - 1, -1)
+      return
+    }
+    if (e.key === 'Escape') { showDropdown.value = false; return }
+    if (e.key === 'Enter' && dropdownIndex.value >= 0) {
+      e.preventDefault()
+      selectSearchResult(searchResults.value[dropdownIndex.value])
+      return
+    }
+  }
   if (e.key === 'Enter' || e.key === ',') {
     e.preventDefault()
     addSignerPill()
   }
 }
 
-function addSignerPill() {
+async function addSignerPill() {
   const email = signerInputVal.value.trim().replace(/,$/, '')
   if (!email) return
   if (!EMAIL_RE.test(email)) {
@@ -443,9 +525,23 @@ function addSignerPill() {
     signerError.value = '이미 추가된 이메일입니다'
     return
   }
+  if (!searchResults.value.includes(email)) {
+    try {
+      const res = await api.get<{ data: string[] }>('/api/users/search', { params: { q: email } })
+      if (!res.data.data.includes(email)) {
+        signerError.value = 'QuSign에 가입되지 않은 이메일입니다'
+        return
+      }
+    } catch {
+      signerError.value = '사용자 확인에 실패했습니다'
+      return
+    }
+  }
   signerPills.value.push({ email })
   signerInputVal.value = ''
   signerError.value = ''
+  searchResults.value = []
+  showDropdown.value = false
 }
 
 async function handleSubmit() {

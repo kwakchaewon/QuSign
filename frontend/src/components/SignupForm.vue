@@ -131,13 +131,15 @@
         </svg>
       </span>
       <span>
-        <a href="#" @click.prevent="showTerms = true">이용약관</a> 및
-        <a href="#" @click.prevent="showPrivacy = true">개인정보처리방침</a>에 동의해요
+        <a href="#" @click.prevent="showTermsModal = true">이용약관 및 개인정보처리방침</a>에 동의해요
       </span>
     </label>
 
-    <TermsModal v-model="showTerms" type="terms" />
-    <TermsModal v-model="showPrivacy" type="privacy" />
+    <TermsModal
+      v-model="showTermsModal"
+      @agree="agree = true"
+      @disagree="agree = false"
+    />
 
     <!-- 에러 알림 -->
     <div v-if="submitErr" class="qs-alert" role="alert">
@@ -179,8 +181,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import TermsModal from '@/components/ui/TermsModal.vue'
 
-const showTerms = ref(false)
-const showPrivacy = ref(false)
+const showTermsModal = ref(false)
 
 const emit = defineEmits<{ success: [email: string] }>()
 const auth = useAuthStore()

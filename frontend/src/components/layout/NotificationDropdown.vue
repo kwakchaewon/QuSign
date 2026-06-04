@@ -76,7 +76,9 @@ function toggleOpen() {
 async function handleItemClick(n: Notification) {
   if (!n.isRead) await store.markAsRead(n.id)
   isOpen.value = false
-  if (n.referenceId) {
+  if (n.type === 'SIGN_REQUEST' && n.referenceToken) {
+    router.push(`/sign/${n.referenceToken}`)
+  } else if (n.referenceId) {
     router.push(`/documents/${n.referenceId}`)
   }
 }

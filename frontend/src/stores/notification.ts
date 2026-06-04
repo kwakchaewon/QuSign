@@ -8,6 +8,7 @@ export interface Notification {
   title: string
   message: string
   referenceId: number | null
+  referenceToken: string | null
   isRead: boolean
   createdAt: string
 }

@@ -410,7 +410,7 @@
 }
 
 /* =============== Toast =============== */
-.qs-toast-wrap {
+.qs-page-detail .qs-toast-wrap {
   position: fixed;
   left: 50%;
   bottom: 28px;
@@ -420,11 +420,11 @@
   transition: opacity 0.25s, transform 0.25s var(--easing-default);
   z-index: var(--z-toast);
 }
-.qs-toast-wrap.is-show {
+.qs-page-detail .qs-toast-wrap.is-show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
-.qs-toast {
+.qs-page-detail .qs-toast {
   display: inline-flex; align-items: center; gap: 10px;
   background: var(--text-primary);
   color: var(--surface-bg);
@@ -435,7 +435,7 @@
   white-space: nowrap;
   max-width: calc(100vw - 32px);
 }
-.qs-toast-dot {
+.qs-page-detail .qs-toast-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
   background: var(--color-success);

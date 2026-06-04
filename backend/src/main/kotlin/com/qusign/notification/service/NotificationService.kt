@@ -38,6 +38,7 @@ class NotificationService(
         title: String,
         message: String,
         referenceId: Long? = null,
+        referenceToken: String? = null,
     ) {
         val user = userRepository.findById(userId).orElse(null) ?: return
         if (!isEnabled(user, type)) return
@@ -48,6 +49,7 @@ class NotificationService(
                 title = title,
                 message = message,
                 referenceId = referenceId,
+                referenceToken = referenceToken,
             )
         )
         val payload = objectMapper.writeValueAsString(NotificationResponse(notification))

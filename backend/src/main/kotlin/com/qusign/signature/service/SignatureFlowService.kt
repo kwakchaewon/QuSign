@@ -89,6 +89,7 @@ class SignatureFlowService(
                 title = "서명 요청",
                 message = "${requester.email}님이 '${document.originalFilename}' 서명을 요청했습니다.",
                 referenceId = req.id,
+                referenceToken = req.token,
             )
         }
 

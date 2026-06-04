@@ -8,6 +8,7 @@ data class NotificationResponse(
     val title: String,
     val message: String,
     val referenceId: Long?,
+    val referenceToken: String?,
     val isRead: Boolean,
     val createdAt: String,
 ) {
@@ -17,6 +18,7 @@ data class NotificationResponse(
         title = n.title,
         message = n.message,
         referenceId = n.referenceId,
+        referenceToken = n.referenceToken,
         isRead = n.isRead,
         createdAt = n.createdAt?.toString() ?: "",
     )

@@ -26,6 +26,9 @@ class Notification(
     @Column(name = "reference_id")
     val referenceId: Long? = null,
 
+    @Column(name = "reference_token", length = 36)
+    val referenceToken: String? = null,
+
     @Column(name = "is_read", nullable = false)
     var isRead: Boolean = false,
 

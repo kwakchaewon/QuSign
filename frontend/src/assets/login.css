@@ -225,6 +225,7 @@ button { font: inherit; }
   display: flex;
   flex-direction: column;
   gap: 14px;
+  margin-top: 16px;
 }
 
 .qs-field {

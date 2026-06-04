@@ -131,7 +131,7 @@
         </svg>
       </span>
       <span>
-        <a href="#" @click.prevent="showTermsModal = true">이용약관 및 개인정보처리방침</a>에 동의해요
+        <a href="#" @click.prevent="showTermsModal = true">이용약관 및 개인정보처리방침</a>에 대해 확인과 동의가 필요해요.
       </span>
     </label>
 

@@ -10,7 +10,7 @@ import VerifyView from '../views/VerifyView.vue'
 import AccountSettingsView from '../views/AccountSettingsView.vue'
 import NotificationsView from '../views/NotificationsView.vue'
 
-const AUTH_ROUTES = ['/home', '/documents', '/request', '/settings', '/notifications']
+const AUTH_ROUTES = ['/home', '/documents', '/request', '/settings', '/notifications', '/sign']
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

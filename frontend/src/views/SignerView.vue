@@ -13,22 +13,11 @@
             </svg>
             <template v-else>1</template>
           </span>
-          <span class="qs-step-label">본인 확인</span>
-        </div>
-        <span :class="['qs-step-bar', { 'is-done': step > 1 }]" />
-        <div :class="['qs-step-item', { 'is-active': step === 2, 'is-done': step > 2 }]">
-          <span class="qs-step-num">
-            <svg v-if="step > 2" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4"
-                stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <template v-else>2</template>
-          </span>
           <span class="qs-step-label">문서 검토 · 서명</span>
         </div>
-        <span :class="['qs-step-bar', { 'is-done': step > 2 }]" />
-        <div :class="['qs-step-item', { 'is-active': step === 3 }]">
-          <span class="qs-step-num">3</span>
+        <span :class="['qs-step-bar', { 'is-done': step > 1 }]" />
+        <div :class="['qs-step-item', { 'is-active': step === 2 }]">
+          <span class="qs-step-num">2</span>
           <span class="qs-step-label">완료</span>
         </div>
       </div>
@@ -48,179 +37,18 @@
           요청자가 이 서명 요청을 취소했습니다.<br />
           서명이 필요하다면 요청자에게 문의해 주세요.
         </p>
-        <div v-if="cancelledInfo.requester || cancelledInfo.cancelledAt" class="qs-cancelled-meta">
-          <div v-if="cancelledInfo.requester" class="qs-cancelled-meta-row">
+        <div v-if="cancelledInfo.requester" class="qs-cancelled-meta">
+          <div class="qs-cancelled-meta-row">
             <span class="qs-cancelled-meta-k">요청자</span>
             <span class="qs-cancelled-meta-v">{{ cancelledInfo.requester }}</span>
           </div>
-          <div v-if="cancelledInfo.cancelledAt" class="qs-cancelled-meta-row">
-            <span class="qs-cancelled-meta-k">취소 일시</span>
-            <span class="qs-cancelled-meta-v">{{ cancelledInfo.cancelledAt }}</span>
-          </div>
         </div>
       </article>
 
-      <!-- ── Step 1: 이메일 OTP 인증 ── -->
+      <!-- ── Step 1: 문서 검토 + 서명 ── -->
       <article v-else-if="step === 1" class="qs-card" aria-labelledby="step1-title">
         <header class="qs-card-head">
-          <h1 id="step1-title" class="qs-card-title">본인 확인</h1>
-          <p class="qs-card-desc">
-            서명 요청을 받은 이메일 주소를 입력해 주세요.<br />
-            입력하신 주소로 6자리 인증 코드를 보내 드려요.
-          </p>
-        </header>
-
-        <div class="qs-field">
-          <label class="qs-label" for="signer-email">이메일</label>
-          <div :class="['qs-input', { 'is-disabled': otpSent, 'is-error': emailTouched && !emailValid }]">
-            <span class="qs-input-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </span>
-            <input
-              id="signer-email"
-              v-model="email"
-              type="email"
-              inputmode="email"
-              autocomplete="email"
-              placeholder="name@company.com"
-              :disabled="otpSent"
-              @blur="emailTouched = true"
-              @keydown.enter="!otpSent && sendOtp()"
-            />
-            <span v-if="emailValid" class="qs-input-tick" aria-hidden="true">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </span>
-          </div>
-          <span v-if="emailTouched && !emailValid && email.length > 0"
-            class="qs-help is-error">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 4l9 16H3l9-16z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-              <path d="M12 10v4M12 17v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            </svg>
-            이메일 형식이 올바르지 않아요
-          </span>
-          <span v-if="sendErr" class="qs-help is-error">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 4l9 16H3l9-16z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-              <path d="M12 10v4M12 17v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            </svg>
-            {{ sendErr }}
-          </span>
-        </div>
-
-        <button v-if="!otpSent"
-          type="button"
-          class="qs-btn qs-btn-primary qs-btn-lg qs-btn-block"
-          style="margin-top: 8px"
-          :disabled="!emailValid || isSending"
-          @click="sendOtp"
-        >
-          <svg v-if="isSending" width="20" height="20" viewBox="0 0 24 24" fill="none"
-            style="animation: qs-signer-spin 1s linear infinite" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.25" stroke-width="2.4"/>
-            <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-          </svg>
-          <span>{{ isSending ? '전송 중…' : '인증 코드 받기' }}</span>
-          <svg v-if="!isSending" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-
-        <template v-if="otpSent">
-          <div class="qs-sent-banner" role="status">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4"
-                stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span>
-              <span class="qs-sent-banner-strong">{{ email }}</span>으로 인증 코드를 보냈어요.
-            </span>
-          </div>
-
-          <div class="qs-field" style="margin-top: 14px">
-            <div class="qs-label-row">
-              <label class="qs-label">인증 코드 (6자리)</label>
-              <span :class="['qs-otp-timer', { 'is-expiring': timerSeconds <= 30 }]">
-                <svg class="qs-otp-clock" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
-                  <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-                </svg>
-                <span class="qs-otp-timer-mono">{{ fmtTimer(timerSeconds) }}</span>
-              </span>
-            </div>
-            <div class="qs-otp-row" role="group" aria-label="인증 코드 6자리 입력">
-              <input
-                v-for="(_, i) in otpCode"
-                :key="i"
-                :ref="(el) => setOtpRef(i, el)"
-                type="text"
-                inputmode="numeric"
-                :autocomplete="i === 0 ? 'one-time-code' : 'off'"
-                maxlength="6"
-                :value="otpCode[i]"
-                placeholder="·"
-                :aria-label="`인증 코드 ${i + 1}자리`"
-                :class="['qs-otp-input', { 'has-value': otpCode[i], 'is-error': !!otpErr }]"
-                :disabled="isVerifying || timerSeconds === 0"
-                @input="handleOtpInput(i, $event)"
-                @keydown="handleOtpKeydown(i, $event)"
-                @focus="handleOtpFocus"
-              />
-            </div>
-            <span v-if="otpErr" class="qs-help is-error" style="margin-top: 8px">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 4l9 16H3l9-16z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-                <path d="M12 10v4M12 17v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-              </svg>
-              {{ otpErr }}
-            </span>
-            <span v-if="timerSeconds === 0 && !otpErr" class="qs-help is-error" style="margin-top: 8px">
-              인증 코드가 만료되었어요. 재전송해 주세요.
-            </span>
-          </div>
-
-          <div class="qs-otp-meta">
-            <span class="qs-help">코드를 받지 못하셨나요?</span>
-            <button type="button" class="qs-link-quiet"
-              :disabled="timerSeconds > 150"
-              @click="sendOtp">
-              재전송{{ timerSeconds > 150 ? ` (${timerSeconds - 150}s)` : '' }}
-            </button>
-          </div>
-
-          <button
-            type="button"
-            class="qs-btn qs-btn-primary qs-btn-lg qs-btn-block"
-            style="margin-top: 10px"
-            :disabled="otpCode.join('').length < 6 || isVerifying || timerSeconds === 0"
-            @click="verifyOtp"
-          >
-            <svg v-if="isVerifying" width="20" height="20" viewBox="0 0 24 24" fill="none"
-              style="animation: qs-signer-spin 1s linear infinite" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.25" stroke-width="2.4"/>
-              <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-            </svg>
-            <span>{{ isVerifying ? '확인 중…' : '인증하고 문서 보기' }}</span>
-            <svg v-if="!isVerifying" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </template>
-      </article>
-
-      <!-- ── Step 2: 문서 검토 + 서명 ── -->
-      <article v-else-if="step === 2" class="qs-card" aria-labelledby="step2-title">
-        <header class="qs-card-head">
-          <h1 id="step2-title" class="qs-card-title">문서 검토 · 서명</h1>
+          <h1 id="step1-title" class="qs-card-title">문서 검토 · 서명</h1>
           <p class="qs-card-desc">
             아래 문서 내용을 확인하고, 동의 후 서명을 진행해 주세요.
             서명은 즉시 ML-DSA-65 알고리즘으로 처리됩니다.
@@ -306,7 +134,6 @@
               끝까지 확인
             </button>
           </div>
-          <!-- 실제 PDF 로드 시 iframe, 아닐 경우 플레이스홀더 -->
           <iframe v-if="pdfBlobUrl" :src="pdfBlobUrl" class="qs-pdf-frame" title="서명 요청 문서" />
           <div v-else class="qs-pdf-canvas">
             <div class="qs-pdf-page">
@@ -361,6 +188,34 @@
           </label>
         </div>
 
+        <!-- 비밀번호 입력 -->
+        <div class="qs-field" style="margin-top: 16px">
+          <label class="qs-label" for="sign-password">서명 비밀번호</label>
+          <div class="qs-input">
+            <span class="qs-input-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <rect x="4" y="10" width="16" height="11" rx="3" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <input
+              id="sign-password"
+              v-model="password"
+              type="password"
+              placeholder="계정 비밀번호를 입력해 주세요"
+              autocomplete="current-password"
+              @keydown.enter="handleSign"
+            />
+          </div>
+          <span v-if="signErr" class="qs-help is-error" style="margin-top: 6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 4l9 16H3l9-16z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M12 10v4M12 17v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+            {{ signErr }}
+          </span>
+        </div>
+
         <div class="qs-sign-actions">
           <button
             type="button"
@@ -368,7 +223,7 @@
             :disabled="!canSign"
             @click="handleSign"
           >
-            {{ canSign ? '서명하기' : '동의 후 서명할 수 있어요' }}
+            {{ canSign ? '서명하기' : '동의 및 비밀번호 입력 후 서명할 수 있어요' }}
             <svg v-if="canSign" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round"/>
@@ -386,8 +241,8 @@
         </p>
       </article>
 
-      <!-- ── Step 3: 서명 완료 ── -->
-      <article v-else-if="step === 3" class="qs-card qs-success-card" aria-labelledby="step3-title">
+      <!-- ── Step 2: 서명 완료 ── -->
+      <article v-else-if="step === 2" class="qs-card qs-success-card" aria-labelledby="step2-title">
         <div class="qs-success-icon" aria-hidden="true">
           <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
             <circle cx="22" cy="22" r="20" stroke="currentColor" stroke-width="2.4"
@@ -397,7 +252,7 @@
               class="qs-success-icon-tick"/>
           </svg>
         </div>
-        <h1 id="step3-title" class="qs-success-title">서명이 완료되었습니다</h1>
+        <h1 id="step2-title" class="qs-success-title">서명이 완료되었습니다</h1>
         <p class="qs-success-desc">
           문서가 양자내성암호로 안전하게 서명되었어요.<br />
           요청자에게는 자동으로 알림이 전송됩니다.
@@ -441,12 +296,6 @@
             </svg>
             {{ isDownloadingSigned ? '다운로드 중…' : '서명된 PDF 다운로드' }}
           </button>
-        </div>
-
-        <div class="qs-success-foot">
-          QuSign 계정이 있으신가요?
-          <RouterLink to="/login">로그인하면</RouterLink>
-          서명 이력을 한곳에서 관리할 수 있어요.
         </div>
       </article>
 
@@ -506,7 +355,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/lib/api'
 import PublicTopbar from '@/components/layout/PublicTopbar.vue'
@@ -514,41 +363,14 @@ import PublicTopbar from '@/components/layout/PublicTopbar.vue'
 const route = useRoute()
 const signToken = computed(() => (route.params.token as string) ?? '')
 
+const email = localStorage.getItem('qusign:email') ?? ''
+
 // ── 취소 상태 ──
 const cancelled = ref(false)
-const cancelledInfo = ref({ requester: '', cancelledAt: '' })
+const cancelledInfo = ref({ requester: '' })
 
-// ── Step 1: OTP ──
-const email = ref('')
-const emailTouched = ref(false)
-const emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()))
-const otpSent = ref(false)
-const isSending = ref(false)
-const sendErr = ref<string | null>(null)
-const otpCode = ref<string[]>(['', '', '', '', '', ''])
-const otpRefs: (HTMLInputElement | null)[] = []
-
-function setOtpRef(i: number, el: unknown) {
-  otpRefs[i] = el instanceof HTMLInputElement ? el : null
-}
-
-function handleOtpFocus(event: Event) {
-  (event.target as HTMLInputElement)?.select()
-}
-
-const hashFull = computed(() => docInfo.value?.hashSha3256 ?? '')
-const hashShort = computed(() => {
-  const h = docInfo.value?.hashSha3256 ?? ''
-  return h ? `${h.slice(0, 16)}…${h.slice(-8)}` : ''
-})
-const timerSeconds = ref(180)
-const isVerifying = ref(false)
-const otpErr = ref<string | null>(null)
-let timerInterval: ReturnType<typeof setInterval> | null = null
-
-// ── Step 2 ──
+// ── Step 1 ──
 const step = ref(1)
-const signerToken = ref('')
 const docInfo = ref<{
   filename: string
   requesterEmail: string
@@ -558,11 +380,19 @@ const docInfo = ref<{
   pages?: number
 } | null>(null)
 const hashOpen = ref(false)
+const hashFull = computed(() => docInfo.value?.hashSha3256 ?? '')
+const hashShort = computed(() => {
+  const h = docInfo.value?.hashSha3256 ?? ''
+  return h ? `${h.slice(0, 16)}…${h.slice(-8)}` : ''
+})
 const pdfBlobUrl = ref('')
 const scrolled = ref(false)
 const consent1 = ref(false)
 const consent2 = ref(false)
-const canSign = computed(() => scrolled.value && consent1.value && consent2.value)
+const password = ref('')
+const canSign = computed(() =>
+  scrolled.value && consent1.value && consent2.value && password.value.trim().length > 0
+)
 
 // ── 서명 ──
 const signing = ref(false)
@@ -576,11 +406,11 @@ const SIGNING_STEPS = [
 const signedAt = ref('')
 const signErr = ref<string | null>(null)
 
-// ── Step 3 ──
+// ── Step 2 ──
 const isDownloadingSigned = ref(false)
 
 // ─────────────────────────────────────
-// 마운트 시 문서 정보 조회 (취소 여부 포함)
+// 마운트 시 서명 요청 정보 + PDF 조회
 // ─────────────────────────────────────
 onMounted(async () => {
   if (!signToken.value) return
@@ -588,22 +418,17 @@ onMounted(async () => {
     const res = await api.get<{
       data: {
         cancelled: boolean
-        cancelledAt?: string
         requesterEmail: string
         documentName: string
         hashSha3256: string
         requestedAt: string
         expiresAt: string
-        pages?: number
       }
-    }>(`/api/public/signature-requests/${signToken.value}`)
+    }>(`/api/signature-requests/${signToken.value}/info`)
     const d = res.data.data
     if (d.cancelled) {
       cancelled.value = true
-      cancelledInfo.value = {
-        requester: d.requesterEmail,
-        cancelledAt: d.cancelledAt ?? '',
-      }
+      cancelledInfo.value = { requester: d.requesterEmail }
     } else {
       docInfo.value = {
         filename: d.documentName,
@@ -611,155 +436,22 @@ onMounted(async () => {
         requestedAt: formatDate(d.requestedAt),
         expiresAt: formatDate(d.expiresAt),
         hashSha3256: d.hashSha3256,
-        pages: d.pages,
       }
+      await fetchPdf()
     }
   } catch {
-    // 엔드포인트 미구현 시 무시 — OTP 플로우는 정상 진행
+    // 오류 시 빈 화면 — api 인터셉터가 401/500 처리
   }
 })
 
 onBeforeUnmount(() => {
-  stopTimer()
   if (pdfBlobUrl.value) URL.revokeObjectURL(pdfBlobUrl.value)
 })
 
-// ─────────────────────────────────────
-// 타이머
-// ─────────────────────────────────────
-function startTimer() {
-  stopTimer()
-  timerSeconds.value = 180
-  timerInterval = setInterval(() => {
-    timerSeconds.value--
-    if (timerSeconds.value <= 0) stopTimer()
-  }, 1000)
-}
-
-function stopTimer() {
-  if (timerInterval) { clearInterval(timerInterval); timerInterval = null }
-}
-
-function fmtTimer(s: number) {
-  const m = Math.floor(s / 60)
-  const sec = s % 60
-  return `${m}:${String(sec).padStart(2, '0')}`
-}
-
-// ─────────────────────────────────────
-// OTP
-// ─────────────────────────────────────
-async function sendOtp() {
-  if (!emailValid.value || isSending.value) return
-  isSending.value = true
-  sendErr.value = null
-  try {
-    await api.post(`/api/public/signature-requests/${signToken.value}/send-otp`, {
-      email: email.value.trim(),
-    })
-    otpSent.value = true
-    otpCode.value = ['', '', '', '', '', '']
-    otpErr.value = null
-    startTimer()
-    await nextTick()
-    otpRefs[0]?.focus()
-  } catch (err: any) {
-    sendErr.value = err?.response?.data?.message ?? '인증 코드 전송에 실패했어요. 잠시 후 다시 시도해 주세요.'
-  } finally {
-    isSending.value = false
-  }
-}
-
-function handleOtpInput(idx: number, event: Event) {
-  const raw = (event.target as HTMLInputElement).value
-  const cleaned = raw.replace(/\D/g, '')
-  if (cleaned.length > 1) {
-    const next = ['', '', '', '', '', '']
-    cleaned.slice(0, 6).split('').forEach((c, i) => { next[i] = c })
-    otpCode.value = next
-    const lastIdx = Math.min(cleaned.length, 5)
-    nextTick(() => otpRefs[lastIdx]?.focus())
-    otpErr.value = null
-    return
-  }
-  const next = [...otpCode.value]
-  next[idx] = cleaned.slice(0, 1)
-  otpCode.value = next
-  otpErr.value = null
-  if (cleaned && idx < 5) nextTick(() => otpRefs[idx + 1]?.focus())
-}
-
-function handleOtpKeydown(idx: number, e: KeyboardEvent) {
-  if (e.key === 'Backspace' && !otpCode.value[idx] && idx > 0) {
-    nextTick(() => otpRefs[idx - 1]?.focus())
-  } else if (e.key === 'ArrowLeft' && idx > 0) {
-    nextTick(() => otpRefs[idx - 1]?.focus())
-  } else if (e.key === 'ArrowRight' && idx < 5) {
-    nextTick(() => otpRefs[idx + 1]?.focus())
-  } else if (e.key === 'Enter' && otpCode.value.join('').length === 6) {
-    verifyOtp()
-  }
-}
-
-async function verifyOtp() {
-  const code = otpCode.value.join('')
-  if (code.length < 6 || isVerifying.value) return
-  isVerifying.value = true
-  otpErr.value = null
-  try {
-    const res = await api.post<{ data: { signerToken: string } }>(
-      `/api/public/signature-requests/${signToken.value}/verify-otp`,
-      { email: email.value.trim(), code }
-    )
-    signerToken.value = res.data.data.signerToken
-    stopTimer()
-    await fetchDocInfoWithToken()
-    await fetchPdf()
-    step.value = 2
-  } catch (err: any) {
-    otpErr.value = err?.response?.data?.message ?? '인증 코드가 일치하지 않아요.'
-  } finally {
-    isVerifying.value = false
-  }
-}
-
-// ─────────────────────────────────────
-// 문서 정보 (토큰 인증 후)
-// ─────────────────────────────────────
-async function fetchDocInfoWithToken() {
-  if (docInfo.value) return
-  try {
-    const res = await api.get<{
-      data: {
-        documentName: string
-        requesterEmail: string
-        requestedAt: string
-        expiresAt: string
-        hashSha3256: string
-        pages?: number
-      }
-    }>(`/api/public/signature-requests/${signToken.value}`, {
-      headers: signerToken.value ? { Authorization: `Bearer ${signerToken.value}` } : {},
-    })
-    const d = res.data.data
-    docInfo.value = {
-      filename: d.documentName,
-      requesterEmail: d.requesterEmail,
-      requestedAt: formatDate(d.requestedAt),
-      expiresAt: formatDate(d.expiresAt),
-      hashSha3256: d.hashSha3256,
-      pages: d.pages,
-    }
-  } catch {
-    // 조회 실패 시 빈 정보로 진행
-  }
-}
-
 async function fetchPdf() {
   try {
-    const res = await api.get(`/api/public/signature-requests/${signToken.value}/document`, {
+    const res = await api.get(`/api/signature-requests/${signToken.value}/document`, {
       responseType: 'blob',
-      headers: signerToken.value ? { Authorization: `Bearer ${signerToken.value}` } : {},
     })
     if (pdfBlobUrl.value) URL.revokeObjectURL(pdfBlobUrl.value)
     pdfBlobUrl.value = URL.createObjectURL(res.data)
@@ -777,7 +469,6 @@ async function handleSign() {
   signingStep.value = 0
   signErr.value = null
 
-  // 시각적 스텝 진행
   const visualDone = new Promise<void>(resolve => {
     let i = 0
     const iv = setInterval(() => {
@@ -787,14 +478,11 @@ async function handleSign() {
     }, 700)
   })
 
-  // API 호출
   const apiDone = (async () => {
     try {
-      await api.post(
-        `/api/public/signature-requests/${signToken.value}/sign`,
-        { email: email.value.trim() },
-        signerToken.value ? { headers: { Authorization: `Bearer ${signerToken.value}` } } : undefined
-      )
+      await api.post(`/api/signature-requests/${signToken.value}/sign`, {
+        password: password.value,
+      })
       signedAt.value = new Date().toLocaleString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit',
@@ -807,7 +495,7 @@ async function handleSign() {
   await Promise.all([visualDone, apiDone])
   signing.value = false
   if (!signErr.value) {
-    step.value = 3
+    step.value = 2
   }
 }
 
@@ -817,9 +505,8 @@ async function handleSign() {
 async function downloadSignedPdf() {
   isDownloadingSigned.value = true
   try {
-    const res = await api.get(`/api/public/signature-requests/${signToken.value}/signed-document`, {
+    const res = await api.get(`/api/signature-requests/${signToken.value}/signed-document`, {
       responseType: 'blob',
-      headers: signerToken.value ? { Authorization: `Bearer ${signerToken.value}` } : {},
     })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')

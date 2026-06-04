@@ -64,6 +64,13 @@ class UserService(
         )
     }
 
+    fun searchUsers(requesterEmail: String, q: String): List<String> {
+        if (q.length < 2) return emptyList()
+        return userRepository.findTop8ByEmailContainingIgnoreCaseAndDeletedAtIsNullOrderByEmail(q)
+            .map { it.email }
+            .filter { it != requesterEmail }
+    }
+
     @Transactional
     fun deleteAccount(email: String) {
         val user = userRepository.findByEmail(email) ?: throw NoSuchElementException("사용자를 찾을 수 없습니다")

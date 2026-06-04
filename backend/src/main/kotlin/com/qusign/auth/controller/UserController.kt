@@ -34,6 +34,12 @@ class UserController(private val userService: UserService) {
     ): ApiResponse<NotificationSettingsResponse> =
         ApiResponse.ok(userService.updateNotificationSettings(email, request))
 
+    @GetMapping("/search")
+    fun searchUsers(
+        @AuthenticationPrincipal email: String,
+        @RequestParam q: String,
+    ): ApiResponse<List<String>> = ApiResponse.ok(userService.searchUsers(email, q))
+
     @DeleteMapping("/me")
     fun deleteAccount(@AuthenticationPrincipal email: String): ApiResponse<Unit> {
         userService.deleteAccount(email)

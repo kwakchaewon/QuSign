@@ -20,7 +20,6 @@
 
           <div class="qs-card-body">
             <h2 class="qs-card-title">로그인</h2>
-            <p class="qs-card-desc">기업 계정으로 로그인하고 문서를 안전하게 서명하세요.</p>
 
             <LoginForm @login="handleLogin" />
 

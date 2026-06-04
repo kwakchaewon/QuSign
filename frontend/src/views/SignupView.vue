@@ -20,15 +20,6 @@
 
           <div class="qs-card-body">
             <h2 class="qs-card-title">회원가입</h2>
-            <p class="qs-card-desc">
-              <span class="qs-keyhint">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="8" cy="15" r="4" stroke="currentColor" stroke-width="1.6" />
-                  <path d="M11 12l9-9M17 6l3 3M14 9l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </span>
-              가입 즉시 ML-DSA 키쌍이 생성됩니다
-            </p>
 
             <SignupForm @success="handleSuccess" />
 

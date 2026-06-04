@@ -130,7 +130,7 @@ button { font: inherit; }
 }
 .qs-card-body { display: flex; flex-direction: column; }
 .qs-card-title {
-  margin: 0 0 4px;
+  margin: 0 0 20px;
   font-size: 19px; font-weight: 600;
   letter-spacing: -0.01em;
 }

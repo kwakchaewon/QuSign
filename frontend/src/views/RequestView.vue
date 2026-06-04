@@ -51,10 +51,10 @@
 
             <div class="qs-drop-icon">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                <rect width="48" height="48" rx="12" fill="var(--color-error-bg)"/>
-                <path d="M16 20h16M16 26h10M16 32h12" stroke="var(--color-error)"
+                <rect width="48" height="48" rx="12" fill="var(--color-primary-50)"/>
+                <path d="M16 20h16M16 26h10M16 32h12" stroke="var(--color-primary-400)"
                   stroke-width="2" stroke-linecap="round"/>
-                <text x="12" y="42" font-size="8" font-weight="800" fill="var(--color-error)"
+                <text x="12" y="42" font-size="8" font-weight="800" fill="var(--color-primary-600)"
                   font-family="monospace">PDF</text>
               </svg>
             </div>
@@ -87,8 +87,8 @@
               :class="{ 'is-error': f.status === 'error' }">
               <div class="qs-mfile-icon">
                 <svg width="24" height="30" viewBox="0 0 28 36" fill="none">
-                  <rect width="28" height="36" rx="4" fill="var(--color-error-bg)"/>
-                  <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-error)"
+                  <rect width="28" height="36" rx="4" fill="var(--color-primary-50)"/>
+                  <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-primary-600)"
                     font-family="monospace">PDF</text>
                 </svg>
               </div>
@@ -152,8 +152,8 @@
           <div class="qs-file qs-file-summary">
             <div class="qs-file-icon">
               <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
-                <rect width="28" height="36" rx="4" fill="var(--color-error-bg)"/>
-                <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-error)"
+                <rect width="28" height="36" rx="4" fill="var(--color-primary-50)"/>
+                <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-primary-600)"
                   font-family="monospace">PDF</text>
               </svg>
             </div>
@@ -254,8 +254,8 @@
           <div v-for="(fr, fi) in fileResults" :key="fi" class="qs-link-list">
             <div class="qs-link-file-head">
               <svg width="14" height="18" viewBox="0 0 28 36" fill="none">
-                <rect width="28" height="36" rx="4" fill="var(--color-error-bg)"/>
-                <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-error)"
+                <rect width="28" height="36" rx="4" fill="var(--color-primary-50)"/>
+                <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-primary-600)"
                   font-family="monospace">PDF</text>
               </svg>
               <span class="qs-link-file-name">{{ fr.fileName }}</span>

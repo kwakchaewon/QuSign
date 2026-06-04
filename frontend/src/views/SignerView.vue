@@ -3,8 +3,8 @@
     <PublicTopbar title="QuSign" subtitle="전자서명 요청" logo-to="/" show-pqc-badge />
 
     <main class="qs-main">
-      <!-- 스텝퍼 (취소 상태가 아닐 때만) -->
-      <div v-if="!cancelled" class="qs-stepper" aria-label="서명 진행 단계">
+      <!-- 스텝퍼 (정상 진행 중일 때만) -->
+      <div v-if="!accessError && !cancelled" class="qs-stepper" aria-label="서명 진행 단계">
         <div :class="['qs-step-item', { 'is-active': step === 1, 'is-done': step > 1 }]">
           <span class="qs-step-num">
             <svg v-if="step > 1" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -22,8 +22,22 @@
         </div>
       </div>
 
+      <!-- ── 접근 오류 ── -->
+      <article v-if="accessError" class="qs-card qs-cancelled-card" aria-labelledby="access-error-title">
+        <div class="qs-cancelled-icon" aria-hidden="true">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2"
+              fill="var(--surface-muted)"/>
+            <path d="M22 22l20 20M42 22L22 42" stroke="currentColor" stroke-width="2.4"
+              stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1 id="access-error-title" class="qs-cancelled-title">{{ accessError.title }}</h1>
+        <p class="qs-cancelled-desc">{{ accessError.desc }}</p>
+      </article>
+
       <!-- ── 취소 상태 ── -->
-      <article v-if="cancelled" class="qs-card qs-cancelled-card" aria-labelledby="cancelled-title">
+      <article v-else-if="cancelled" class="qs-card qs-cancelled-card" aria-labelledby="cancelled-title">
         <div class="qs-cancelled-icon" aria-hidden="true">
           <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
             <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2"
@@ -365,6 +379,9 @@ const signToken = computed(() => (route.params.token as string) ?? '')
 
 const email = localStorage.getItem('qusign:email') ?? ''
 
+// ── 접근 오류 ──
+const accessError = ref<{ title: string; desc: string } | null>(null)
+
 // ── 취소 상태 ──
 const cancelled = ref(false)
 const cancelledInfo = ref({ requester: '' })
@@ -439,8 +456,20 @@ onMounted(async () => {
       }
       await fetchPdf()
     }
-  } catch {
-    // 오류 시 빈 화면 — api 인터셉터가 401/500 처리
+  } catch (err: any) {
+    const status = err?.response?.status
+    if (status === 403) {
+      accessError.value = {
+        title: '접근 권한이 없습니다',
+        desc: '이 서명 요청의 서명자가 아닙니다.\n서명 요청자에게 문의해 주세요.',
+      }
+    } else if (status === 404) {
+      accessError.value = {
+        title: '요청을 찾을 수 없습니다',
+        desc: '삭제되었거나 존재하지 않는 서명 요청이에요.\nURL을 다시 확인해 주세요.',
+      }
+    }
+    // 401은 api 인터셉터가 로그인 페이지로 리다이렉트
   }
 })
 

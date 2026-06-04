@@ -139,6 +139,8 @@
 
 ## 4단계: 기능 고도화 & 품질 강화
 > 기간: 진행 중
+>
+> 수동 테스트 시나리오: [`docs/test-scenarios/service-scenario.md`](../test-scenarios/service-scenario.md)
 
 ### 4-1. 유효성 검사 및 예외처리 강화
 

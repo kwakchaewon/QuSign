@@ -88,6 +88,13 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         response.outputStream.write(bytes)
     }
 
+    @GetMapping("/signature-requests/{token}/info")
+    fun getSignerRequestInfo(
+        @AuthenticationPrincipal email: String,
+        @PathVariable token: String,
+    ): ApiResponse<com.qusign.signature.dto.SignerRequestInfoResponse> =
+        ApiResponse.ok(signatureFlowService.getSignerRequestInfo(token, email))
+
     @PostMapping("/signature-requests/{id}/signers/{email}/cancel")
     fun cancelSigner(
         @AuthenticationPrincipal requesterEmail: String,

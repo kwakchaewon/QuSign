@@ -76,6 +76,15 @@ data class SignerDetailDto(
     val signatureToken: String?,
 )
 
+data class SignerRequestInfoResponse(
+    val documentName: String,
+    val requesterEmail: String,
+    val requestedAt: String,
+    val expiresAt: String,
+    val hashSha3256: String,
+    val cancelled: Boolean,
+)
+
 data class SignatureRequestDetailResponse(
     val id: Long,
     val documentName: String,

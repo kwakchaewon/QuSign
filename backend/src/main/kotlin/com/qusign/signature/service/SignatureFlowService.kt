@@ -274,6 +274,21 @@ class SignatureFlowService(
         )
     }
 
+    @Transactional(readOnly = true)
+    fun getSignerRequestInfo(token: String, signerEmail: String): SignerRequestInfoResponse {
+        val req = signatureRequestRepository.findByToken(token)
+            ?: throw SignatureRequestNotFoundException()
+        if (!req.signerEmail.equals(signerEmail, ignoreCase = true)) throw UnauthorizedSignerException()
+        return SignerRequestInfoResponse(
+            documentName = req.document.originalFilename,
+            requesterEmail = req.requester.email,
+            requestedAt = req.createdAt?.toString() ?: "",
+            expiresAt = req.expiresAt.toString(),
+            hashSha3256 = req.document.hashSha3256,
+            cancelled = req.status == "CANCELLED",
+        )
+    }
+
     @Transactional
     fun cancelSigner(documentId: Long, signerEmail: String, requesterEmail: String) {
         val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()

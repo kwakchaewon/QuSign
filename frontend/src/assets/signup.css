@@ -64,6 +64,19 @@
 }
 .qs-check-block a:hover { color: var(--color-primary-500); }
 
+/* 약관 미동의 강조 */
+.qs-check-block.is-agree-err {
+  color: var(--color-error);
+  font-weight: 600;
+}
+.qs-check-block.is-agree-err .qs-check-box {
+  border-color: var(--color-error);
+}
+.qs-check-block.is-agree-err a {
+  color: var(--color-error);
+  text-decoration-color: var(--color-error);
+}
+
 /* ---- Success overlay ---- */
 .qs-success {
   position: fixed; inset: 0;

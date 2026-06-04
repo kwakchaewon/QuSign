@@ -249,6 +249,36 @@
 
 > 이메일 알림은 6단계 SES 연동 시 추가. 이 단계는 인앱 알림에 집중한다.
 
+#### 사전 학습 (구현 전 필수)
+
+| 주제 | 핵심 개념 | 학습 포인트 |
+|---|---|---|
+| Redis Pub/Sub | PUBLISH / SUBSCRIBE 패턴, 채널 구조 | 메시지는 영속되지 않음 (fire-and-forget) |
+| Spring Data Redis | `RedisTemplate`, `MessageListener`, `RedisMessageListenerContainer` | Lettuce 클라이언트, 연결 풀 동작 방식 |
+| SSE (Server-Sent Events) | HTTP 단방향 스트림, `text/event-stream` MIME | `EventSource` 브라우저 API, 자동 재연결 |
+| `SseEmitter` (Spring) | 비동기 응답 유지, `onCompletion` / `onTimeout` | 서버 스레드 점유 없이 연결 유지하는 원리 |
+| 동시성 자료구조 | `ConcurrentHashMap`, `CopyOnWriteArrayList` | 다중 SSE 연결을 스레드 안전하게 관리해야 하는 이유 |
+| Redis vs DB 알림 | Redis = 실시간 push / DB = 영속 저장 | 둘의 역할을 분리하는 이유 |
+
+- [ ] Redis Pub/Sub 개념 및 `PUBLISH` / `SUBSCRIBE` 명령어 실습
+- [ ] `spring-boot-starter-data-redis` 의존성 구조 파악 (Lettuce vs Jedis)
+- [ ] MDN `EventSource` API 문서 읽기 (SSE 재연결, Last-Event-ID 헤더)
+- [ ] `SseEmitter` Spring 공식 문서 읽기
+
+#### 사후 학습 (구현 후 심화)
+
+| 주제 | 핵심 개념 | 학습 포인트 |
+|---|---|---|
+| Redis Pub/Sub vs Streams | At-most-once(Pub/Sub) vs At-least-once(Streams) | SSE 연결 공백 시 메시지 누락 가능성 |
+| SSE vs WebSocket | 단방향 vs 양방향, 프로토콜 비교 | 알림처럼 단방향이면 SSE가 더 단순·효율적 |
+| 수평 확장 (Scale-out) | 다중 서버 인스턴스 → Redis가 브로커로 동작 | 인스턴스 A가 발행 → Redis → 인스턴스 B의 SSE로 전달 |
+| SSE 재연결 누락 방지 | `Last-Event-ID` 헤더 + 이벤트 ID 전략 | 끊김 동안 발생한 알림을 재연결 시 replay |
+| Redis Cluster / Sentinel | 고가용성 Redis 구성 | 6단계 AWS 배포 시 ElastiCache 적용 |
+
+- [ ] Redis Streams (`XADD`, `XREAD`) 개념 학습 — Pub/Sub과 차이점 정리
+- [ ] SSE + `Last-Event-ID` 패턴 실습 (재연결 시 누락 알림 복구)
+- [ ] AWS ElastiCache (Redis 호환) 요금 구조 파악 — 6단계 배포 준비
+
 #### 알림 타입
 
 | 타입 | 수신자 | 트리거 |

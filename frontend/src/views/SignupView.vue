@@ -43,14 +43,6 @@
             </div>
           </div>
 
-          <div class="qs-card-foot">
-            <div class="qs-trust">
-              <div v-for="item in trustItems" :key="item.k" class="qs-trust-item">
-                <span class="qs-trust-k">{{ item.k }}</span>
-                <span class="qs-trust-v">{{ item.v }}</span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
     </main>
@@ -102,12 +94,6 @@ import SignupForm from '@/components/SignupForm.vue'
 import PublicTopbar from '@/components/layout/PublicTopbar.vue'
 
 const success = ref({ show: false, email: '' })
-
-const trustItems = [
-  { k: '키생성', v: 'ML-DSA-65' },
-  { k: '저장방식', v: 'AES-256' },
-  { k: '전송', v: 'TLS 1.3' },
-]
 
 function handleSuccess(email: string) {
   success.value = { show: true, email }

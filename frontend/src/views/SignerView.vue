@@ -4,7 +4,7 @@
 
     <main class="qs-main">
       <!-- 스텝퍼 (정상 진행 중일 때만) -->
-      <div v-if="!accessError && !cancelled" class="qs-stepper" aria-label="서명 진행 단계">
+      <div v-if="!accessError && !cancelled && !alreadySigned" class="qs-stepper" aria-label="서명 진행 단계">
         <div :class="['qs-step-item', { 'is-active': step === 1, 'is-done': step > 1 }]">
           <span class="qs-step-num">
             <svg v-if="step > 1" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -55,6 +55,33 @@
           <div class="qs-cancelled-meta-row">
             <span class="qs-cancelled-meta-k">요청자</span>
             <span class="qs-cancelled-meta-v">{{ cancelledInfo.requester }}</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ── 이미 서명 완료 상태 ── -->
+      <article v-else-if="alreadySigned" class="qs-card qs-cancelled-card" aria-labelledby="already-signed-title">
+        <div class="qs-cancelled-icon qs-already-signed-icon" aria-hidden="true">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2"
+              fill="var(--color-success-bg)"/>
+            <path d="M20 33l8 8 16-16" stroke="currentColor" stroke-width="2.4"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1 id="already-signed-title" class="qs-cancelled-title">이미 서명이 완료된 요청입니다</h1>
+        <p class="qs-cancelled-desc">
+          이 문서에 대한 서명이 이미 완료되었습니다.<br />
+          서명 사본이 필요하다면 요청자에게 문의해 주세요.
+        </p>
+        <div v-if="alreadySignedInfo.requester" class="qs-cancelled-meta">
+          <div class="qs-cancelled-meta-row">
+            <span class="qs-cancelled-meta-k">요청자</span>
+            <span class="qs-cancelled-meta-v">{{ alreadySignedInfo.requester }}</span>
+          </div>
+          <div v-if="alreadySignedInfo.documentName" class="qs-cancelled-meta-row">
+            <span class="qs-cancelled-meta-k">문서</span>
+            <span class="qs-cancelled-meta-v">{{ alreadySignedInfo.documentName }}</span>
           </div>
         </div>
       </article>
@@ -468,6 +495,10 @@ const accessError = ref<{ title: string; desc: string } | null>(null)
 const cancelled = ref(false)
 const cancelledInfo = ref({ requester: '' })
 
+// ── 이미 서명 완료 상태 ──
+const alreadySigned = ref(false)
+const alreadySignedInfo = ref({ requester: '', documentName: '' })
+
 // ── Step 1 ──
 const step = ref(1)
 const docInfo = ref<{
@@ -518,6 +549,7 @@ onMounted(async () => {
     const res = await api.get<{
       data: {
         cancelled: boolean
+        signed: boolean
         requesterEmail: string
         documentName: string
         hashSha3256: string
@@ -529,6 +561,9 @@ onMounted(async () => {
     if (d.cancelled) {
       cancelled.value = true
       cancelledInfo.value = { requester: d.requesterEmail }
+    } else if (d.signed) {
+      alreadySigned.value = true
+      alreadySignedInfo.value = { requester: d.requesterEmail, documentName: d.documentName }
     } else {
       docInfo.value = {
         filename: d.documentName,

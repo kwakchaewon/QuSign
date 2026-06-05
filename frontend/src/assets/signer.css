@@ -696,6 +696,10 @@
   display: flex; align-items: center; justify-content: center;
   color: var(--text-tertiary);
 }
+.qs-already-signed-icon {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
 .qs-cancelled-title {
   margin: 0 0 10px;
   font-size: 22px; font-weight: 700;

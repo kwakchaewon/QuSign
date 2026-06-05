@@ -648,6 +648,28 @@
 
 ---
 
+## 기타 요구사항 (미분류 / 차후 개발 예정)
+
+> 개발 중 발견된 누락 기능, 개선 아이디어, UX 요구사항을 기록한다.  
+> 단계에 배정되지 않은 항목은 여기서 관리하다가 로드맵 정기 리뷰 시 해당 단계로 편입한다.
+
+### 서명 거절 (Signer-initiated Rejection)
+
+> 현재는 **요청자가 취소**하는 흐름(4-6)만 구현됨.  
+> 서명자가 스스로 거절하는 흐름은 미구현 상태.
+
+- [ ] **DB** — `REJECTED` 상태값 추가 (현재 `PENDING / SIGNED / CANCELLED / EXPIRED` 4종)
+- [ ] **백엔드** — `POST /api/signature-requests/{token}/reject` 엔드포인트
+  - 서명자 본인 + PENDING 상태만 허용
+  - 선택적 사유(reason) 필드 수신
+  - 요청자에게 `SIGN_REJECTED` 알림 발송
+- [ ] **백엔드** — `SIGN_REJECTED` 알림 타입 추가 (`NotificationService`)
+- [ ] **프론트엔드 (서명자)** — SignerView에 "서명 거절" 버튼 + 사유 입력 모달
+- [ ] **프론트엔드 (요청자)** — DocumentDetailView에 `REJECTED` 상태 배지 및 사유 표시
+- [ ] `./gradlew test` 통과
+
+---
+
 ## 막혔을 때 체크리스트
 
 - [ ] Docker 로그 확인 (`docker compose logs -f`)

@@ -139,16 +139,36 @@
         <!-- PDF 미리보기 -->
         <div class="qs-pdf">
           <div class="qs-pdf-head">
-            <span class="qs-pdf-pages">미리보기</span>
-            <button type="button" class="qs-btn qs-btn-ghost qs-btn-sm" @click="scrolled = true">
+            <span class="qs-pdf-pages">문서 미리보기</span>
+            <button
+              v-if="pdfBlobUrl"
+              type="button"
+              class="qs-btn qs-btn-ghost qs-btn-sm"
+              @click="largeViewOpen = true"
+            >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
                   stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              끝까지 확인
+              크게 보기
             </button>
           </div>
-          <iframe v-if="pdfBlobUrl" :src="pdfBlobUrl" class="qs-pdf-frame" title="서명 요청 문서" />
+          <div :class="['qs-pdf-notice', { 'is-done': scrolled }]" role="status">
+            <svg v-if="scrolled" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4"
+                stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M12 8v4M12 15.5v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+            <span>
+              {{ scrolled
+                ? '문서를 모두 확인했어요. 아래에서 서명을 진행해 주세요.'
+                : '문서를 끝까지 스크롤해야 서명할 수 있어요.' }}
+            </span>
+          </div>
+          <PdfViewer v-if="pdfBlobUrl" :src="pdfBlobUrl" @scrolled-to-end="scrolled = true" />
           <div v-else class="qs-pdf-canvas">
             <div class="qs-pdf-page">
               <div class="qs-pdf-page-content">
@@ -163,12 +183,6 @@
               </div>
             </div>
             <div class="qs-pdf-fade" aria-hidden="true" />
-          </div>
-          <div class="qs-pdf-foot">
-            <span :class="['qs-pdf-scrolled', { 'is-done': scrolled }]">
-              <span class="qs-dot-live" aria-hidden="true" />
-              {{ scrolled ? '문서를 끝까지 확인했어요' : '스크롤해 끝까지 확인해 주세요' }}
-            </span>
           </div>
         </div>
 
@@ -337,6 +351,73 @@
       </div>
     </main>
 
+    <!-- 크게 보기 모달 -->
+    <Teleport to="body">
+      <div
+        v-if="largeViewOpen"
+        class="qs-large-viewer-backdrop"
+        role="dialog"
+        aria-modal="true"
+        aria-label="문서 크게 보기"
+        @click.self="largeViewOpen = false"
+      >
+        <div class="qs-large-viewer-card">
+          <div class="qs-large-viewer-head">
+            <span class="qs-large-viewer-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"
+                  stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M14 2v5h5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+              {{ docInfo?.filename ?? '서명 요청 문서' }}
+            </span>
+            <div class="qs-large-viewer-head-right">
+              <span v-if="scrolled" class="qs-large-viewer-done">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                확인 완료
+              </span>
+              <button
+                type="button"
+                class="qs-large-viewer-close"
+                aria-label="닫기"
+                @click="largeViewOpen = false"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <PdfViewer
+            :src="pdfBlobUrl"
+            height="72vh"
+            @scrolled-to-end="scrolled = true"
+          />
+          <div class="qs-large-viewer-foot">
+            <span v-if="!scrolled" class="qs-large-viewer-hint">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
+                <path d="M12 8v4M12 15.5v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+              끝까지 스크롤하면 서명 동의가 가능해요
+            </span>
+            <button
+              type="button"
+              class="qs-btn qs-btn-primary"
+              :class="{ 'qs-btn-ghost': !scrolled }"
+              @click="largeViewOpen = false"
+            >
+              {{ scrolled ? '확인 완료 · 닫기' : '닫기' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- 서명 생성 오버레이 -->
     <Teleport to="body">
       <div v-if="signing" class="qs-overlay" role="dialog" aria-modal="true" aria-labelledby="signing-title">
@@ -373,6 +454,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/lib/api'
 import PublicTopbar from '@/components/layout/PublicTopbar.vue'
+import PdfViewer from '@/components/PdfViewer.vue'
 
 const route = useRoute()
 const signToken = computed(() => (route.params.token as string) ?? '')
@@ -404,6 +486,7 @@ const hashShort = computed(() => {
 })
 const pdfBlobUrl = ref('')
 const scrolled = ref(false)
+const largeViewOpen = ref(false)
 const consent1 = ref(false)
 const consent2 = ref(false)
 const password = ref('')

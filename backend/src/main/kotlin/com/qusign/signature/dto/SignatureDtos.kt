@@ -83,6 +83,7 @@ data class SignerRequestInfoResponse(
     val expiresAt: String,
     val hashSha3256: String,
     val cancelled: Boolean,
+    val signed: Boolean,
 )
 
 data class SignatureRequestDetailResponse(

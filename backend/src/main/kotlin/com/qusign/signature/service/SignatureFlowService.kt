@@ -286,6 +286,7 @@ class SignatureFlowService(
             expiresAt = req.expiresAt.toString(),
             hashSha3256 = req.document.hashSha3256,
             cancelled = req.status == "CANCELLED",
+            signed = req.status == "SIGNED",
         )
     }
 

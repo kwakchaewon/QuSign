@@ -22,6 +22,9 @@ class SignatureRequest(
     @Column(name = "signer_email", nullable = false)
     val signerEmail: String,
 
+    @Column(length = 1000)
+    val message: String? = null,
+
     @Column(nullable = false, length = 36)
     val token: String,
 

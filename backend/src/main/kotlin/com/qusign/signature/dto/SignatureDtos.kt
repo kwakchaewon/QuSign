@@ -14,6 +14,7 @@ data class CreateSignatureRequestDto(
     @field:NotNull val documentId: Long,
     @field:NotBlank @field:Email val signerEmail: String,
     @field:Min(1) val expirationHours: Long = 72,
+    @field:Size(max = 1000) val message: String? = null,
 )
 
 data class BatchCreateSignatureRequestDto(
@@ -79,6 +80,7 @@ data class SignerDetailDto(
 data class SignerRequestInfoResponse(
     val documentName: String,
     val requesterEmail: String,
+    val message: String?,
     val requestedAt: String,
     val expiresAt: String,
     val hashSha3256: String,

@@ -69,6 +69,7 @@ class SignatureFlowService(
                 signerEmail = dto.signerEmail,
                 token = UUID.randomUUID().toString(),
                 expiresAt = LocalDateTime.now().plusHours(dto.expirationHours),
+                message = dto.message?.takeIf { it.isNotBlank() },
             )
         )
 
@@ -282,6 +283,7 @@ class SignatureFlowService(
         return SignerRequestInfoResponse(
             documentName = req.document.originalFilename,
             requesterEmail = req.requester.email,
+            message = req.message,
             requestedAt = req.createdAt?.toString() ?: "",
             expiresAt = req.expiresAt.toString(),
             hashSha3256 = req.document.hashSha3256,

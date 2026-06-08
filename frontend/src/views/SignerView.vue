@@ -665,7 +665,7 @@ async function downloadSignedPdf() {
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
-    a.download = `signed_${docInfo.value?.filename ?? 'document.pdf'}`
+    a.download = (docInfo.value?.filename ?? 'document.pdf').replace(/\.pdf$/i, '') + '_qusigned.pdf'
     a.click()
     URL.revokeObjectURL(url)
   } catch {

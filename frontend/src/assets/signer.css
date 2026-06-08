@@ -100,7 +100,7 @@
   border: 0.5px solid var(--border-default);
   border-radius: 20px;
   padding: 28px;
-  animation: qs-signer-fade-up 0.35s var(--easing-default);
+  animation: qs-signer-fade-up 0.35s var(--easing-default) both;
 }
 
 .qs-card-head { margin-bottom: 22px; }
@@ -578,6 +578,7 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   z-index: var(--z-modal);
+  isolation: isolate;
   display: flex; align-items: center; justify-content: center;
   padding: 24px;
   animation: qs-signer-fade-up 0.25s ease-out;

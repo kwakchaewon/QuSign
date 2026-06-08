@@ -14,10 +14,6 @@ class DocumentBundle(
     @JoinColumn(name = "owner_id", nullable = false)
     val owner: User,
 
-    @OneToMany(mappedBy = "bundle", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    @OrderBy("ordinal ASC")
-    val items: MutableList<DocumentBundleItem> = mutableListOf(),
-
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: LocalDateTime? = null,
 )

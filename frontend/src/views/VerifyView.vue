@@ -158,7 +158,7 @@
           </div>
 
           <div class="vf-result-actions">
-            <button class="vf-btn vf-btn-secondary" @click="reset">다시 검증하기</button>
+            <button class="vf-btn vf-btn-primary" @click="reset">다시 검증하기</button>
           </div>
         </div>
       </div>
@@ -185,7 +185,7 @@
             {{ failReason }}
           </div>
           <div class="vf-result-actions">
-            <button class="vf-btn vf-btn-secondary" @click="reset">다시 검증하기</button>
+            <button class="vf-btn vf-btn-primary" @click="reset">다시 검증하기</button>
           </div>
         </div>
       </div>

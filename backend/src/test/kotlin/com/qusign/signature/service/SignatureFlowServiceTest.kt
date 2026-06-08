@@ -7,6 +7,7 @@ import com.qusign.document.service.DocumentService
 import com.qusign.notification.service.NotificationService
 import com.qusign.signature.dto.CreateSignatureRequestDto
 import com.qusign.signature.dto.VerifyResponse
+import com.qusign.signature.exception.DuplicateSignatureRequestException
 import com.qusign.signature.exception.SignatureRequestAlreadySignedException
 import com.qusign.signature.exception.SignatureRequestCancelledException
 import com.qusign.signature.exception.SignatureRequestNotCancellableException
@@ -159,6 +160,25 @@ class SignatureFlowServiceTest {
 
         assertThrows<SignatureRequestNotCancellableException> {
             signatureFlowService.cancelSigner(doc.id, "signer7@qusign.com", "req7@qusign.com")
+        }
+    }
+
+    @Test
+    fun `이미 서명된 문서에 재서명 요청 시 예외`() {
+        authService.register("req8@qusign.com", "pw1234!")
+        authService.register("signer8@qusign.com", "pw1234!")
+        val doc = documentService.upload("req8@qusign.com", pdf())
+        val req = signatureFlowService.requestSignature(
+            "req8@qusign.com",
+            CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer8@qusign.com"),
+        )
+        signatureFlowService.sign(req.token, "signer8@qusign.com", "pw1234!")
+
+        assertThrows<SignatureRequestAlreadySignedException> {
+            signatureFlowService.requestSignature(
+                "req8@qusign.com",
+                CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer8@qusign.com"),
+            )
         }
     }
 

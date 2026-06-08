@@ -58,8 +58,9 @@ class SignatureFlowService(
             ?: throw DocumentNotFoundException()
 
         val existing = signatureRequestRepository.findByDocumentAndSignerEmail(document, dto.signerEmail)
-        if (existing != null && existing.status == "PENDING" && existing.expiresAt.isAfter(LocalDateTime.now())) {
-            throw DuplicateSignatureRequestException()
+        if (existing != null) {
+            if (existing.status == "SIGNED") throw SignatureRequestAlreadySignedException()
+            if (existing.status == "PENDING" && existing.expiresAt.isAfter(LocalDateTime.now())) throw DuplicateSignatureRequestException()
         }
 
         val req = signatureRequestRepository.save(

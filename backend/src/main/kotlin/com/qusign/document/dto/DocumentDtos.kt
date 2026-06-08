@@ -8,6 +8,9 @@ data class DocumentResponse(
     val hashSha3256: String,
     val createdAt: String?,
     val signatureStatus: String = "NONE",
+    val bundleId: Long? = null,
+    val bundlePrimary: Boolean = false,
+    val bundleDocCount: Int = 1,
 ) {
     constructor(doc: Document, signatureStatus: String = "NONE") : this(
         id = doc.id,

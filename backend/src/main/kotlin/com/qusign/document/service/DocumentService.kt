@@ -10,6 +10,7 @@ import com.qusign.document.exception.BatchTooManyFilesException
 import com.qusign.document.exception.DocumentNotFoundException
 import com.qusign.document.exception.InvalidFileTypeException
 import com.qusign.document.exception.StorageException
+import com.qusign.document.repository.DocumentBundleItemRepository
 import com.qusign.document.repository.DocumentRepository
 import com.qusign.signature.repository.SignatureRequestRepository
 import com.qusign.signature.service.PdfSignatureService
@@ -25,6 +26,7 @@ class DocumentService(
     private val userRepository: UserRepository,
     private val storageService: StorageService,
     private val signatureRequestRepository: SignatureRequestRepository,
+    private val documentBundleItemRepository: DocumentBundleItemRepository,
     private val pdfSignatureService: PdfSignatureService,
 ) {
     @Transactional
@@ -70,6 +72,19 @@ class DocumentService(
         val user = userRepository.findByEmail(email) ?: return emptyList()
         val docs = documentRepository.findByUserOrderByCreatedAtDesc(user)
         val requestsByDocId = signatureRequestRepository.findByDocumentIn(docs).groupBy { it.document.id }
+
+        // 번들 정보 조회: 문서가 어떤 번들에 속하는지
+        val bundleItemsByDocId = documentBundleItemRepository.findByDocumentIn(docs).groupBy { it.document.id }
+
+        // 번들별 문서 수 계산
+        val bundleDocCount = mutableMapOf<Long, Int>()
+        val bundlePrimaryDocId = mutableMapOf<Long, Long>() // bundleId → primaryDocId (ordinal=0)
+        bundleItemsByDocId.values.flatten().forEach { item ->
+            val bundleId = item.bundle.id
+            bundleDocCount[bundleId] = (bundleDocCount[bundleId] ?: 0) + 1
+            if (item.ordinal == 0) bundlePrimaryDocId[bundleId] = item.document.id
+        }
+
         return docs.map { doc ->
             val reqs = requestsByDocId[doc.id] ?: emptyList()
             val status = when {
@@ -77,7 +92,19 @@ class DocumentService(
                 reqs.all { it.status == "SIGNED" } -> "SIGNED"
                 else -> "PENDING"
             }
-            DocumentResponse(doc, status)
+            val bundleItem = bundleItemsByDocId[doc.id]?.firstOrNull()
+            val bundleId = bundleItem?.bundle?.id
+            val isPrimary = bundleId != null && bundlePrimaryDocId[bundleId] == doc.id
+            DocumentResponse(
+                id = doc.id,
+                originalFilename = doc.originalFilename,
+                hashSha3256 = doc.hashSha3256,
+                createdAt = doc.createdAt?.toString(),
+                signatureStatus = status,
+                bundleId = bundleId,
+                bundlePrimary = isPrimary,
+                bundleDocCount = if (bundleId != null) bundleDocCount[bundleId] ?: 1 else 1,
+            )
         }
     }
 

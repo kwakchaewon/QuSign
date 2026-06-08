@@ -79,7 +79,27 @@
             <span class="qs-cancelled-meta-k">요청자</span>
             <span class="qs-cancelled-meta-v">{{ alreadySignedInfo.requester }}</span>
           </div>
-          <div v-if="alreadySignedInfo.documentName" class="qs-cancelled-meta-row">
+          <!-- 번들: 전체 파일 목록 -->
+          <template v-if="alreadySignedInfo.isBundle && alreadySignedInfo.documents.length > 1">
+            <div class="qs-cancelled-meta-row" style="align-items:flex-start">
+              <span class="qs-cancelled-meta-k" style="padding-top:2px">문서</span>
+              <span class="qs-cancelled-meta-v">
+                <div
+                  v-for="doc in alreadySignedInfo.documents"
+                  :key="doc.index"
+                  style="display:flex;align-items:center;gap:6px;margin-bottom:4px"
+                >
+                  <svg width="11" height="14" viewBox="0 0 28 36" fill="none" aria-hidden="true" style="flex-shrink:0">
+                    <rect width="28" height="36" rx="4" fill="var(--color-error-bg)"/>
+                    <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-error)" font-family="monospace">PDF</text>
+                  </svg>
+                  <span :title="doc.filename">{{ truncateFileName(doc.filename) }}</span>
+                </div>
+              </span>
+            </div>
+          </template>
+          <!-- 단건 -->
+          <div v-else-if="alreadySignedInfo.documentName" class="qs-cancelled-meta-row">
             <span class="qs-cancelled-meta-k">문서</span>
             <span class="qs-cancelled-meta-v">{{ alreadySignedInfo.documentName }}</span>
           </div>
@@ -112,7 +132,7 @@
             <div class="qs-doc-meta-headtext">
               <div class="qs-doc-meta-name">
                 <template v-if="docInfo?.isBundle && docInfo.documents.length > 1">
-                  {{ docInfo.documents[0].filename }} 외 {{ docInfo.documents.length - 1 }}건
+                  {{ truncateFileName(docInfo.documents[0].filename) }} 외 {{ docInfo.documents.length - 1 }}건
                 </template>
                 <template v-else>
                   {{ docInfo?.filename ?? '서명 요청 문서' }}
@@ -187,15 +207,83 @@
           </div>
         </div>
 
-        <!-- PDF 미리보기 -->
-        <div class="qs-pdf">
+        <!-- PDF 미리보기 (번들: 여러 문서) -->
+        <template v-if="docInfo?.isBundle && docInfo.documents.length > 1">
+          <div :class="['qs-pdf-notice', { 'is-done': allScrolled }]" role="status">
+            <svg v-if="allScrolled" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4"
+                stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M12 8v4M12 15.5v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+            <span>
+              {{ allScrolled
+                ? '모든 문서를 확인했어요. 아래에서 서명을 진행해 주세요.'
+                : `${scrolledDocs.filter(Boolean).length} / ${docInfo.documents.length}개 문서 확인됨 — 모든 문서를 끝까지 스크롤해 주세요.` }}
+            </span>
+          </div>
+
+          <div v-for="(doc, i) in docInfo.documents" :key="doc.index" class="qs-pdf qs-pdf-bundle-item">
+            <div class="qs-pdf-head">
+              <span class="qs-pdf-pages" style="display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden">
+                <svg width="12" height="16" viewBox="0 0 28 36" fill="none" aria-hidden="true" style="flex-shrink:0">
+                  <rect width="28" height="36" rx="4" fill="var(--color-error-bg)"/>
+                  <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-error)" font-family="monospace">PDF</text>
+                </svg>
+                <span :title="doc.filename" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ truncateFileName(doc.filename, 32) }}</span>
+              </span>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                <span v-if="scrolledDocs[i]" class="qs-doc-checked-badge">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  확인 완료
+                </span>
+                <button
+                  v-if="pdfBlobUrls[i]"
+                  type="button"
+                  class="qs-btn qs-btn-ghost qs-btn-sm"
+                  @click="openLargeView(i)"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
+                      stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  크게 보기
+                </button>
+              </div>
+            </div>
+            <PdfViewer v-if="pdfBlobUrls[i]" :src="pdfBlobUrls[i]" @scrolled-to-end="markScrolled(i)" />
+            <div v-else class="qs-pdf-canvas">
+              <div class="qs-pdf-page">
+                <div class="qs-pdf-page-content">
+                  <div class="qs-pdf-line is-title" />
+                  <div class="qs-pdf-line is-mid" />
+                  <div class="qs-pdf-line" />
+                  <div class="qs-pdf-line is-short" />
+                  <div class="qs-pdf-line is-mid" />
+                  <div class="qs-pdf-line" />
+                  <div class="qs-pdf-line is-short" />
+                  <div class="qs-pdf-sig-area">서명란</div>
+                </div>
+              </div>
+              <div class="qs-pdf-fade" aria-hidden="true" />
+            </div>
+          </div>
+        </template>
+
+        <!-- PDF 미리보기 (단건) -->
+        <div v-else class="qs-pdf">
           <div class="qs-pdf-head">
             <span class="qs-pdf-pages">문서 미리보기</span>
             <button
               v-if="pdfBlobUrl"
               type="button"
               class="qs-btn qs-btn-ghost qs-btn-sm"
-              @click="largeViewOpen = true"
+              @click="openLargeView(0)"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
@@ -219,7 +307,7 @@
                 : '문서를 끝까지 스크롤해야 서명할 수 있어요.' }}
             </span>
           </div>
-          <PdfViewer v-if="pdfBlobUrl" :src="pdfBlobUrl" @scrolled-to-end="scrolled = true" />
+          <PdfViewer v-if="pdfBlobUrl" :src="pdfBlobUrl" @scrolled-to-end="markScrolled(0)" />
           <div v-else class="qs-pdf-canvas">
             <div class="qs-pdf-page">
               <div class="qs-pdf-page-content">
@@ -342,7 +430,7 @@
             <span class="qs-receipt-k">문서</span>
             <span class="qs-receipt-v">
               <template v-if="docInfo?.isBundle && docInfo.documents.length > 1">
-                {{ docInfo.documents[0].filename }} 외 {{ docInfo.documents.length - 1 }}건
+                {{ truncateFileName(docInfo.documents[0].filename) }} 외 {{ docInfo.documents.length - 1 }}건
               </template>
               <template v-else>{{ docInfo?.filename ?? '서명 완료 문서' }}</template>
             </span>
@@ -361,26 +449,53 @@
           </div>
         </div>
 
-        <div class="qs-success-actions">
-          <!-- 번들: 각 문서 개별 다운로드 -->
+        <div class="qs-download-section">
+          <p class="qs-download-label">서명된 문서 다운로드</p>
+
+          <!-- 번들: 파일 목록 카드 -->
           <template v-if="docInfo?.isBundle && docInfo.documents.length > 1">
-            <button
-              v-for="doc in docInfo.documents"
-              :key="doc.index"
-              type="button"
-              class="qs-btn qs-btn-secondary qs-btn-lg qs-btn-block"
-              :disabled="downloadingIndex === doc.index"
-              @click="downloadSignedBundleDoc(doc.index, doc.filename)"
-              style="margin-bottom:6px"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 4v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.8"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M5 19h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              </svg>
-              {{ downloadingIndex === doc.index ? '다운로드 중…' : doc.filename }}
-            </button>
+            <ul class="qs-download-list" role="list">
+              <li
+                v-for="doc in docInfo.documents"
+                :key="doc.index"
+                class="qs-download-item"
+              >
+                <span class="qs-download-file-icon" aria-hidden="true">
+                  <svg width="18" height="23" viewBox="0 0 28 36" fill="none">
+                    <rect width="28" height="36" rx="4" fill="var(--color-error-bg)"/>
+                    <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-error)" font-family="monospace">PDF</text>
+                  </svg>
+                </span>
+                <span class="qs-download-filename">{{ doc.filename }}</span>
+                <button
+                  type="button"
+                  class="qs-download-btn"
+                  :disabled="downloadingIndex === doc.index"
+                  :aria-label="`${doc.filename} 다운로드`"
+                  @click="downloadSignedBundleDoc(doc.index, doc.filename)"
+                >
+                  <svg
+                    v-if="downloadingIndex !== doc.index"
+                    width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+                  >
+                    <path d="M12 4v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M5 19h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  <svg
+                    v-else
+                    width="15" height="15" viewBox="0 0 24 24" fill="none"
+                    style="animation: qs-signer-spin 1s linear infinite" aria-hidden="true"
+                  >
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.3" stroke-width="2.4"/>
+                    <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                  </svg>
+                  <span>{{ downloadingIndex === doc.index ? '처리 중' : '저장' }}</span>
+                </button>
+              </li>
+            </ul>
           </template>
+
           <!-- 단건 다운로드 -->
           <template v-else>
             <button
@@ -447,10 +562,15 @@
                   stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
                 <path d="M14 2v5h5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
               </svg>
-              {{ docInfo?.filename ?? '서명 요청 문서' }}
+              {{ docInfo?.isBundle && docInfo.documents.length > 1
+                ? docInfo.documents[largeViewIndex]?.filename
+                : docInfo?.filename ?? '서명 요청 문서' }}
             </span>
             <div class="qs-large-viewer-head-right">
-              <span v-if="scrolled" class="qs-large-viewer-done">
+              <span
+                v-if="docInfo?.isBundle && docInfo.documents.length > 1 ? scrolledDocs[largeViewIndex] : scrolled"
+                class="qs-large-viewer-done"
+              >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4"
                     stroke-linecap="round" stroke-linejoin="round"/>
@@ -471,12 +591,15 @@
             </div>
           </div>
           <PdfViewer
-            :src="pdfBlobUrl"
+            :src="docInfo?.isBundle && docInfo.documents.length > 1 ? pdfBlobUrls[largeViewIndex] : pdfBlobUrl"
             height="72vh"
-            @scrolled-to-end="scrolled = true"
+            @scrolled-to-end="markScrolled(largeViewIndex)"
           />
           <div class="qs-large-viewer-foot">
-            <span v-if="!scrolled" class="qs-large-viewer-hint">
+            <span
+              v-if="!(docInfo?.isBundle && docInfo.documents.length > 1 ? scrolledDocs[largeViewIndex] : scrolled)"
+              class="qs-large-viewer-hint"
+            >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
                 <path d="M12 8v4M12 15.5v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
@@ -486,10 +609,10 @@
             <button
               type="button"
               class="qs-btn qs-btn-primary"
-              :class="{ 'qs-btn-ghost': !scrolled }"
+              :class="{ 'qs-btn-ghost': !(docInfo?.isBundle && docInfo.documents.length > 1 ? scrolledDocs[largeViewIndex] : scrolled) }"
               @click="largeViewOpen = false"
             >
-              {{ scrolled ? '확인 완료 · 닫기' : '닫기' }}
+              {{ (docInfo?.isBundle && docInfo.documents.length > 1 ? scrolledDocs[largeViewIndex] : scrolled) ? '확인 완료 · 닫기' : '닫기' }}
             </button>
           </div>
         </div>
@@ -548,7 +671,12 @@ const cancelledInfo = ref({ requester: '' })
 
 // ── 이미 서명 완료 상태 ──
 const alreadySigned = ref(false)
-const alreadySignedInfo = ref({ requester: '', documentName: '' })
+const alreadySignedInfo = ref<{
+  requester: string
+  documentName: string
+  isBundle: boolean
+  documents: BundleDoc[]
+}>({ requester: '', documentName: '', isBundle: false, documents: [] })
 
 // ── Step 1 ──
 const step = ref(1)
@@ -573,13 +701,17 @@ const hashShort = computed(() => {
   return h ? `${h.slice(0, 16)}…${h.slice(-8)}` : ''
 })
 const pdfBlobUrl = ref('')
-const scrolled = ref(false)
+const pdfBlobUrls = ref<string[]>([])
+const scrolledDocs = ref<boolean[]>([false])
+const scrolled = computed(() => scrolledDocs.value[0] ?? false)
+const allScrolled = computed(() => scrolledDocs.value.length > 0 && scrolledDocs.value.every(Boolean))
 const largeViewOpen = ref(false)
+const largeViewIndex = ref(0)
 const consent1 = ref(false)
 const consent2 = ref(false)
 const password = ref('')
 const canSign = computed(() =>
-  scrolled.value && consent1.value && consent2.value && password.value.trim().length > 0
+  allScrolled.value && consent1.value && consent2.value && password.value.trim().length > 0
 )
 
 // ── 서명 ──
@@ -624,7 +756,12 @@ onMounted(async () => {
       cancelledInfo.value = { requester: d.requesterEmail }
     } else if (d.signed) {
       alreadySigned.value = true
-      alreadySignedInfo.value = { requester: d.requesterEmail, documentName: d.documentName }
+      alreadySignedInfo.value = {
+        requester: d.requesterEmail,
+        documentName: d.documentName,
+        isBundle: d.isBundle ?? false,
+        documents: d.documents ?? [],
+      }
     } else {
       docInfo.value = {
         filename: d.documentName,
@@ -657,18 +794,46 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (pdfBlobUrl.value) URL.revokeObjectURL(pdfBlobUrl.value)
+  pdfBlobUrls.value.forEach(u => u && URL.revokeObjectURL(u))
 })
 
 async function fetchPdf() {
-  try {
-    const res = await api.get(`/api/signature-requests/${signToken.value}/document`, {
-      responseType: 'blob',
-    })
-    if (pdfBlobUrl.value) URL.revokeObjectURL(pdfBlobUrl.value)
-    pdfBlobUrl.value = URL.createObjectURL(res.data)
-  } catch {
-    // 미리보기 실패 시 플레이스홀더 유지
+  if (docInfo.value?.isBundle && docInfo.value.documents.length > 1) {
+    const docs = docInfo.value.documents
+    scrolledDocs.value = new Array(docs.length).fill(false)
+    pdfBlobUrls.value = new Array(docs.length).fill('')
+    await Promise.all(
+      docs.map(async (doc, i) => {
+        try {
+          const res = await api.get(
+            `/api/signature-requests/${signToken.value}/bundle-documents/${doc.index}`,
+            { responseType: 'blob' },
+          )
+          pdfBlobUrls.value[i] = URL.createObjectURL(res.data)
+        } catch { /* 미리보기 실패 시 플레이스홀더 유지 */ }
+      }),
+    )
+  } else {
+    scrolledDocs.value = [false]
+    try {
+      const res = await api.get(`/api/signature-requests/${signToken.value}/document`, {
+        responseType: 'blob',
+      })
+      if (pdfBlobUrl.value) URL.revokeObjectURL(pdfBlobUrl.value)
+      pdfBlobUrl.value = URL.createObjectURL(res.data)
+    } catch {
+      // 미리보기 실패 시 플레이스홀더 유지
+    }
   }
+}
+
+function markScrolled(i: number) {
+  scrolledDocs.value[i] = true
+}
+
+function openLargeView(i: number) {
+  largeViewIndex.value = i
+  largeViewOpen.value = true
 }
 
 // ─────────────────────────────────────
@@ -755,6 +920,17 @@ async function downloadSignedBundleDoc(index: number, filename: string) {
 // ─────────────────────────────────────
 // 유틸
 // ─────────────────────────────────────
+function truncateFileName(name: string, maxLen = 28): string {
+  if (name.length <= maxLen) return name
+  const lastDot = name.lastIndexOf('.')
+  if (lastDot <= 0) return name.slice(0, maxLen - 3) + '...'
+  const ext = name.slice(lastDot)
+  const base = name.slice(0, lastDot)
+  const allowedBase = maxLen - 3 - ext.length
+  if (allowedBase <= 0) return name.slice(0, maxLen - 3) + '...'
+  return base.slice(0, allowedBase) + '...' + ext
+}
+
 function formatDate(d: string | null | undefined) {
   if (!d) return '—'
   const dt = new Date(d)

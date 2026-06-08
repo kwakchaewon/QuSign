@@ -843,3 +843,79 @@
   .qs-large-viewer-backdrop { padding: 0; }
   .qs-large-viewer-card { border-radius: 0; max-height: 100vh; max-width: 100%; }
 }
+
+/* =============== 서명 완료 다운로드 =============== */
+.qs-download-section {
+  margin-top: 20px;
+}
+.qs-download-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: 0 0 8px 2px;
+}
+.qs-download-list {
+  list-style: none; margin: 0; padding: 0;
+  border: 0.5px solid var(--border-default);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-elevated);
+}
+.qs-download-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 0.5px solid var(--border-default);
+  transition: background 0.15s;
+}
+.qs-download-item:last-child { border-bottom: none; }
+.qs-download-item:hover { background: var(--surface-muted); }
+.qs-download-file-icon { flex-shrink: 0; line-height: 0; }
+.qs-download-filename {
+  flex: 1; min-width: 0;
+  font-size: 13px; font-weight: 500; color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.qs-download-btn {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.qs-download-btn:hover:not(:disabled) {
+  background: var(--color-primary-50, rgba(37, 99, 235, 0.07));
+  border-color: var(--color-primary-500);
+  color: var(--color-primary-600, #2563eb);
+}
+.qs-download-btn:disabled {
+  opacity: 0.5; cursor: default;
+}
+[data-theme="dark"] .qs-download-btn:hover:not(:disabled) {
+  background: rgba(99, 154, 255, 0.12);
+  border-color: var(--color-primary-400, #6699ff);
+  color: var(--color-primary-300, #93b4ff);
+}
+
+/* =============== 번들 문서 미리보기 =============== */
+.qs-pdf-bundle-item {
+  margin-top: 12px;
+  border-top: 0.5px solid var(--border-default);
+  padding-top: 12px;
+}
+.qs-pdf-bundle-item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+.qs-doc-checked-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600;
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border, rgba(22, 163, 74, 0.25));
+  border-radius: 20px;
+  padding: 2px 8px;
+}

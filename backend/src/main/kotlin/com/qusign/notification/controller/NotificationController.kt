@@ -1,6 +1,7 @@
 package com.qusign.notification.controller
 
 import com.qusign.auth.repository.UserRepository
+import com.qusign.auth.service.JwtService
 import com.qusign.common.response.ApiResponse
 import com.qusign.notification.dto.NotificationResponse
 import com.qusign.notification.dto.UnreadCountResponse
@@ -9,6 +10,8 @@ import com.qusign.notification.service.SseEmitterRegistry
 import org.springframework.http.MediaType
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
+import org.springframework.http.HttpStatus
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 @RestController
@@ -17,12 +20,18 @@ class NotificationController(
     private val notificationService: NotificationService,
     private val registry: SseEmitterRegistry,
     private val userRepository: UserRepository,
+    private val jwtService: JwtService,
 ) {
 
     @GetMapping("/stream", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun stream(authentication: Authentication): SseEmitter {
-        val userId = resolveUserId(authentication)
-        return registry.register(userId)
+    fun stream(@RequestParam token: String?): SseEmitter {
+        if (token.isNullOrBlank() || !jwtService.isValid(token)) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.")
+        }
+        val email = jwtService.extractEmail(token)
+        val user = userRepository.findByEmail(email)
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다.")
+        return registry.register(user.id)
     }
 
     @GetMapping

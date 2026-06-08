@@ -42,6 +42,7 @@ class SecurityConfig(private val jwtAuthenticationFilter: JwtAuthenticationFilte
             .authorizeHttpRequests { auth ->
                 auth
                     .requestMatchers("/api/health", "/actuator/health", "/api/auth/**", "/api/verify").permitAll()
+                    .requestMatchers("/api/notifications/stream").permitAll()
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

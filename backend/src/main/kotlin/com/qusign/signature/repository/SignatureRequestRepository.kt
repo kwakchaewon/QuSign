@@ -12,6 +12,14 @@ interface SignatureRequestRepository : JpaRepository<SignatureRequest, Long> {
     fun findByDocumentAndSignerEmail(document: Document, signerEmail: String): SignatureRequest?
     fun findByDocumentIn(documents: List<Document>): List<SignatureRequest>
 
+    // 번들 서명
+    fun findByBundleTokenAndSignerEmailOrderByDocumentIdAsc(bundleToken: String, signerEmail: String): List<SignatureRequest>
+    fun findByBundleTokenOrderByDocumentIdAsc(bundleToken: String): List<SignatureRequest>
+
+    // 번들 상세 (요청자용): 같은 bundle_id의 모든 요청
+    @Query("SELECT r FROM SignatureRequest r WHERE r.bundle.id = :bundleId ORDER BY r.signerEmail, r.document.id")
+    fun findByBundleIdOrderBySignerAndDocument(bundleId: Long): List<SignatureRequest>
+
     // 만료 D-1 (24시간 이내 만료 예정 PENDING 요청)
     @Query("SELECT r FROM SignatureRequest r WHERE r.status = 'PENDING' AND r.expiresAt BETWEEN :from AND :to")
     fun findExpiringBetween(from: LocalDateTime, to: LocalDateTime): List<SignatureRequest>

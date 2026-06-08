@@ -2,6 +2,7 @@ package com.qusign.signature.entity
 
 import com.qusign.auth.entity.User
 import com.qusign.document.entity.Document
+import com.qusign.document.entity.DocumentBundle
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -36,4 +37,12 @@ class SignatureRequest(
 
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: LocalDateTime? = null,
+
+    // 번들 서명 시 사용: 같은 bundle_id + bundle_token을 공유하는 요청들을 한 번에 서명
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bundle_id")
+    val bundle: DocumentBundle? = null,
+
+    @Column(name = "bundle_token", length = 36)
+    val bundleToken: String? = null,
 )

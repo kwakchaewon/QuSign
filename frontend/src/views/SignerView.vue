@@ -93,7 +93,7 @@
                     <rect width="28" height="36" rx="4" fill="var(--color-error-bg)"/>
                     <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-error)" font-family="monospace">PDF</text>
                   </svg>
-                  <span :title="doc.filename">{{ truncateFileName(doc.filename) }}</span>
+                  <span :title="doc.filename" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ truncateFileName(doc.filename, 22) }}</span>
                 </div>
               </span>
             </div>

@@ -272,11 +272,11 @@
               <div class="qs-link-entries">
                 <div v-for="(s, si) in bundleResult.signers" :key="si" class="qs-link-entry">
                   <span class="qs-link-entry-email">{{ s.email }}</span>
-                  <span class="qs-link-url">{{ `${window.location.origin}/sign/${s.bundleToken}` }}</span>
+                  <span class="qs-link-url">{{ `${origin}/sign/${s.bundleToken}` }}</span>
                   <button
                     class="qs-btn qs-btn-sm qs-btn-secondary"
                     :class="{ 'is-success': copiedKey === `bundle-${si}` }"
-                    @click="copyOne(`${window.location.origin}/sign/${s.bundleToken}`, `bundle-${si}`)">
+                    @click="copyOne(`${origin}/sign/${s.bundleToken}`, `bundle-${si}`)">
                     {{ copiedKey === `bundle-${si}` ? '복사됨' : '복사' }}
                   </button>
                 </div>
@@ -364,6 +364,7 @@ interface BundleResult { bundleId: number; signers: BundleSignerLink[] }
 const router = useRouter()
 const step = ref(1)
 const bundleResult = ref<BundleResult | null>(null)
+const origin = window.location.origin
 
 const fileInputEl = ref<HTMLInputElement | null>(null)
 const isDrag = ref(false)
@@ -607,7 +608,7 @@ async function handleSubmit() {
         fileName: files.value[0].name,
         signers: res.data.data.signers.map((s: BundleSignerLink) => ({
           email: s.email,
-          link: `${window.location.origin}/sign/${s.bundleToken}`,
+          link: `${origin}/sign/${s.bundleToken}`,
         })),
       }]
     } else {
@@ -625,7 +626,7 @@ async function handleSubmit() {
           })
           signerResults.push({
             email: s.email,
-            link: `${window.location.origin}/sign/${res.data.data.token}`,
+            link: `${origin}/sign/${res.data.data.token}`,
           })
         }
         results.push({ fileName: f.name, signers: signerResults })

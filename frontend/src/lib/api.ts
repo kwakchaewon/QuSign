@@ -18,9 +18,12 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('qusign:token')
-      localStorage.removeItem('qusign:email')
-      window.location.href = '/login'
+      const isAuthEndpoint = err.config?.url?.includes('/api/auth/')
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('qusign:token')
+        localStorage.removeItem('qusign:email')
+        window.location.href = '/login'
+      }
     } else if (!err.response) {
       showError('네트워크 연결을 확인해주세요.')
     } else if (err.response.status >= 500) {

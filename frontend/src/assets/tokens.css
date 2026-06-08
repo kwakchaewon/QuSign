@@ -234,7 +234,9 @@
    Base Reset
    ============================================================ */
 html, body {
-  scrollbar-gutter: stable;
+  margin: 0;
+  padding: 0;
+  scrollbar-gutter: stable both-edges;
   background: var(--surface-bg);
   color: var(--text-primary);
   font-family: var(--font-sans);

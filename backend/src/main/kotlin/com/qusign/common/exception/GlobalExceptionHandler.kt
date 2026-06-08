@@ -5,6 +5,7 @@ import com.qusign.auth.exception.EmailAlreadyExistsException
 import com.qusign.auth.exception.InvalidCredentialsException
 import com.qusign.auth.exception.InvalidCurrentPasswordException
 import com.qusign.common.response.ApiResponse
+import com.qusign.document.exception.AlreadySignedDocumentException
 import com.qusign.document.exception.BatchTooManyFilesException
 import com.qusign.document.exception.DocumentNotFoundException
 import com.qusign.document.exception.InvalidFileTypeException
@@ -45,6 +46,10 @@ class GlobalExceptionHandler {
     @ExceptionHandler(InvalidFileTypeException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleInvalidFileType(e: InvalidFileTypeException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(AlreadySignedDocumentException::class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    fun handleAlreadySignedDocument(e: AlreadySignedDocumentException) = ApiResponse.error(e.message!!)
 
     @ExceptionHandler(BatchTooManyFilesException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

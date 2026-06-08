@@ -3,7 +3,10 @@ package com.qusign.document.service
 import com.qusign.auth.service.AuthService
 import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
+import com.qusign.document.exception.AlreadySignedDocumentException
 import com.qusign.document.exception.DocumentNotFoundException
+import com.qusign.signature.service.PdfSignatureService
+import com.qusign.signature.service.SignatureMetadata
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -25,6 +28,7 @@ class DocumentServiceTest {
 
     @MockitoBean lateinit var storageService: StorageService
     @MockitoBean lateinit var emailService: EmailService
+    @MockitoBean lateinit var pdfSignatureService: PdfSignatureService
     @MockitoBean lateinit var redisMessageListenerContainer: RedisMessageListenerContainer
 
     @Autowired
@@ -37,6 +41,7 @@ class DocumentServiceTest {
     fun setUp() {
         doNothing().whenever(storageService).upload(any(), any(), any())
         whenever(storageService.download(any())).thenReturn(byteArrayOf(1, 2, 3))
+        whenever(pdfSignatureService.extractMetadata(any())).thenReturn(null)
     }
 
     private fun pdf(name: String = "test.pdf") =
@@ -70,6 +75,22 @@ class DocumentServiceTest {
         val (bytes, filename) = documentService.download("dl@qusign.com", doc.id)
         assertTrue(bytes.isNotEmpty())
         assertTrue(filename == "test.pdf")
+    }
+
+    @Test
+    fun `이미 서명된 PDF 업로드 시 예외`() {
+        authService.register("signed@qusign.com", "password123")
+        val fakeMetadata = SignatureMetadata(
+            signature = byteArrayOf(1),
+            signerId = "someone@qusign.com",
+            signedAt = "2026-01-01T00:00:00",
+            documentHash = byteArrayOf(1),
+        )
+        whenever(pdfSignatureService.extractMetadata(any())).thenReturn(fakeMetadata)
+
+        assertThrows<AlreadySignedDocumentException> {
+            documentService.upload("signed@qusign.com", pdf("already_signed.pdf"))
+        }
     }
 
     @Test

@@ -5,12 +5,14 @@ import com.qusign.auth.repository.UserRepository
 import com.qusign.common.storage.StorageService
 import com.qusign.document.dto.DocumentResponse
 import com.qusign.document.entity.Document
+import com.qusign.document.exception.AlreadySignedDocumentException
 import com.qusign.document.exception.BatchTooManyFilesException
 import com.qusign.document.exception.DocumentNotFoundException
 import com.qusign.document.exception.InvalidFileTypeException
 import com.qusign.document.exception.StorageException
 import com.qusign.document.repository.DocumentRepository
 import com.qusign.signature.repository.SignatureRequestRepository
+import com.qusign.signature.service.PdfSignatureService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -23,6 +25,7 @@ class DocumentService(
     private val userRepository: UserRepository,
     private val storageService: StorageService,
     private val signatureRequestRepository: SignatureRequestRepository,
+    private val pdfSignatureService: PdfSignatureService,
 ) {
     @Transactional
     fun upload(email: String, file: MultipartFile): DocumentResponse {
@@ -41,6 +44,7 @@ class DocumentService(
     private fun uploadForUser(user: User, file: MultipartFile): DocumentResponse {
         val bytes = file.bytes
         if (!isPdf(bytes)) throw InvalidFileTypeException()
+        if (pdfSignatureService.extractMetadata(bytes) != null) throw AlreadySignedDocumentException()
         val hash = sha3256Hex(bytes)
         val key = "documents/${user.id}/${UUID.randomUUID()}/${file.originalFilename ?: "document.pdf"}"
 

@@ -4,3 +4,4 @@ class DocumentNotFoundException : RuntimeException("문서를 찾을 수 없습�
 class StorageException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 class BatchTooManyFilesException(max: Int = 5) : RuntimeException("최대 ${max}개 파일까지 업로드할 수 있습니다")
 class InvalidFileTypeException : RuntimeException("PDF 파일만 업로드할 수 있습니다")
+class AlreadySignedDocumentException : RuntimeException("이미 QuSign 서명된 문서는 업로드할 수 없습니다")

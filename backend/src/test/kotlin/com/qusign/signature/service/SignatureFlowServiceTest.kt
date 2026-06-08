@@ -3,6 +3,7 @@ package com.qusign.signature.service
 import com.qusign.auth.service.AuthService
 import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
+import com.qusign.document.exception.AlreadySignedDocumentException
 import com.qusign.document.service.DocumentService
 import com.qusign.notification.service.NotificationService
 import com.qusign.signature.dto.CreateSignatureRequestDto
@@ -160,6 +161,25 @@ class SignatureFlowServiceTest {
 
         assertThrows<SignatureRequestNotCancellableException> {
             signatureFlowService.cancelSigner(doc.id, "signer7@qusign.com", "req7@qusign.com")
+        }
+    }
+
+    @Test
+    fun `서명된 PDF를 새 문서로 업로드 시 예외`() {
+        authService.register("req9@qusign.com", "pw1234!")
+        authService.register("signer9@qusign.com", "pw1234!")
+        val doc = documentService.upload("req9@qusign.com", pdf())
+        val req = signatureFlowService.requestSignature(
+            "req9@qusign.com",
+            CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer9@qusign.com"),
+        )
+        signatureFlowService.sign(req.token, "signer9@qusign.com", "pw1234!")
+
+        val signedBytes = storedFiles["signed-documents/${req.id}/${doc.originalFilename}"]!!
+        val signedFile = MockMultipartFile("file", doc.originalFilename, "application/pdf", signedBytes)
+
+        assertThrows<AlreadySignedDocumentException> {
+            documentService.upload("req9@qusign.com", signedFile)
         }
     }
 

@@ -4,13 +4,14 @@ import SignupView from '../views/SignupView.vue'
 import HomeView from '../views/HomeView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import DocumentDetailView from '../views/DocumentDetailView.vue'
+import BundleDetailView from '../views/BundleDetailView.vue'
 import RequestView from '../views/RequestView.vue'
 import SignerView from '../views/SignerView.vue'
 import VerifyView from '../views/VerifyView.vue'
 import AccountSettingsView from '../views/AccountSettingsView.vue'
 import NotificationsView from '../views/NotificationsView.vue'
 
-const AUTH_ROUTES = ['/home', '/documents', '/request', '/settings', '/notifications', '/sign']
+const AUTH_ROUTES = ['/home', '/documents', '/bundles', '/request', '/settings', '/notifications', '/sign']
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,6 +25,7 @@ const router = createRouter({
     { path: '/signup', name: 'signup', component: SignupView },
     { path: '/documents', name: 'documents', component: DashboardView },
     { path: '/documents/:id', name: 'document-detail', component: DocumentDetailView },
+    { path: '/bundles/:id', name: 'bundle-detail', component: BundleDetailView },
     { path: '/request', name: 'request', component: RequestView },
     { path: '/sign/:token?', name: 'sign', component: SignerView },
     { path: '/verify', name: 'verify', component: VerifyView },

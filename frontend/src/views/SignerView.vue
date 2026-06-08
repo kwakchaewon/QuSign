@@ -110,11 +110,31 @@
               </svg>
             </span>
             <div class="qs-doc-meta-headtext">
-              <div class="qs-doc-meta-name" :title="docInfo?.filename">
-                {{ docInfo?.filename ?? '서명 요청 문서' }}
+              <div class="qs-doc-meta-name">
+                <template v-if="docInfo?.isBundle && docInfo.documents.length > 1">
+                  {{ docInfo.documents[0].filename }} 외 {{ docInfo.documents.length - 1 }}건
+                </template>
+                <template v-else>
+                  {{ docInfo?.filename ?? '서명 요청 문서' }}
+                </template>
               </div>
               <div class="qs-doc-meta-size">
-                <span>{{ docInfo?.pages ? `${docInfo.pages}페이지` : 'PDF' }}</span>
+                <span v-if="docInfo?.isBundle && docInfo.documents.length > 1">
+                  {{ docInfo.documents.length }}개 PDF 묶음 서명
+                </span>
+                <span v-else>{{ docInfo?.pages ? `${docInfo.pages}페이지` : 'PDF' }}</span>
+              </div>
+              <!-- 번들 파일 목록 -->
+              <div v-if="docInfo?.isBundle && docInfo.documents.length > 1" style="margin-top:8px">
+                <div v-for="doc in docInfo.documents" :key="doc.index"
+                  style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);margin-top:3px">
+                  <svg width="10" height="13" viewBox="0 0 28 36" fill="none">
+                    <rect width="28" height="36" rx="4" fill="var(--color-error-bg)"/>
+                    <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-error)"
+                      font-family="monospace">PDF</text>
+                  </svg>
+                  {{ doc.filename }}
+                </div>
               </div>
             </div>
           </div>
@@ -320,7 +340,12 @@
         <div class="qs-success-receipt">
           <div class="qs-receipt-row">
             <span class="qs-receipt-k">문서</span>
-            <span class="qs-receipt-v">{{ docInfo?.filename ?? '서명 완료 문서' }}</span>
+            <span class="qs-receipt-v">
+              <template v-if="docInfo?.isBundle && docInfo.documents.length > 1">
+                {{ docInfo.documents[0].filename }} 외 {{ docInfo.documents.length - 1 }}건
+              </template>
+              <template v-else>{{ docInfo?.filename ?? '서명 완료 문서' }}</template>
+            </span>
           </div>
           <div class="qs-receipt-row">
             <span class="qs-receipt-k">서명자</span>
@@ -337,24 +362,46 @@
         </div>
 
         <div class="qs-success-actions">
-          <button
-            type="button"
-            class="qs-btn qs-btn-primary qs-btn-lg qs-btn-block"
-            :disabled="isDownloadingSigned"
-            @click="downloadSignedPdf"
-          >
-            <svg v-if="!isDownloadingSigned" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 4v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M5 19h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none"
-              style="animation: qs-signer-spin 1s linear infinite" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.25" stroke-width="2.4"/>
-              <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-            </svg>
-            {{ isDownloadingSigned ? '다운로드 중…' : '서명된 PDF 다운로드' }}
-          </button>
+          <!-- 번들: 각 문서 개별 다운로드 -->
+          <template v-if="docInfo?.isBundle && docInfo.documents.length > 1">
+            <button
+              v-for="doc in docInfo.documents"
+              :key="doc.index"
+              type="button"
+              class="qs-btn qs-btn-secondary qs-btn-lg qs-btn-block"
+              :disabled="downloadingIndex === doc.index"
+              @click="downloadSignedBundleDoc(doc.index, doc.filename)"
+              style="margin-bottom:6px"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 4v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.8"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M5 19h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              {{ downloadingIndex === doc.index ? '다운로드 중…' : doc.filename }}
+            </button>
+          </template>
+          <!-- 단건 다운로드 -->
+          <template v-else>
+            <button
+              type="button"
+              class="qs-btn qs-btn-primary qs-btn-lg qs-btn-block"
+              :disabled="isDownloadingSigned"
+              @click="downloadSignedPdf"
+            >
+              <svg v-if="!isDownloadingSigned" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 4v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.8"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M5 19h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none"
+                style="animation: qs-signer-spin 1s linear infinite" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.25" stroke-width="2.4"/>
+                <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+              </svg>
+              {{ isDownloadingSigned ? '다운로드 중…' : '서명된 PDF 다운로드' }}
+            </button>
+          </template>
         </div>
       </article>
 
@@ -505,6 +552,9 @@ const alreadySignedInfo = ref({ requester: '', documentName: '' })
 
 // ── Step 1 ──
 const step = ref(1)
+
+interface BundleDoc { index: number; filename: string; hashSha3256: string }
+
 const docInfo = ref<{
   filename: string
   requesterEmail: string
@@ -513,6 +563,8 @@ const docInfo = ref<{
   expiresAt: string
   hashSha3256: string
   pages?: number
+  isBundle: boolean
+  documents: BundleDoc[]
 } | null>(null)
 const hashOpen = ref(false)
 const hashFull = computed(() => docInfo.value?.hashSha3256 ?? '')
@@ -544,6 +596,7 @@ const signErr = ref<string | null>(null)
 
 // ── Step 2 ──
 const isDownloadingSigned = ref(false)
+const downloadingIndex = ref<number | null>(null)
 
 // ─────────────────────────────────────
 // 마운트 시 서명 요청 정보 + PDF 조회
@@ -561,6 +614,8 @@ onMounted(async () => {
         hashSha3256: string
         requestedAt: string
         expiresAt: string
+        isBundle: boolean
+        documents: BundleDoc[]
       }
     }>(`/api/signature-requests/${signToken.value}/info`)
     const d = res.data.data
@@ -578,6 +633,8 @@ onMounted(async () => {
         requestedAt: formatDate(d.requestedAt),
         expiresAt: formatDate(d.expiresAt),
         hashSha3256: d.hashSha3256,
+        isBundle: d.isBundle ?? false,
+        documents: d.documents ?? [],
       }
       await fetchPdf()
     }
@@ -672,6 +729,26 @@ async function downloadSignedPdf() {
     alert('서명된 PDF 다운로드에 실패했어요.')
   } finally {
     isDownloadingSigned.value = false
+  }
+}
+
+async function downloadSignedBundleDoc(index: number, filename: string) {
+  downloadingIndex.value = index
+  try {
+    const res = await api.get(
+      `/api/signature-requests/${signToken.value}/signed-bundle-documents/${index}`,
+      { responseType: 'blob' }
+    )
+    const url = URL.createObjectURL(res.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename.replace(/\.pdf$/i, '') + '_qusigned.pdf'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    alert('다운로드에 실패했어요.')
+  } finally {
+    downloadingIndex.value = null
   }
 }
 

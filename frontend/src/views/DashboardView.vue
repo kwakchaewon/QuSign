@@ -103,9 +103,9 @@
               :key="doc.id"
               class="qs-doc"
               style="cursor:pointer"
-              @click="router.push(`/documents/${doc.id}`)"
+              @click="router.push(doc.detailPath)"
             >
-              <div class="qs-doc-icon">
+              <div class="qs-doc-icon" style="position:relative">
                 <svg width="28" height="36" viewBox="0 0 28 36" fill="none" aria-hidden="true">
                   <rect width="28" height="36" rx="4" fill="var(--color-error-bg)"/>
                   <path d="M6 11h16M6 16h10M6 21h12" stroke="var(--color-error)"
@@ -113,9 +113,14 @@
                   <text x="5" y="30" font-size="6" font-weight="700" fill="var(--color-error)"
                     font-family="monospace">PDF</text>
                 </svg>
+                <!-- 번들 뱃지 -->
+                <span v-if="doc.bundleDocCount > 1"
+                  style="position:absolute;top:-4px;right:-6px;background:var(--color-primary-500);color:#fff;border-radius:99px;font-size:10px;font-weight:700;padding:1px 5px;line-height:1.4">
+                  {{ doc.bundleDocCount }}
+                </span>
               </div>
               <div class="qs-doc-main">
-                <div class="qs-doc-name">{{ doc.originalFilename }}</div>
+                <div class="qs-doc-name">{{ doc.displayName }}</div>
               </div>
               <div class="qs-doc-status">
                 <span class="qs-badge qs-badge-pending">
@@ -124,10 +129,10 @@
                 </span>
               </div>
               <div class="qs-doc-actions">
-                <button class="qs-btn qs-btn-sm qs-btn-primary" @click.stop="router.push(`/documents/${doc.id}`)">
+                <button class="qs-btn qs-btn-sm qs-btn-primary" @click.stop="router.push(doc.detailPath)">
                   상세보기
                 </button>
-                <button class="qs-btn qs-btn-sm qs-btn-secondary" @click.stop="handleDownload(doc)">
+                <button v-if="!doc.bundleId" class="qs-btn qs-btn-sm qs-btn-secondary" @click.stop="handleDownload(doc)">
                   다운로드
                 </button>
               </div>
@@ -175,6 +180,15 @@ interface Doc {
   hashSha3256: string
   createdAt: string | null
   signatureStatus: 'NONE' | 'PENDING' | 'SIGNED'
+  bundleId: number | null
+  bundlePrimary: boolean
+  bundleDocCount: number
+}
+
+// 화면에 표시할 항목 (번들의 경우 primary 문서만 표시)
+interface DisplayItem extends Doc {
+  displayName: string   // "파일명.pdf 외 N건" 형식
+  detailPath: string    // 클릭 시 이동 경로
 }
 
 const PAGE_SIZE = 10
@@ -207,25 +221,37 @@ onMounted(async () => {
   }
 })
 
+// 번들 비주 문서 제외, 번들 primary만 표시하도록 변환
+const displayItems = computed<DisplayItem[]>(() =>
+  docs.value
+    .filter(d => !d.bundleId || d.bundlePrimary)
+    .map(d => ({
+      ...d,
+      displayName: d.bundleId && d.bundleDocCount > 1
+        ? `${d.originalFilename} 외 ${d.bundleDocCount - 1}건`
+        : d.originalFilename,
+      detailPath: d.bundleId ? `/bundles/${d.bundleId}` : `/documents/${d.id}`,
+    }))
+)
 
 function tabCount(key: TabKey) {
-  if (key === 'ALL') return docs.value.length
-  return docs.value.filter(d => d.signatureStatus === key).length
+  if (key === 'ALL') return displayItems.value.length
+  return displayItems.value.filter(d => d.signatureStatus === key).length
 }
 
 const filteredDocs = computed(() => {
   let list = activeTab.value === 'ALL'
-    ? docs.value
-    : docs.value.filter(d => d.signatureStatus === activeTab.value)
+    ? displayItems.value
+    : displayItems.value.filter(d => d.signatureStatus === activeTab.value)
 
   const q = search.value.trim().toLowerCase()
-  if (q) list = list.filter(d => d.originalFilename.toLowerCase().includes(q))
+  if (q) list = list.filter(d => d.displayName.toLowerCase().includes(q))
 
   return [...list].sort((a, b) => {
     switch (sortKey.value) {
       case 'date-asc':  return (a.createdAt ?? '').localeCompare(b.createdAt ?? '')
-      case 'name-asc':  return a.originalFilename.localeCompare(b.originalFilename)
-      case 'name-desc': return b.originalFilename.localeCompare(a.originalFilename)
+      case 'name-asc':  return a.displayName.localeCompare(b.displayName)
+      case 'name-desc': return b.displayName.localeCompare(a.displayName)
       default:          return (b.createdAt ?? '').localeCompare(a.createdAt ?? '')
     }
   })
@@ -244,7 +270,7 @@ function formatDate(d: string | null) {
   if (!d) return '-'
   return d.slice(0, 10).replace(/-/g, '.')
 }
-async function handleDownload(doc: Doc) {
+async function handleDownload(doc: DisplayItem) {
   try {
     const res = await api.get(`/api/documents/${doc.id}/download`, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)

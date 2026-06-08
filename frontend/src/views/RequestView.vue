@@ -246,33 +246,69 @@
           </div>
           <h2 class="qs-done-title">서명 요청이 전송되었습니다</h2>
           <p class="qs-done-desc">
-            {{ fileResults.length }}개 파일 · {{ signerPills.length }}명 서명자에게<br>
-            서명 요청 이메일이 발송되었습니다.
+            <template v-if="bundleResult">
+              {{ files.length }}개 파일 묶음 · {{ signerPills.length }}명 서명자에게<br>
+              서명자 1인당 하나의 링크로 전체 서명 요청이 발송되었습니다.
+            </template>
+            <template v-else>
+              {{ fileResults.length }}개 파일 · {{ signerPills.length }}명 서명자에게<br>
+              서명 요청 이메일이 발송되었습니다.
+            </template>
           </p>
 
-          <!-- Per-file link list -->
-          <div v-for="(fr, fi) in fileResults" :key="fi" class="qs-link-list">
-            <div class="qs-link-file-head">
-              <svg width="14" height="18" viewBox="0 0 28 36" fill="none">
-                <rect width="28" height="36" rx="4" fill="var(--color-primary-50)"/>
-                <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-primary-600)"
-                  font-family="monospace">PDF</text>
-              </svg>
-              <span class="qs-link-file-name">{{ fr.fileName }}</span>
-            </div>
-            <div class="qs-link-entries">
-              <div v-for="(sr, si) in fr.signers" :key="si" class="qs-link-entry">
-                <span class="qs-link-entry-email">{{ sr.email }}</span>
-                <span class="qs-link-url">{{ sr.link }}</span>
-                <button
-                  class="qs-btn qs-btn-sm qs-btn-secondary"
-                  :class="{ 'is-success': copiedKey === `${fi}-${si}` }"
-                  @click="copyOne(sr.link, `${fi}-${si}`)">
-                  {{ copiedKey === `${fi}-${si}` ? '복사됨' : '복사' }}
-                </button>
+          <!-- 번들: 서명자 1인당 하나의 링크 -->
+          <template v-if="bundleResult">
+            <div class="qs-link-list">
+              <div class="qs-link-file-head">
+                <svg width="14" height="18" viewBox="0 0 28 36" fill="none">
+                  <rect width="28" height="36" rx="4" fill="var(--color-primary-50)"/>
+                  <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-primary-600)"
+                    font-family="monospace">PDF</text>
+                </svg>
+                <span class="qs-link-file-name">
+                  {{ files[0]?.name }}{{ files.length > 1 ? ` 외 ${files.length - 1}건` : '' }}
+                </span>
+              </div>
+              <div class="qs-link-entries">
+                <div v-for="(s, si) in bundleResult.signers" :key="si" class="qs-link-entry">
+                  <span class="qs-link-entry-email">{{ s.email }}</span>
+                  <span class="qs-link-url">{{ `${window.location.origin}/sign/${s.bundleToken}` }}</span>
+                  <button
+                    class="qs-btn qs-btn-sm qs-btn-secondary"
+                    :class="{ 'is-success': copiedKey === `bundle-${si}` }"
+                    @click="copyOne(`${window.location.origin}/sign/${s.bundleToken}`, `bundle-${si}`)">
+                    {{ copiedKey === `bundle-${si}` ? '복사됨' : '복사' }}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </template>
+
+          <!-- 단건: 파일별 링크 목록 (기존) -->
+          <template v-else>
+            <div v-for="(fr, fi) in fileResults" :key="fi" class="qs-link-list">
+              <div class="qs-link-file-head">
+                <svg width="14" height="18" viewBox="0 0 28 36" fill="none">
+                  <rect width="28" height="36" rx="4" fill="var(--color-primary-50)"/>
+                  <text x="4" y="22" font-size="7" font-weight="800" fill="var(--color-primary-600)"
+                    font-family="monospace">PDF</text>
+                </svg>
+                <span class="qs-link-file-name">{{ fr.fileName }}</span>
+              </div>
+              <div class="qs-link-entries">
+                <div v-for="(sr, si) in fr.signers" :key="si" class="qs-link-entry">
+                  <span class="qs-link-entry-email">{{ sr.email }}</span>
+                  <span class="qs-link-url">{{ sr.link }}</span>
+                  <button
+                    class="qs-btn qs-btn-sm qs-btn-secondary"
+                    :class="{ 'is-success': copiedKey === `${fi}-${si}` }"
+                    @click="copyOne(sr.link, `${fi}-${si}`)">
+                    {{ copiedKey === `${fi}-${si}` ? '복사됨' : '복사' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </template>
 
           <button class="qs-btn qs-btn-sm qs-btn-secondary qs-copy-all-btn" @click="copyAll">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -322,9 +358,12 @@ interface FileEntry {
 interface SignerPill { email: string }
 interface SignerResult { email: string; link: string }
 interface FileResult { fileName: string; signers: SignerResult[] }
+interface BundleSignerLink { email: string; bundleToken: string }
+interface BundleResult { bundleId: number; signers: BundleSignerLink[] }
 
 const router = useRouter()
 const step = ref(1)
+const bundleResult = ref<BundleResult | null>(null)
 
 const fileInputEl = ref<HTMLInputElement | null>(null)
 const isDrag = ref(false)
@@ -548,25 +587,52 @@ async function handleSubmit() {
   if (signerPills.value.length === 0) return
   isSending.value = true
   try {
-    const results: FileResult[] = []
-    for (const f of files.value) {
-      if (!f.docId) continue
-      const signerResults: SignerResult[] = []
-      for (const s of signerPills.value) {
-        const res = await api.post<{ data: { token: string } }>('/api/signature-requests', {
-          documentId: f.docId,
-          signerEmail: s.email,
+    const docIds = files.value.filter(f => f.docId).map(f => f.docId as number)
+    const signerEmails = signerPills.value.map(p => p.email)
+
+    if (docIds.length > 1) {
+      // 번들 API: 여러 파일을 한 번에 처리
+      const res = await api.post<{ data: { bundleId: number; signers: BundleSignerLink[] } }>(
+        '/api/signature-requests/bundle',
+        {
+          documentIds: docIds,
+          signerEmails,
           expirationHours: 72,
           message: message.value.trim() || null,
-        })
-        signerResults.push({
+        }
+      )
+      bundleResult.value = res.data.data
+      // fileResults도 하위호환성을 위해 채워줌 (step 3 표시용)
+      fileResults.value = [{
+        fileName: files.value[0].name,
+        signers: res.data.data.signers.map((s: BundleSignerLink) => ({
           email: s.email,
-          link: `${window.location.origin}/sign/${res.data.data.token}`,
-        })
+          link: `${window.location.origin}/sign/${s.bundleToken}`,
+        })),
+      }]
+    } else {
+      // 단건 API (기존 로직)
+      const results: FileResult[] = []
+      for (const f of files.value) {
+        if (!f.docId) continue
+        const signerResults: SignerResult[] = []
+        for (const s of signerPills.value) {
+          const res = await api.post<{ data: { token: string } }>('/api/signature-requests', {
+            documentId: f.docId,
+            signerEmail: s.email,
+            expirationHours: 72,
+            message: message.value.trim() || null,
+          })
+          signerResults.push({
+            email: s.email,
+            link: `${window.location.origin}/sign/${res.data.data.token}`,
+          })
+        }
+        results.push({ fileName: f.name, signers: signerResults })
       }
-      results.push({ fileName: f.name, signers: signerResults })
+      fileResults.value = results
+      bundleResult.value = null
     }
-    fileResults.value = results
     step.value = 3
   } catch (err: any) {
     alert(err.response?.data?.message ?? '서명 요청 전송에 실패했어요.')
@@ -602,6 +668,7 @@ function resetForm() {
   signerError.value = ''
   message.value = ''
   fileResults.value = []
+  bundleResult.value = null
   copiedKey.value = ''
   copiedAll.value = false
 }

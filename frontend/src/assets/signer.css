@@ -356,6 +356,11 @@
   border-bottom: 0.5px solid var(--border-default);
 }
 .qs-meta-row:last-child { border-bottom: none; }
+.qs-meta-message {
+  white-space: pre-wrap;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
 
 /* Hash toggle (signer version — wider, mono, collapsible) */
 .qs-signer-page .qs-hash-toggle {

@@ -557,6 +557,7 @@ async function handleSubmit() {
           documentId: f.docId,
           signerEmail: s.email,
           expirationHours: 72,
+          message: message.value.trim() || null,
         })
         signerResults.push({
           email: s.email,

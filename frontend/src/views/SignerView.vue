@@ -91,7 +91,7 @@
         <header class="qs-card-head">
           <h1 id="step1-title" class="qs-card-title">문서 검토 · 서명</h1>
           <p class="qs-card-desc">
-            아래 문서 내용을 확인하고, 동의 후 서명을 진행해 주세요.
+            아래 문서 내용을 확인하고, 동의 후 서명을 진행해 주세요.<br />
             서명은 즉시 ML-DSA-65 알고리즘으로 처리됩니다.
           </p>
         </header>
@@ -122,6 +122,10 @@
             <div class="qs-meta-row">
               <span class="qs-meta-k">요청자</span>
               <span class="qs-meta-v qs-mono">{{ docInfo?.requesterEmail ?? '—' }}</span>
+            </div>
+            <div v-if="docInfo?.message" class="qs-meta-row qs-meta-row--message">
+              <span class="qs-meta-k">요청 메시지</span>
+              <span class="qs-meta-v qs-meta-message">{{ docInfo.message }}</span>
             </div>
             <div class="qs-meta-row">
               <span class="qs-meta-k">요청 일시</span>
@@ -504,6 +508,7 @@ const step = ref(1)
 const docInfo = ref<{
   filename: string
   requesterEmail: string
+  message: string | null
   requestedAt: string
   expiresAt: string
   hashSha3256: string
@@ -552,6 +557,7 @@ onMounted(async () => {
         signed: boolean
         requesterEmail: string
         documentName: string
+        message: string | null
         hashSha3256: string
         requestedAt: string
         expiresAt: string
@@ -568,6 +574,7 @@ onMounted(async () => {
       docInfo.value = {
         filename: d.documentName,
         requesterEmail: d.requesterEmail,
+        message: d.message ?? null,
         requestedAt: formatDate(d.requestedAt),
         expiresAt: formatDate(d.expiresAt),
         hashSha3256: d.hashSha3256,

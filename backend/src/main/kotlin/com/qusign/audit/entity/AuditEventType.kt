@@ -1,0 +1,11 @@
+package com.qusign.audit.entity
+
+enum class AuditEventType {
+    SIGN_REQUEST_CREATED,
+    BUNDLE_REQUEST_CREATED,
+    SIGNED,
+    BUNDLE_SIGNED,
+    SIGNER_CANCELLED,
+    BUNDLE_SIGNER_CANCELLED,
+    SIGNED_DOCUMENT_DOWNLOADED,
+}

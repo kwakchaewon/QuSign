@@ -26,6 +26,10 @@ storage:
 email:
   base-url: http://localhost:5173
 
+admin:
+  email: admin@qusign.local
+  password: Admin1234!
+
 logging:
   level:
     com.qusign: DEBUG

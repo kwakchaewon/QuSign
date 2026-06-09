@@ -224,6 +224,15 @@
             </div>
           </div>
         </section>
+
+        <!-- Audit timeline -->
+        <div class="qs-section-head">
+          <h3 class="qs-section-title">감사 로그</h3>
+          <span class="qs-section-meta">법적 증거 수준 이벤트 기록</span>
+        </div>
+        <section class="qs-card">
+          <AuditTimeline :bundle-id="detail.bundleId" />
+        </section>
       </template>
     </main>
 
@@ -277,6 +286,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/lib/api'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import AuditTimeline from '@/components/AuditTimeline.vue'
 
 interface BundleDocumentInfo { index: number; filename: string; hashSha3256: string }
 interface BundleSignedDoc { index: number; filename: string }

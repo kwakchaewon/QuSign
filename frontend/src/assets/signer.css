@@ -26,6 +26,12 @@
 .qs-signer-page {
   min-height: 100vh;
   display: flex; flex-direction: column;
+  align-items: center;
+}
+
+/* 탑바는 항상 전체 너비 유지 */
+.qs-signer-page > .qs-topbar {
+  align-self: stretch;
 }
 
 /* =============== Main layout (scoped) =============== */
@@ -33,7 +39,6 @@
   flex: 1;
   width: 100%;
   max-width: 560px;
-  margin: 0 auto;
   padding: 24px 20px 80px;
   display: flex; flex-direction: column;
   gap: 16px;
@@ -636,7 +641,7 @@
 }
 
 /* =============== Step 3: Success =============== */
-.qs-success-card { text-align: center; padding: 36px 28px 28px; }
+.qs-success-card { text-align: center; padding: 36px 28px 28px; max-width: 520px; }
 .qs-success-icon {
   width: 84px; height: 84px;
   margin: 0 auto 20px;

@@ -27,4 +27,8 @@ interface SignatureRequestRepository : JpaRepository<SignatureRequest, Long> {
     // 이미 만료된 PENDING 요청 (알림 미발송분 처리용)
     @Query("SELECT r FROM SignatureRequest r WHERE r.status = 'PENDING' AND r.expiresAt < :now")
     fun findExpiredPending(now: LocalDateTime): List<SignatureRequest>
+
+    // 받은 문서 목록 (서명자 이메일 기준)
+    @Query("SELECT r FROM SignatureRequest r WHERE r.signerEmail = :signerEmail ORDER BY r.createdAt DESC")
+    fun findBySignerEmailOrderByCreatedAtDesc(signerEmail: String): List<SignatureRequest>
 }

@@ -17,6 +17,13 @@ import java.nio.charset.StandardCharsets
 @RequestMapping("/api")
 class SignatureController(private val signatureFlowService: SignatureFlowService) {
 
+    // ── 받은 문서 목록 (서명자용) ─────────────────────────────────────────────
+    @GetMapping("/signature-requests/received")
+    fun getReceivedDocuments(
+        @AuthenticationPrincipal email: String,
+    ): ApiResponse<ReceivedDocumentsResponse> =
+        ApiResponse.ok(signatureFlowService.getReceivedDocuments(email))
+
     // ── 단건 서명 요청 ────────────────────────────────────────────────────────
     @PostMapping("/signature-requests")
     @ResponseStatus(HttpStatus.CREATED)

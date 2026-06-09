@@ -157,3 +157,22 @@ data class BundleSignedDocDto(
     val index: Int,
     val filename: String,
 )
+
+// 받은 문서 목록 (서명자용)
+data class ReceivedDocumentItem(
+    val requestId: Long,
+    val documentName: String,
+    val requesterEmail: String,
+    val status: String,         // PENDING | SIGNED | CANCELLED | EXPIRED
+    val token: String,
+    val bundleToken: String?,
+    val bundleDocCount: Int,
+    val expiresAt: String,
+    val createdAt: String,
+    val message: String?,
+    val isBundle: Boolean,
+)
+
+data class ReceivedDocumentsResponse(
+    val received: List<ReceivedDocumentItem>,
+)

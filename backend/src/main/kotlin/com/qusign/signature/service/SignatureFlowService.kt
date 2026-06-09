@@ -526,6 +526,59 @@ class SignatureFlowService(
         return Pair(bytes, req.document.originalFilename.addQusignedSuffix())
     }
 
+    // ── 받은 문서 목록 (서명자용) ─────────────────────────────────────────────
+    @Transactional(readOnly = true)
+    fun getReceivedDocuments(signerEmail: String): ReceivedDocumentsResponse {
+        val requests = signatureRequestRepository.findBySignerEmailOrderByCreatedAtDesc(signerEmail)
+        val now = LocalDateTime.now()
+        val processedBundleTokens = mutableSetOf<String>()
+        val items = mutableListOf<ReceivedDocumentItem>()
+
+        for (req in requests) {
+            val effectiveStatus = when {
+                req.status == "SIGNED"    -> "SIGNED"
+                req.status == "CANCELLED" -> "CANCELLED"
+                req.expiresAt.isBefore(now) -> "EXPIRED"
+                else -> "PENDING"
+            }
+
+            val bt = req.bundleToken
+            if (bt != null) {
+                if (bt in processedBundleTokens) continue
+                processedBundleTokens.add(bt)
+                val count = requests.count { it.bundleToken == bt }
+                items.add(ReceivedDocumentItem(
+                    requestId = req.id,
+                    documentName = req.document.originalFilename,
+                    requesterEmail = req.requester.email,
+                    status = effectiveStatus,
+                    token = req.token,
+                    bundleToken = bt,
+                    bundleDocCount = count,
+                    expiresAt = req.expiresAt.toString(),
+                    createdAt = req.createdAt?.toString() ?: "",
+                    message = req.message,
+                    isBundle = true,
+                ))
+            } else {
+                items.add(ReceivedDocumentItem(
+                    requestId = req.id,
+                    documentName = req.document.originalFilename,
+                    requesterEmail = req.requester.email,
+                    status = effectiveStatus,
+                    token = req.token,
+                    bundleToken = null,
+                    bundleDocCount = 1,
+                    expiresAt = req.expiresAt.toString(),
+                    createdAt = req.createdAt?.toString() ?: "",
+                    message = req.message,
+                    isBundle = false,
+                ))
+            }
+        }
+        return ReceivedDocumentsResponse(received = items)
+    }
+
     // ── 취소 ────────────────────────────────────────────────────────────────
     @Transactional
     fun cancelSigner(documentId: Long, signerEmail: String, requesterEmail: String) {

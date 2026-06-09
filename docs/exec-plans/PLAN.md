@@ -469,7 +469,51 @@
 
 ---
 
-### 4-9. 루트 페이지 대시보드화
+### 4-9. 관리자 페이지
+
+**목표:** 감사 로그·사용자·서명 현황을 관리자가 시스템 전체 범위에서 조회·관리할 수 있는 어드민 패널을 구축한다
+
+> 4-8 감사 로그 구현 완료 후 진행
+
+#### Step 1. 권한 모델 확장
+
+- [ ] `V10__add_role_to_users.sql` — `users.role VARCHAR(20) DEFAULT 'USER'`
+- [ ] `User` 엔티티에 `role: String` 필드 추가
+- [ ] `SecurityConfig` — `/api/admin/**` 경로를 `ROLE_ADMIN`만 접근 허용
+- [ ] 초기 관리자 계정 등록 방법 명세 (환경변수 또는 초기 데이터 SQL)
+
+#### Step 2. 백엔드 — 관리자 API
+
+- [ ] `GET /api/admin/stats` — 시스템 전체 통계 (총 사용자·서명 수, 상태별 카운트)
+- [ ] `GET /api/admin/users` — 전체 사용자 목록 (페이징, 이메일 검색)
+- [ ] `PUT /api/admin/users/{email}/disable` — 사용자 비활성화 (소프트, 로그인 차단)
+- [ ] `GET /api/admin/audit` — 시스템 전체 감사 로그 (페이징, `eventType`·날짜 필터)
+  - 4-8 `AuditLogService`에 `findAll(pageable, filter)` 메서드 추가
+- [ ] `GET /api/admin/users/{email}/audit` — 특정 사용자의 감사 로그 전체 조회
+- [ ] `GET /api/admin/audit/export` — 전체 감사 로그 JSON 내보내기 (법적 분쟁·감사 대응)
+- [ ] 모든 관리자 API에 `@PreAuthorize("hasRole('ADMIN')")` 적용
+
+#### Step 3. 프론트엔드
+
+- [ ] 라우터 가드: `/admin/**` → `ADMIN` 역할 없으면 `/home` 리다이렉트
+- [ ] `AdminLayout.vue` — 관리자 전용 레이아웃 (사이드바: 통계 / 사용자 / 감사 로그)
+- [ ] `AdminStatsView.vue` (`/admin`) — 통계 카드 + 최근 감사 이벤트 요약
+- [ ] `AdminUsersView.vue` (`/admin/users`) — 사용자 목록 테이블 (이메일 검색, 비활성화 버튼)
+- [ ] `AdminAuditView.vue` (`/admin/audit`) — 전체 감사 로그 테이블 (이벤트 타입·날짜 필터, 내보내기 버튼)
+  - 4-8의 `AuditTimeline.vue` 컴포넌트 재사용
+
+#### Step 4. 테스트
+
+- [ ] `ROLE_USER` 계정이 `/api/admin/**` 접근 시 403 반환 확인
+- [ ] 관리자 전체 감사 로그 조회 및 필터 동작 확인
+- [ ] 사용자 비활성화 후 해당 계정 로그인 차단 확인
+- [ ] `./gradlew test` 통과
+
+**완료 기준:** 관리자 로그인 → 전체 사용자·감사 로그 조회 → JSON 내보내기 동작 + 비관리자의 어드민 접근 시 403
+
+---
+
+### 4-10. 루트 페이지 대시보드화
 
 **목표:** 로그인 후 진입점(`/`)을 서비스 현황이 한눈에 보이는 대시보드로 만든다
 
@@ -495,7 +539,7 @@
 
 ---
 
-### 4-10. 계정 설정
+### 4-11. 계정 설정
 
 **목표:** 비밀번호 변경, 알림 수신 설정, 계정 탈퇴를 제공한다
 
@@ -523,7 +567,7 @@
 
 ---
 
-### 4-11. 알림 시스템 고도화
+### 4-12. 알림 시스템 고도화
 
 **목표:** 4-5에서 구축한 Redis 알림 기반 위에 UX 개선 및 설정 연동을 완성한다
 
@@ -538,7 +582,7 @@
 
 #### Step 2. 설정 연동
 
-- [x] 계정 설정(4-10) `notifySignRequest` / `notifySignDone` 토글 — 알림 생성 여부 실제 반영
+- [x] 계정 설정(4-11) `notifySignRequest` / `notifySignDone` 토글 — 알림 생성 여부 실제 반영
 - [x] 알림 발생 전 사용자 설정 확인 (`NotificationService`에서 `User.notify*` 체크)
 
 #### Step 3. 알림 목록 전체 페이지

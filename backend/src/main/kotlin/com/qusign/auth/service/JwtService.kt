@@ -14,8 +14,9 @@ class JwtService(
 ) {
     private val key by lazy { Keys.hmacShaKeyFor(secret.toByteArray(Charsets.UTF_8)) }
 
-    fun generateToken(email: String): String = Jwts.builder()
+    fun generateToken(email: String, role: String = "USER"): String = Jwts.builder()
         .subject(email)
+        .claim("role", role)
         .issuedAt(Date())
         .expiration(Date(System.currentTimeMillis() + expirationMs))
         .signWith(key)
@@ -24,6 +25,10 @@ class JwtService(
     fun extractEmail(token: String): String =
         Jwts.parser().verifyWith(key).build()
             .parseSignedClaims(token).payload.subject
+
+    fun extractRole(token: String): String =
+        Jwts.parser().verifyWith(key).build()
+            .parseSignedClaims(token).payload["role"] as? String ?: "USER"
 
     fun isValid(token: String): Boolean = try {
         Jwts.parser().verifyWith(key).build().parseSignedClaims(token)

@@ -33,6 +33,9 @@ class User(
     @Column(name = "notify_marketing")
     var notifyMarketing: Boolean = false,
 
+    @Column(nullable = false)
+    var role: String = "USER",
+
     @Column(name = "deleted_at")
     var deletedAt: LocalDateTime? = null,
 

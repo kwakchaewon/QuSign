@@ -1,6 +1,7 @@
 package com.qusign.signature.service
 
 import com.qusign.auth.service.AuthService
+import com.qusign.common.audit.AuditContext
 import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import com.qusign.document.exception.AlreadySignedDocumentException
@@ -39,6 +40,7 @@ class SignatureFlowServiceTest {
     @MockitoBean lateinit var emailService: EmailService
     @MockitoBean lateinit var notificationService: NotificationService
     @MockitoBean lateinit var redisMessageListenerContainer: RedisMessageListenerContainer
+    @MockitoBean lateinit var auditLogService: com.qusign.audit.service.AuditLogService
 
     @Autowired lateinit var authService: AuthService
     @Autowired lateinit var documentService: DocumentService
@@ -46,6 +48,7 @@ class SignatureFlowServiceTest {
 
     private val pdfBytes: ByteArray by lazy { createMinimalPdf() }
     private val storedFiles = mutableMapOf<String, ByteArray>()
+    private val testCtx = AuditContext(ipAddress = "127.0.0.1", userAgent = "test")
 
     @BeforeEach
     fun setUp() {
@@ -79,6 +82,7 @@ class SignatureFlowServiceTest {
         val result = signatureFlowService.requestSignature(
             "req@qusign.com",
             CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer@qusign.com"),
+            testCtx,
         )
 
         assertNotNull(result.token)
@@ -95,9 +99,10 @@ class SignatureFlowServiceTest {
         val req = signatureFlowService.requestSignature(
             "req2@qusign.com",
             CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer2@qusign.com"),
+            testCtx,
         )
 
-        val signed = signatureFlowService.sign(req.token, "signer2@qusign.com", "pw1234!")
+        val signed = signatureFlowService.sign(req.token, "signer2@qusign.com", "pw1234!", testCtx)
         assertNotNull(signed.id)
 
         val verifyResult: VerifyResponse = signatureFlowService.verify(req.token)
@@ -110,7 +115,7 @@ class SignatureFlowServiceTest {
     fun `잘못된 토큰으로 서명 시 예외`() {
         authService.register("signer3@qusign.com", "pw1234!")
         assertThrows<SignatureRequestNotFoundException> {
-            signatureFlowService.sign("invalid-token", "signer3@qusign.com", "pw1234!")
+            signatureFlowService.sign("invalid-token", "signer3@qusign.com", "pw1234!", testCtx)
         }
     }
 
@@ -122,12 +127,13 @@ class SignatureFlowServiceTest {
         val req = signatureFlowService.requestSignature(
             "req4@qusign.com",
             CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer4@qusign.com"),
+            testCtx,
         )
 
-        signatureFlowService.sign(req.token, "signer4@qusign.com", "pw1234!")
+        signatureFlowService.sign(req.token, "signer4@qusign.com", "pw1234!", testCtx)
 
         assertThrows<SignatureRequestAlreadySignedException> {
-            signatureFlowService.sign(req.token, "signer4@qusign.com", "pw1234!")
+            signatureFlowService.sign(req.token, "signer4@qusign.com", "pw1234!", testCtx)
         }
     }
 
@@ -139,12 +145,13 @@ class SignatureFlowServiceTest {
         val req = signatureFlowService.requestSignature(
             "req6@qusign.com",
             CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer6@qusign.com"),
+            testCtx,
         )
 
-        signatureFlowService.cancelSigner(doc.id, "signer6@qusign.com", "req6@qusign.com")
+        signatureFlowService.cancelSigner(doc.id, "signer6@qusign.com", "req6@qusign.com", testCtx)
 
         assertThrows<SignatureRequestCancelledException> {
-            signatureFlowService.sign(req.token, "signer6@qusign.com", "pw1234!")
+            signatureFlowService.sign(req.token, "signer6@qusign.com", "pw1234!", testCtx)
         }
     }
 
@@ -156,11 +163,12 @@ class SignatureFlowServiceTest {
         val req = signatureFlowService.requestSignature(
             "req7@qusign.com",
             CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer7@qusign.com"),
+            testCtx,
         )
-        signatureFlowService.sign(req.token, "signer7@qusign.com", "pw1234!")
+        signatureFlowService.sign(req.token, "signer7@qusign.com", "pw1234!", testCtx)
 
         assertThrows<SignatureRequestNotCancellableException> {
-            signatureFlowService.cancelSigner(doc.id, "signer7@qusign.com", "req7@qusign.com")
+            signatureFlowService.cancelSigner(doc.id, "signer7@qusign.com", "req7@qusign.com", testCtx)
         }
     }
 
@@ -172,8 +180,9 @@ class SignatureFlowServiceTest {
         val req = signatureFlowService.requestSignature(
             "req9@qusign.com",
             CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer9@qusign.com"),
+            testCtx,
         )
-        signatureFlowService.sign(req.token, "signer9@qusign.com", "pw1234!")
+        signatureFlowService.sign(req.token, "signer9@qusign.com", "pw1234!", testCtx)
 
         val signedBytes = storedFiles["signed-documents/${req.id}/${doc.originalFilename}"]!!
         val signedFile = MockMultipartFile("file", doc.originalFilename, "application/pdf", signedBytes)
@@ -191,13 +200,15 @@ class SignatureFlowServiceTest {
         val req = signatureFlowService.requestSignature(
             "req8@qusign.com",
             CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer8@qusign.com"),
+            testCtx,
         )
-        signatureFlowService.sign(req.token, "signer8@qusign.com", "pw1234!")
+        signatureFlowService.sign(req.token, "signer8@qusign.com", "pw1234!", testCtx)
 
         assertThrows<SignatureRequestAlreadySignedException> {
             signatureFlowService.requestSignature(
                 "req8@qusign.com",
                 CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer8@qusign.com"),
+                testCtx,
             )
         }
     }
@@ -211,10 +222,11 @@ class SignatureFlowServiceTest {
         val req = signatureFlowService.requestSignature(
             "req5@qusign.com",
             CreateSignatureRequestDto(documentId = doc.id, signerEmail = "signer5@qusign.com"),
+            testCtx,
         )
 
         assertThrows<UnauthorizedSignerException> {
-            signatureFlowService.sign(req.token, "other5@qusign.com", "pw1234!")
+            signatureFlowService.sign(req.token, "other5@qusign.com", "pw1234!", testCtx)
         }
     }
 }

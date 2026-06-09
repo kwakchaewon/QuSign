@@ -39,7 +39,7 @@ class PdfSignatureServiceTest {
         val signature = pqcSignatureService.sign(keyPair.private, message)
 
         val docHash = "테스트 문서 해시".toByteArray()
-        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com", docHash)
+        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com", docHash, "127.0.0.1")
         val extracted = pdfSignatureService.extractSignature(signedPdf)
 
         assertNotNull(extracted)
@@ -53,7 +53,7 @@ class PdfSignatureServiceTest {
         val message = "테스트 문서 해시".toByteArray()
         val signature = pqcSignatureService.sign(keyPair.private, message)
 
-        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com", message)
+        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com", message, "127.0.0.1")
         val extracted = pdfSignatureService.extractSignature(signedPdf)!!
 
         assertTrue(pqcSignatureService.verify(keyPair.public, message, extracted))
@@ -68,7 +68,7 @@ class PdfSignatureServiceTest {
             docHash
         )
 
-        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com", docHash)
+        val signedPdf = pdfSignatureService.embedSignature(pdf, signature, "tester@qusign.com", docHash, "127.0.0.1")
         val meta = pdfSignatureService.extractMetadata(signedPdf)
 
         assertNotNull(meta)

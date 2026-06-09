@@ -81,6 +81,16 @@
             <p class="qs-drop-max-sub">최대 {{ MAX_FILES }}개까지 업로드할 수 있습니다</p>
           </div>
 
+          <!-- Upload overflow warning -->
+          <div v-if="uploadWarnMsg" class="qs-upload-warn" role="alert">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            {{ uploadWarnMsg }}
+          </div>
+
           <!-- File rows -->
           <div v-if="files.length > 0" class="qs-mfile-list">
             <div v-for="f in files" :key="f.id" class="qs-mfile"
@@ -369,6 +379,8 @@ const origin = window.location.origin
 const fileInputEl = ref<HTMLInputElement | null>(null)
 const isDrag = ref(false)
 const files = ref<FileEntry[]>([])
+const uploadWarnMsg = ref('')
+let uploadWarnTimer: ReturnType<typeof setTimeout> | null = null
 
 const signerInputEl = ref<HTMLInputElement | null>(null)
 const signerInputVal = ref('')
@@ -408,8 +420,22 @@ function handleFileChange(e: Event) {
   if (fileInputEl.value) fileInputEl.value.value = ''
 }
 
+function showUploadWarn(msg: string) {
+  uploadWarnMsg.value = msg
+  if (uploadWarnTimer) clearTimeout(uploadWarnTimer)
+  uploadWarnTimer = setTimeout(() => { uploadWarnMsg.value = '' }, 4000)
+}
+
 function addFiles(newFiles: File[]) {
   const remaining = MAX_FILES - files.value.length
+  if (remaining <= 0) {
+    showUploadWarn(`최대 ${MAX_FILES}개까지만 업로드할 수 있습니다. 기존 파일을 삭제한 뒤 추가하세요.`)
+    return
+  }
+  const skipped = newFiles.length - remaining
+  if (skipped > 0) {
+    showUploadWarn(`${newFiles.length}개 중 ${skipped}개는 최대 파일 수(${MAX_FILES}개)를 초과하여 추가되지 않았습니다.`)
+  }
   const toAdd = newFiles.slice(0, remaining)
   for (const f of toAdd) {
     if (f.size > MAX_SIZE) {

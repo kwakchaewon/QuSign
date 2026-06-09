@@ -463,7 +463,7 @@
 - [x] **약관 수정** — 회원가입 약관에 감사 로그 수집 목적·보유 기간 명시
   - 문구 예시: *"서비스 이용 중 발생하는 서명 이벤트 및 접속 IP는 인증 보안 감시·서명 무결성 검증·분쟁 해결 목적으로 10년간 보관됩니다."*
   - 근거: 개인정보보호법 제6조 (수집 동의 근거 명시 의무)
-- [x] **KISA RFC 3161 타임스탬프 연동 검토** — 서버 시각 대신 공인 시각 사용 (eIDAS·법원 제출 시 증거력 강화, 3단계 이후 적용)
+- [ ] **KISA RFC 3161 타임스탬프 연동 검토** — 서버 시각 대신 공인 시각 사용 (eIDAS·법원 제출 시 증거력 강화, 3단계 이후 적용)
 
 **완료 기준:** 서명 완료 PDF에 감사 정보(IP·일시) 포함 + 상세 페이지에서 이벤트 타임라인 조회 + 다운로드 이력 기록 + 감사 로그 JSON 내보내기 + 약관 IP 수집 동의 문구 반영
 
@@ -477,10 +477,10 @@
 
 #### Step 1. 권한 모델 확장
 
-- [ ] `V10__add_role_to_users.sql` — `users.role VARCHAR(20) DEFAULT 'USER'`
-- [ ] `User` 엔티티에 `role: String` 필드 추가
-- [ ] `SecurityConfig` — `/api/admin/**` 경로를 `ROLE_ADMIN`만 접근 허용
-- [ ] 초기 관리자 계정 등록 방법 명세 (환경변수 또는 초기 데이터 SQL)
+- [x] `V12__add_role_to_users.sql` — `users.role VARCHAR(20) DEFAULT 'USER'`
+- [x] `User` 엔티티에 `role: String` 필드 추가
+- [x] `SecurityConfig` — `/api/admin/**` 경로를 `ROLE_ADMIN`만 접근 허용
+- [x] 초기 관리자 계정 등록 방법 명세 — `ADMIN_EMAIL` / `ADMIN_PASSWORD` ENV, 앱 시작 시 `AdminInitializer` 자동 생성·승격
 
 #### Step 2. 백엔드 — 관리자 API
 

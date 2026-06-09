@@ -82,14 +82,16 @@
                 {{ formatDateTime(info.expiresAt) }}
               </span>
             </div>
-            <div v-if="info.isBundle" class="qs-detail-row">
+            <!-- 포함 문서 목록 (미서명 번들) -->
+            <div v-if="info.isBundle && effectiveStatus !== 'SIGNED'" class="qs-detail-row">
               <span class="qs-detail-label">포함 문서</span>
               <span class="qs-detail-value">
-                <span v-for="doc in info.documents" :key="doc.index" style="display:block;margin-bottom:2px">
+                <span v-for="doc in bundleDocs" :key="doc.index" style="display:block;margin-bottom:2px">
                   {{ doc.index + 1 }}. {{ doc.filename }}
                 </span>
               </span>
             </div>
+
             <div class="qs-detail-row">
               <span class="qs-detail-label">문서 해시</span>
               <span class="qs-detail-value" style="font-family:var(--font-mono);font-size:11px;word-break:break-all;color:var(--text-tertiary)">
@@ -98,6 +100,27 @@
             </div>
             <div v-if="info.message" class="qs-detail-message">
               "{{ info.message }}"
+            </div>
+
+            <!-- 번들 SIGNED: 파일별 다운로드 행 -->
+            <div v-if="effectiveStatus === 'SIGNED' && info.isBundle" class="qs-dl-section">
+              <div class="qs-dl-header">서명된 문서</div>
+              <div class="qs-dl-list">
+                <div v-for="doc in bundleDocs" :key="doc.index" class="qs-dl-row">
+                  <svg width="20" height="26" viewBox="0 0 20 26" fill="none" aria-hidden="true" class="qs-dl-file-icon">
+                    <rect width="20" height="26" rx="3" fill="var(--color-error-bg)"/>
+                    <text x="3.5" y="20" font-size="5" font-weight="700" fill="var(--color-error)" font-family="monospace">PDF</text>
+                  </svg>
+                  <span class="qs-dl-name">{{ doc.filename }}</span>
+                  <button class="qs-btn qs-btn-secondary qs-btn-sm" @click="handleBundleDownload(doc.index, doc.filename)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M12 4v12M6 10l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    다운로드
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -113,8 +136,8 @@
               서명하기
             </button>
 
-            <!-- 단건: 단일 다운로드 버튼 -->
-            <button v-if="effectiveStatus === 'SIGNED' && !info?.isBundle"
+            <!-- 단건 SIGNED: 하단 다운로드 버튼 -->
+            <button v-if="effectiveStatus === 'SIGNED' && !info.isBundle"
               class="qs-btn qs-btn-primary qs-btn-md"
               @click="handleDownload"
             >
@@ -124,22 +147,6 @@
               </svg>
               서명된 문서 다운로드
             </button>
-
-            <!-- 번들: 문서별 개별 다운로드 버튼 -->
-            <template v-if="effectiveStatus === 'SIGNED' && info?.isBundle">
-              <button
-                v-for="doc in bundleDocs"
-                :key="doc.index"
-                class="qs-btn qs-btn-primary qs-btn-md"
-                @click="handleBundleDownload(doc.index, doc.filename)"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                {{ doc.filename }}
-              </button>
-            </template>
 
             <button class="qs-btn qs-btn-secondary qs-btn-md" @click="router.push('/received')">
               목록으로

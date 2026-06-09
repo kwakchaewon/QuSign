@@ -92,6 +92,46 @@
 .qs-status-icon-cancel  { background: var(--badge-error-bg);   color: var(--badge-error-text); }
 .qs-status-icon-expired { background: var(--surface-muted); color: var(--text-tertiary); }
 
+/* =============== 번들 다운로드 목록 =============== */
+.qs-dl-section {
+  margin-top: 4px;
+}
+.qs-dl-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.qs-dl-list {
+  display: flex;
+  flex-direction: column;
+  border: 0.5px solid var(--border-default);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.qs-dl-row {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--border-default);
+  transition: background 0.12s;
+}
+.qs-dl-row:last-child { border-bottom: none; }
+.qs-dl-row:hover { background: var(--surface-muted); }
+.qs-dl-file-icon { flex-shrink: 0; }
+.qs-dl-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 720px) {
   .qs-detail-head { flex-direction: column; }
   .qs-detail-body { padding: 20px 16px; }
@@ -99,4 +139,6 @@
   .qs-detail-actions .qs-btn { flex: 1; }
   .qs-detail-row { flex-direction: column; gap: 4px; }
   .qs-detail-label { width: auto; }
+  .qs-dl-row { grid-template-columns: 20px 1fr; grid-template-rows: auto auto; }
+  .qs-dl-row .qs-btn { grid-column: 1 / -1; }
 }

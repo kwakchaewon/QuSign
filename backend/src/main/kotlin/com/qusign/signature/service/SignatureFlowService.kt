@@ -1,10 +1,13 @@
 package com.qusign.signature.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.qusign.audit.entity.AuditEventType
+import com.qusign.audit.service.AuditLogService
 import com.qusign.auth.entity.User
 import com.qusign.auth.repository.UserRepository
 import com.qusign.auth.service.EncryptedKey
 import com.qusign.auth.service.KeyEncryptionService
+import com.qusign.common.audit.AuditContext
 import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import com.qusign.document.entity.DocumentBundle
@@ -45,21 +48,22 @@ class SignatureFlowService(
     private val objectMapper: ObjectMapper,
     private val emailService: EmailService,
     private val notificationService: NotificationService,
+    private val auditLogService: AuditLogService,
 ) {
 
     @Transactional
-    fun requestSignature(requesterEmail: String, dto: CreateSignatureRequestDto): SignatureRequestResponse {
+    fun requestSignature(requesterEmail: String, dto: CreateSignatureRequestDto, auditCtx: AuditContext): SignatureRequestResponse {
         val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
-        return requestSignatureForUser(requester, dto)
+        return requestSignatureForUser(requester, dto, auditCtx)
     }
 
     @Transactional
-    fun requestSignatureBatch(requesterEmail: String, dto: BatchCreateSignatureRequestDto): List<SignatureRequestResponse> {
+    fun requestSignatureBatch(requesterEmail: String, dto: BatchCreateSignatureRequestDto, auditCtx: AuditContext): List<SignatureRequestResponse> {
         val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
-        return dto.requests.map { requestSignatureForUser(requester, it) }
+        return dto.requests.map { requestSignatureForUser(requester, it, auditCtx) }
     }
 
-    private fun requestSignatureForUser(requester: User, dto: CreateSignatureRequestDto): SignatureRequestResponse {
+    private fun requestSignatureForUser(requester: User, dto: CreateSignatureRequestDto, auditCtx: AuditContext): SignatureRequestResponse {
         val document = documentRepository.findByIdAndUser(dto.documentId, requester)
             ?: throw DocumentNotFoundException()
 
@@ -100,12 +104,20 @@ class SignatureFlowService(
             )
         }
 
+        auditLogService.record(
+            eventType = AuditEventType.SIGN_REQUEST_CREATED,
+            actorEmail = requester.email,
+            auditCtx = auditCtx,
+            signatureRequestId = req.id,
+            documentId = document.id,
+        )
+
         return SignatureRequestResponse(req)
     }
 
     // ── 번들 서명 요청 생성 ──────────────────────────────────────────────────
     @Transactional
-    fun requestBundleSignature(requesterEmail: String, dto: CreateBundleSignatureRequestDto): BundleSignatureRequestResponse {
+    fun requestBundleSignature(requesterEmail: String, dto: CreateBundleSignatureRequestDto, auditCtx: AuditContext): BundleSignatureRequestResponse {
         val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
 
         val documents = dto.documentIds.mapIndexed { idx, docId ->
@@ -113,7 +125,6 @@ class SignatureFlowService(
                 ?: throw DocumentNotFoundException()
         }
 
-        // 번들 엔티티 생성
         val bundle = documentBundleRepository.save(DocumentBundle(owner = requester))
         documents.forEachIndexed { idx, doc ->
             documentBundleItemRepository.save(DocumentBundleItem(bundle = bundle, document = doc, ordinal = idx))
@@ -126,14 +137,13 @@ class SignatureFlowService(
         for (signerEmail in dto.signerEmails) {
             val bundleToken = UUID.randomUUID().toString()
 
-            // 번들 내 문서별로 SignatureRequest 생성 (같은 bundleToken 공유)
             documents.forEach { doc ->
                 signatureRequestRepository.save(
                     SignatureRequest(
                         document = doc,
                         requester = requester,
                         signerEmail = signerEmail,
-                        token = UUID.randomUUID().toString(), // 개별 unique token (내부용)
+                        token = UUID.randomUUID().toString(),
                         expiresAt = expiresAt,
                         message = dto.message?.takeIf { it.isNotBlank() },
                         bundle = bundle,
@@ -142,7 +152,6 @@ class SignatureFlowService(
                 )
             }
 
-            // 서명자에게 이메일 발송 (번들 토큰 사용)
             val displayName = if (documents.size > 1)
                 "${primaryDocName} 외 ${documents.size - 1}건"
             else primaryDocName
@@ -170,21 +179,26 @@ class SignatureFlowService(
             signerLinks.add(BundleSignerLinkDto(email = signerEmail, bundleToken = bundleToken))
         }
 
+        auditLogService.record(
+            eventType = AuditEventType.BUNDLE_REQUEST_CREATED,
+            actorEmail = requester.email,
+            auditCtx = auditCtx,
+            bundleId = bundle.id,
+        )
+
         return BundleSignatureRequestResponse(bundleId = bundle.id, signers = signerLinks)
     }
 
     // ── 서명 (단건 + 번들 통합) ─────────────────────────────────────────────
     @Transactional
-    fun sign(token: String, signerEmail: String, password: String): SignatureResponse {
-        // 번들 토큰으로 먼저 조회
+    fun sign(token: String, signerEmail: String, password: String, auditCtx: AuditContext): SignatureResponse {
         val bundleRequests = signatureRequestRepository
             .findByBundleTokenAndSignerEmailOrderByDocumentIdAsc(token, signerEmail)
 
         if (bundleRequests.isNotEmpty()) {
-            return signBundle(bundleRequests, signerEmail, password)
+            return signBundle(bundleRequests, signerEmail, password, auditCtx)
         }
 
-        // 단건 토큰 조회 (기존 로직)
         val req = signatureRequestRepository.findByToken(token)
             ?: throw SignatureRequestNotFoundException()
 
@@ -196,7 +210,7 @@ class SignatureFlowService(
         val signer = userRepository.findByEmail(signerEmail) ?: throw UnauthorizedSignerException()
         val signatureBytes = decryptAndSign(signer, password, req.document)
 
-        val signedPdfBytes = signDocument(req.document.storageKey, signatureBytes, signerEmail)
+        val signedPdfBytes = signDocument(req.document.storageKey, signatureBytes, signerEmail, auditCtx.ipAddress)
         val signedKey = "signed-documents/${req.id}/${req.document.originalFilename}"
         storageService.upload(signedKey, signedPdfBytes, "application/pdf")
 
@@ -218,10 +232,18 @@ class SignatureFlowService(
             referenceId = req.document.id,
         )
 
+        auditLogService.record(
+            eventType = AuditEventType.SIGNED,
+            actorEmail = signerEmail,
+            auditCtx = auditCtx,
+            signatureRequestId = req.id,
+            documentId = req.document.id,
+        )
+
         return SignatureResponse(signature)
     }
 
-    private fun signBundle(requests: List<SignatureRequest>, signerEmail: String, password: String): SignatureResponse {
+    private fun signBundle(requests: List<SignatureRequest>, signerEmail: String, password: String, auditCtx: AuditContext): SignatureResponse {
         val first = requests.first()
 
         if (first.status == "CANCELLED") throw SignatureRequestCancelledException()
@@ -234,7 +256,7 @@ class SignatureFlowService(
         var lastSignature: Signature? = null
         for (req in requests) {
             val signatureBytes = decryptAndSign(signer, password, req.document)
-            val signedPdfBytes = signDocument(req.document.storageKey, signatureBytes, signerEmail)
+            val signedPdfBytes = signDocument(req.document.storageKey, signatureBytes, signerEmail, auditCtx.ipAddress)
             val signedKey = "signed-documents/${req.id}/${req.document.originalFilename}"
             storageService.upload(signedKey, signedPdfBytes, "application/pdf")
 
@@ -260,13 +282,19 @@ class SignatureFlowService(
             referenceId = first.bundle?.id ?: first.document.id,
         )
 
+        auditLogService.record(
+            eventType = AuditEventType.BUNDLE_SIGNED,
+            actorEmail = signerEmail,
+            auditCtx = auditCtx,
+            bundleId = first.bundle?.id,
+        )
+
         return SignatureResponse(lastSignature!!)
     }
 
     // ── 서명자용 정보 조회 (단건 + 번들 통합) ─────────────────────────────────
     @Transactional(readOnly = true)
     fun getSignerRequestInfo(token: String, signerEmail: String): SignerRequestInfoResponse {
-        // 번들 토큰으로 먼저 조회
         val bundleRequests = signatureRequestRepository
             .findByBundleTokenAndSignerEmailOrderByDocumentIdAsc(token, signerEmail)
 
@@ -294,7 +322,6 @@ class SignatureFlowService(
             )
         }
 
-        // 단건 토큰 조회 (기존 로직)
         val req = signatureRequestRepository.findByToken(token)
             ?: throw SignatureRequestNotFoundException()
         if (!req.signerEmail.equals(signerEmail, ignoreCase = true)) throw UnauthorizedSignerException()
@@ -317,7 +344,6 @@ class SignatureFlowService(
     // ── 서명자용 원본 PDF 다운로드 ──────────────────────────────────────────
     @Transactional(readOnly = true)
     fun getDocument(token: String, signerEmail: String): Pair<ByteArray, String> {
-        // 번들 토큰: 첫 번째 문서 반환
         val bundleRequests = signatureRequestRepository
             .findByBundleTokenAndSignerEmailOrderByDocumentIdAsc(token, signerEmail)
         if (bundleRequests.isNotEmpty()) {
@@ -346,9 +372,8 @@ class SignatureFlowService(
     }
 
     // ── 서명자용 서명된 PDF 다운로드 ─────────────────────────────────────────
-    @Transactional(readOnly = true)
-    fun getSignedDocument(token: String, signerEmail: String): Pair<ByteArray, String> {
-        // 번들 토큰: 첫 번째 서명 문서 반환
+    @Transactional
+    fun getSignedDocument(token: String, signerEmail: String, auditCtx: AuditContext): Pair<ByteArray, String> {
         val bundleRequests = signatureRequestRepository
             .findByBundleTokenAndSignerEmailOrderByDocumentIdAsc(token, signerEmail)
         if (bundleRequests.isNotEmpty()) {
@@ -357,6 +382,14 @@ class SignatureFlowService(
             val signature = signatureRepository.findBySignatureRequest(req)
                 ?: throw SignatureRequestNotFoundException()
             val bytes = storageService.download(signature.signedStorageKey)
+            auditLogService.record(
+                eventType = AuditEventType.SIGNED_DOCUMENT_DOWNLOADED,
+                actorEmail = signerEmail,
+                auditCtx = auditCtx,
+                signatureRequestId = req.id,
+                documentId = req.document.id,
+                bundleId = req.bundle?.id,
+            )
             return Pair(bytes, req.document.originalFilename.addQusignedSuffix())
         }
 
@@ -366,12 +399,19 @@ class SignatureFlowService(
         val signature = signatureRepository.findBySignatureRequest(req)
             ?: throw SignatureRequestNotFoundException()
         val bytes = storageService.download(signature.signedStorageKey)
+        auditLogService.record(
+            eventType = AuditEventType.SIGNED_DOCUMENT_DOWNLOADED,
+            actorEmail = signerEmail,
+            auditCtx = auditCtx,
+            signatureRequestId = req.id,
+            documentId = req.document.id,
+        )
         return Pair(bytes, req.document.originalFilename.addQusignedSuffix())
     }
 
     // ── 번들 내 특정 서명된 PDF 다운로드 (서명자용, index 지정) ──────────────
-    @Transactional(readOnly = true)
-    fun getSignedBundleDocument(bundleToken: String, signerEmail: String, index: Int): Pair<ByteArray, String> {
+    @Transactional
+    fun getSignedBundleDocument(bundleToken: String, signerEmail: String, index: Int, auditCtx: AuditContext): Pair<ByteArray, String> {
         val requests = signatureRequestRepository
             .findByBundleTokenAndSignerEmailOrderByDocumentIdAsc(bundleToken, signerEmail)
         if (requests.isEmpty()) throw SignatureRequestNotFoundException()
@@ -381,6 +421,14 @@ class SignatureFlowService(
         val signature = signatureRepository.findBySignatureRequest(req)
             ?: throw SignatureRequestNotFoundException()
         val bytes = storageService.download(signature.signedStorageKey)
+        auditLogService.record(
+            eventType = AuditEventType.SIGNED_DOCUMENT_DOWNLOADED,
+            actorEmail = signerEmail,
+            auditCtx = auditCtx,
+            signatureRequestId = req.id,
+            documentId = req.document.id,
+            bundleId = req.bundle?.id,
+        )
         return Pair(bytes, req.document.originalFilename.addQusignedSuffix())
     }
 
@@ -444,13 +492,11 @@ class SignatureFlowService(
             .associateBy { it.signatureRequest.id }
 
         val now = LocalDateTime.now()
-        // 서명자별로 그룹화 (signer email → 요청 목록)
         val requestsBySignerEmail = allRequests.groupBy { it.signerEmail }
 
         val signerDetails = requestsBySignerEmail.map { (signerEmail, reqs) ->
             val reqsSorted = reqs.sortedBy { it.document.id }
             val first = reqsSorted.first()
-            // 번들 전체 상태: 모두 SIGNED면 SIGNED, 하나라도 CANCELLED면 CANCELLED, 만료면 EXPIRED
             val effectiveStatus = when {
                 reqsSorted.all { it.status == "SIGNED" } -> "SIGNED"
                 reqsSorted.any { it.status == "CANCELLED" } -> "CANCELLED"
@@ -489,8 +535,8 @@ class SignatureFlowService(
     }
 
     // ── 요청자용 서명된 PDF 다운로드 (단건 문서 기준) ─────────────────────────
-    @Transactional(readOnly = true)
-    fun getSignedDocumentByRequester(documentId: Long, signerEmail: String, requesterEmail: String): Pair<ByteArray, String> {
+    @Transactional
+    fun getSignedDocumentByRequester(documentId: Long, signerEmail: String, requesterEmail: String, auditCtx: AuditContext): Pair<ByteArray, String> {
         val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
         val document = documentRepository.findByIdAndUser(documentId, requester)
             ?: throw DocumentNotFoundException()
@@ -500,12 +546,19 @@ class SignatureFlowService(
         val signature = signatureRepository.findBySignatureRequest(req)
             ?: throw SignatureRequestNotFoundException()
         val bytes = storageService.download(signature.signedStorageKey)
+        auditLogService.record(
+            eventType = AuditEventType.SIGNED_DOCUMENT_DOWNLOADED,
+            actorEmail = requesterEmail,
+            auditCtx = auditCtx,
+            signatureRequestId = req.id,
+            documentId = documentId,
+        )
         return Pair(bytes, document.originalFilename.addQusignedSuffix())
     }
 
     // ── 번들 내 서명된 PDF 다운로드 (요청자용, index 지정) ──────────────────
-    @Transactional(readOnly = true)
-    fun getBundleSignedDocByRequester(bundleId: Long, signerEmail: String, docIndex: Int, requesterEmail: String): Pair<ByteArray, String> {
+    @Transactional
+    fun getBundleSignedDocByRequester(bundleId: Long, signerEmail: String, docIndex: Int, requesterEmail: String, auditCtx: AuditContext): Pair<ByteArray, String> {
         val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
         documentBundleRepository.findByIdAndOwner(bundleId, requester)
             ?: throw DocumentNotFoundException()
@@ -523,6 +576,14 @@ class SignatureFlowService(
         val signature = signatureRepository.findBySignatureRequest(req)
             ?: throw SignatureRequestNotFoundException()
         val bytes = storageService.download(signature.signedStorageKey)
+        auditLogService.record(
+            eventType = AuditEventType.SIGNED_DOCUMENT_DOWNLOADED,
+            actorEmail = requesterEmail,
+            auditCtx = auditCtx,
+            signatureRequestId = req.id,
+            documentId = req.document.id,
+            bundleId = bundleId,
+        )
         return Pair(bytes, req.document.originalFilename.addQusignedSuffix())
     }
 
@@ -581,7 +642,7 @@ class SignatureFlowService(
 
     // ── 취소 ────────────────────────────────────────────────────────────────
     @Transactional
-    fun cancelSigner(documentId: Long, signerEmail: String, requesterEmail: String) {
+    fun cancelSigner(documentId: Long, signerEmail: String, requesterEmail: String, auditCtx: AuditContext) {
         val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
         val document = documentRepository.findByIdAndUser(documentId, requester)
             ?: throw DocumentNotFoundException()
@@ -599,11 +660,19 @@ class SignatureFlowService(
                 referenceId = req.id,
             )
         }
+
+        auditLogService.record(
+            eventType = AuditEventType.SIGNER_CANCELLED,
+            actorEmail = requesterEmail,
+            auditCtx = auditCtx,
+            signatureRequestId = req.id,
+            documentId = documentId,
+        )
     }
 
     // ── 번들 서명자 취소 ─────────────────────────────────────────────────────
     @Transactional
-    fun cancelBundleSigner(bundleId: Long, signerEmail: String, requesterEmail: String) {
+    fun cancelBundleSigner(bundleId: Long, signerEmail: String, requesterEmail: String, auditCtx: AuditContext) {
         val requester = userRepository.findByEmail(requesterEmail) ?: throw DocumentNotFoundException()
         val bundle = documentBundleRepository.findByIdAndOwner(bundleId, requester)
             ?: throw DocumentNotFoundException()
@@ -629,6 +698,13 @@ class SignatureFlowService(
                 referenceId = bundleId,
             )
         }
+
+        auditLogService.record(
+            eventType = AuditEventType.BUNDLE_SIGNER_CANCELLED,
+            actorEmail = requesterEmail,
+            auditCtx = auditCtx,
+            bundleId = bundleId,
+        )
     }
 
     // ── 검증 ────────────────────────────────────────────────────────────────
@@ -698,7 +774,7 @@ class SignatureFlowService(
         return signWithDecryptedKey(signer, password, documentHash)
     }
 
-    private fun signDocument(storageKey: String, signatureBytes: ByteArray, signerEmail: String): ByteArray {
+    private fun signDocument(storageKey: String, signatureBytes: ByteArray, signerEmail: String, ipAddress: String): ByteArray {
         val originalPdfBytes = storageService.download(storageKey)
         val documentHash = sha3256(originalPdfBytes)
         return pdfSignatureService.embedSignature(
@@ -706,6 +782,7 @@ class SignatureFlowService(
             signature = signatureBytes,
             signerId = signerEmail,
             documentHash = documentHash,
+            ipAddress = ipAddress,
         )
     }
 

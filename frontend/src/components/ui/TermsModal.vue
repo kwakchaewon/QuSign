@@ -25,7 +25,7 @@
           <!-- 이용약관 -->
           <section class="qs-terms-section">
             <h3 class="qs-terms-section-title">이용약관</h3>
-            <p class="qs-terms-updated">최종 수정일: 2026년 6월 1일</p>
+            <p class="qs-terms-updated">최종 수정일: 2026년 6월 9일</p>
 
             <h4>제1조 (목적)</h4>
             <p>본 약관은 QuSign(이하 "서비스")이 제공하는 양자내성암호 기반 전자서명 서비스의 이용 조건 및 절차, 회사와 회원 간의 권리·의무를 규정함을 목적으로 합니다.</p>
@@ -55,13 +55,14 @@
           <!-- 개인정보처리방침 -->
           <section class="qs-terms-section">
             <h3 class="qs-terms-section-title">개인정보처리방침</h3>
-            <p class="qs-terms-updated">최종 수정일: 2026년 6월 1일</p>
+            <p class="qs-terms-updated">최종 수정일: 2026년 6월 9일</p>
 
             <h4>1. 수집하는 개인정보</h4>
             <ul>
               <li><strong>필수:</strong> 이메일 주소, 암호화된 비밀번호</li>
               <li><strong>자동 생성:</strong> ML-DSA-65 공개키/개인키(암호화 저장), 서명 이벤트 기록</li>
               <li><strong>서명 과정:</strong> 업로드된 PDF, SHA3-256 해시, 서명 일시</li>
+              <li><strong>감사 로그:</strong> 서비스 이용 시 접속 IP 주소, 브라우저 정보(User-Agent), 이벤트 유형 및 발생 일시</li>
             </ul>
 
             <h4>2. 개인정보 이용 목적</h4>
@@ -69,10 +70,12 @@
               <li>전자서명 생성 및 검증 서비스 제공</li>
               <li>서명 요청·완료 알림 발송</li>
               <li>계정 인증 및 보안 유지</li>
+              <li>감사 로그 기록을 통한 서비스 보안 강화 및 부정 이용 방지</li>
             </ul>
 
             <h4>3. 보유 및 이용 기간</h4>
             <p>회원 탈퇴 시 이메일·비밀번호는 즉시 삭제(소프트 딜리트)됩니다. 다만, 서명 이력은 전자서명 검증의 법적 효력 유지를 위해 탈퇴 후에도 보존될 수 있습니다.</p>
+            <p>감사 로그(서비스 이용 중 발생하는 서명 이벤트 및 접속 IP·User-Agent)는 인증 보안 감시·서명 무결성 검증·분쟁 해결 목적으로 수집일로부터 <strong>10년간</strong> 보관됩니다(전자서명법 제31조 기준).</p>
 
             <h4>4. 개인정보 보호 조치</h4>
             <ul>

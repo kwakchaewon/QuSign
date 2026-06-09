@@ -33,4 +33,8 @@ class AuditLog(
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime,
+
+    // 전자서명법 제31조: 보존 기한 — createdAt + 10년, 삽입 후 변경 금지
+    @Column(name = "retained_until", nullable = false, updatable = false)
+    val retainedUntil: LocalDateTime,
 )

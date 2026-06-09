@@ -1,5 +1,6 @@
 package com.qusign.audit.service
 
+import com.qusign.audit.RetentionPolicy
 import com.qusign.audit.entity.AuditEventType
 import com.qusign.audit.entity.AuditLog
 import com.qusign.audit.repository.AuditLogRepository
@@ -23,6 +24,7 @@ class AuditLogService(private val auditLogRepository: AuditLogRepository) {
         bundleId: Long? = null,
         documentId: Long? = null,
     ) {
+        val now = LocalDateTime.now(ZoneOffset.UTC)
         auditLogRepository.save(
             AuditLog(
                 eventType = eventType,
@@ -32,7 +34,8 @@ class AuditLogService(private val auditLogRepository: AuditLogRepository) {
                 documentId = documentId,
                 ipAddress = auditCtx.ipAddress.take(45),
                 userAgent = auditCtx.userAgent.take(500),
-                createdAt = LocalDateTime.now(ZoneOffset.UTC),
+                createdAt = now,
+                retainedUntil = now.plus(RetentionPolicy.AUDIT_LOG),
             )
         )
     }

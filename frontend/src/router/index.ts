@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import SignupView from '../views/SignupView.vue'
 import HomeView from '../views/HomeView.vue'
+import UnifiedDashboardView from '../views/UnifiedDashboardView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import DocumentDetailView from '../views/DocumentDetailView.vue'
 import BundleDetailView from '../views/BundleDetailView.vue'
@@ -25,7 +26,8 @@ const router = createRouter({
     { path: '/home', name: 'home', component: HomeView },
     { path: '/login', name: 'login', component: LoginView },
     { path: '/signup', name: 'signup', component: SignupView },
-    { path: '/documents', name: 'documents', component: DashboardView },
+    { path: '/documents', name: 'documents', component: UnifiedDashboardView },
+    { path: '/documents/sent', name: 'documents-sent', component: DashboardView },
     { path: '/documents/:id', name: 'document-detail', component: DocumentDetailView },
     { path: '/bundles/:id', name: 'bundle-detail', component: BundleDetailView },
     { path: '/request', name: 'request', component: RequestView },

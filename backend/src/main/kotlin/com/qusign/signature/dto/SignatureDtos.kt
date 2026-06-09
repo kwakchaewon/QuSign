@@ -87,6 +87,12 @@ data class VerifyResponse(
     val signerId: String? = null,
     val signedAt: String? = null,
     val documentHash: String? = null,
+    /** RFC 3161 TSA 공인 시각 (UTC). TSA 미설정이거나 타임스탬프가 없으면 null */
+    val timestampedAt: String? = null,
+    /** 타임스탬프를 발급한 TSA URL */
+    val tsaUrl: String? = null,
+    /** token의 messageImprint가 서명된 PDF 해시와 일치하는지 여부. null = 토큰 없음 */
+    val timestampValid: Boolean? = null,
 )
 
 data class SignerDetailDto(

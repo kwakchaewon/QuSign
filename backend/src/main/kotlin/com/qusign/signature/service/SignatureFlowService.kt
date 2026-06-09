@@ -20,9 +20,12 @@ import com.qusign.notification.service.NotificationService
 import com.qusign.signature.dto.*
 import com.qusign.signature.entity.Signature
 import com.qusign.signature.entity.SignatureRequest
+import com.qusign.signature.entity.TimestampToken
 import com.qusign.signature.exception.*
 import com.qusign.signature.repository.SignatureRepository
 import com.qusign.signature.repository.SignatureRequestRepository
+import com.qusign.signature.repository.TimestampTokenRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.KeyFactory
@@ -49,7 +52,10 @@ class SignatureFlowService(
     private val emailService: EmailService,
     private val notificationService: NotificationService,
     private val auditLogService: AuditLogService,
+    private val rfcTimestampService: RfcTimestampService,
+    private val timestampTokenRepository: TimestampTokenRepository,
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Transactional
     fun requestSignature(requesterEmail: String, dto: CreateSignatureRequestDto, auditCtx: AuditContext): SignatureRequestResponse {
@@ -223,6 +229,7 @@ class SignatureFlowService(
             )
         )
         req.status = "SIGNED"
+        requestAndSaveTimestamp(signature, signedPdfBytes, signerEmail, auditCtx)
 
         notificationService.createAndPublish(
             userId = req.requester.id,
@@ -269,6 +276,7 @@ class SignatureFlowService(
                 )
             )
             req.status = "SIGNED"
+            requestAndSaveTimestamp(lastSignature!!, signedPdfBytes, signerEmail, auditCtx)
         }
 
         val primaryDocName = requests.first().document.originalFilename
@@ -733,11 +741,17 @@ class SignatureFlowService(
             false
         }
 
+        val tsToken = timestampTokenRepository.findBySignature(signature)
+        val (timestampedAt, tsaUrl, timestampValid) = resolveTimestampInfo(tsToken, signedPdfBytes)
+
         return VerifyResponse(
             valid = valid,
             signerId = metadata.signerId,
             signedAt = metadata.signedAt,
             documentHash = metadata.documentHash.joinToString("") { "%02x".format(it) },
+            timestampedAt = timestampedAt,
+            tsaUrl = tsaUrl,
+            timestampValid = timestampValid,
         )
     }
 
@@ -804,6 +818,59 @@ class SignatureFlowService(
 
     private fun sha3256(bytes: ByteArray): ByteArray =
         MessageDigest.getInstance("SHA3-256").digest(bytes)
+
+    private fun sha256(bytes: ByteArray): ByteArray =
+        MessageDigest.getInstance("SHA-256").digest(bytes)
+
+    /**
+     * TSA에 타임스탬프를 요청하고 결과를 DB에 저장한다.
+     * TSA 장애 시 경고 로그만 남기고 서명 흐름을 중단하지 않는다.
+     */
+    private fun requestAndSaveTimestamp(
+        signature: Signature,
+        signedPdfBytes: ByteArray,
+        actorEmail: String,
+        auditCtx: AuditContext,
+    ) {
+        if (!rfcTimestampService.enabled) return
+        try {
+            val contentHash = sha256(signedPdfBytes)
+            val result = rfcTimestampService.requestTimestamp(contentHash)
+            timestampTokenRepository.save(
+                TimestampToken(
+                    signature = signature,
+                    tsaUrl = result.tsaUrl,
+                    serialNumber = result.serialNumber,
+                    genTime = result.genTime,
+                    messageImprint = result.messageImprint,
+                    tokenDer = result.tokenDer,
+                )
+            )
+            auditLogService.record(
+                eventType = AuditEventType.TIMESTAMP_OBTAINED,
+                actorEmail = actorEmail,
+                auditCtx = auditCtx,
+                signatureRequestId = signature.signatureRequest.id,
+                documentId = signature.signatureRequest.document.id,
+            )
+        } catch (e: Exception) {
+            log.warn("RFC 3161 타임스탬프 획득 실패 (서명 ID={}): {}", signature.id, e.message)
+        }
+    }
+
+    /**
+     * 저장된 [TimestampToken]을 이용해 검증 응답용 타임스탬프 정보를 반환한다.
+     * token이 null이면 세 필드 모두 null을 반환한다.
+     */
+    private fun resolveTimestampInfo(
+        tsToken: TimestampToken?,
+        signedPdfBytes: ByteArray,
+    ): Triple<String?, String?, Boolean?> {
+        if (tsToken == null) return Triple(null, null, null)
+        val signedPdfHash = sha256(signedPdfBytes)
+        val valid = rfcTimestampService.verifyToken(tsToken.tokenDer, signedPdfHash)
+        return Triple(tsToken.genTime.toString(), tsToken.tsaUrl, valid)
+    }
 }
 
 private fun String.addQusignedSuffix(): String {

@@ -8,4 +8,6 @@ enum class AuditEventType {
     SIGNER_CANCELLED,
     BUNDLE_SIGNER_CANCELLED,
     SIGNED_DOCUMENT_DOWNLOADED,
+    /** RFC 3161 TSA 타임스탬프 정상 획득 */
+    TIMESTAMP_OBTAINED,
 }

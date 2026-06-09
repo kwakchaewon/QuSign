@@ -14,6 +14,7 @@
 | 암호화 | Bouncy Castle 1.84 (ML-DSA-65), PDFBox 3.x |
 | DB | MariaDB 10.11 + Flyway |
 | 스토리지 | MinIO (로컬) → AWS S3 (운영) |
+| 메시지 | Redis 7 (Pub/Sub + 실시간 알림) |
 | 프론트엔드 | Vue 3 + Vite + Pinia + Vue Router + TypeScript |
 | 인프라 | Docker Compose → AWS EC2/RDS → Terraform |
 
@@ -24,57 +25,11 @@
 **사전 준비**
 - JDK 21
 - MariaDB 10.11 (root/root, database: qusign)
-- Docker (MinIO 실행용)
-
-```bash
-# 1. MinIO 기동
-docker compose up -d
-
-# 2. 앱 실행 (local 프로파일)
-cd backend
-./gradlew bootRun --args='--spring.profiles.active=local'
-```
-
-**엔드포인트**
-- API: http://localhost:8080
-- MinIO 콘솔: http://localhost:9001 (minioadmin / minioadmin)
-
----
-
-## 테스트
-
-```bash
-cd backend
-./gradlew test
-```
-
----
-
-## 구현된 기능
-
-| 기능 | 엔드포인트 | 비고 |
-|------|-----------|------|
-| 회원가입 / 로그인 | `POST /api/auth/signup` `POST /api/auth/login` | JWT 인증, ML-DSA 키쌍 자동 생성 |
-| PDF 업로드 | `POST /api/documents` | SHA3-256 해시, MinIO 저장 |
-| 문서 목록 / 다운로드 | `GET /api/documents` `GET /api/documents/{id}/download` | |
-| 서명 요청 생성 | `POST /api/signature-requests` | 1회용 토큰, 72시간 만료 |
-| 서명 실행 | `POST /api/signature-requests/{token}/sign` | ML-DSA-65 서명, PDF 메타데이터 삽입 |
-| 서명된 PDF 다운로드 | `GET /api/signature-requests/{token}/signed-document` | `파일명_qusigned.pdf` 형식 |
-| 무결성 검증 (토큰) | `POST /api/verify` | 인증 불필요, 공개 API |
-| 무결성 검증 (파일) | `POST /api/verify/file` | 서명된 PDF 업로드로 직접 검증 |
-
----
-
-## 로컬 실행
-
-**사전 준비**
-- JDK 21
-- MariaDB 10.11 (root/root, database: qusign)
-- Docker (MinIO 실행용)
+- Docker (MinIO + Redis 실행용)
 - Node.js 20+
 
 ```bash
-# 1. MinIO 기동
+# 1. MinIO + Redis 기동
 docker compose up -d
 
 # 2. 백엔드 실행 (local 프로파일)
@@ -102,16 +57,39 @@ cd backend
 
 ---
 
+## 구현된 기능
+
+| 기능 | 엔드포인트 | 비고 |
+|------|-----------|------|
+| 회원가입 / 로그인 | `POST /api/auth/signup` `POST /api/auth/login` | JWT 인증, ML-DSA 키쌍 자동 생성 |
+| PDF 업로드 | `POST /api/documents` | SHA3-256 해시, MinIO 저장, 서명 완료 문서 재업로드 차단 |
+| 문서 목록 / 다운로드 | `GET /api/documents` `GET /api/documents/{id}/download` | |
+| 서명 요청 생성 | `POST /api/signature-requests` | 1회용 토큰, 72시간 만료, 요청 메시지 포함 |
+| 번들 서명 요청 | `POST /api/signature-requests/bundle` | 복수 PDF를 하나의 번들로 묶어 서명자별 링크 1개 발급 |
+| 서명 실행 | `POST /api/signature-requests/{token}/sign` | ML-DSA-65 서명, PDF 메타데이터 삽입 |
+| 서명된 PDF 다운로드 | `GET /api/signature-requests/{token}/signed-document` | `파일명_qusigned.pdf` 형식 |
+| 서명 요청 상세 조회 | `GET /api/signature-requests/{id}` | 요청자 본인만 조회, 서명자별 상태 포함 |
+| 서명 요청 취소 | `POST /api/signature-requests/{id}/signers/{email}/cancel` | PENDING 상태만 허용 |
+| 받은 서명 요청 목록 | `GET /api/signature-requests/received` | 서명자 시점 |
+| 무결성 검증 (토큰) | `POST /api/verify` | 인증 불필요, 공개 API |
+| 무결성 검증 (파일) | `POST /api/verify/file` | 서명된 PDF 업로드로 직접 검증 |
+| 실시간 인앱 알림 | `GET /api/notifications/stream` (SSE) | Redis Pub/Sub 기반, 서명 완료·요청·취소·만료 이벤트 |
+| 계정 설정 | `PUT /api/users/password` `DELETE /api/users/me` | 비밀번호 변경(개인키 재암호화), 계정 탈퇴 |
+| 대시보드 통계 | `GET /api/dashboard` | 문서 수·상태별 카운트·최근 요청 |
+
+---
+
 ## 진행 현황
 
 | 단계 | 내용 | 상태 |
 |------|------|------|
-| 1단계 | 환경 세팅 + PQC 핵심 검증 | 🔄 진행 중 (로컬 실행 확인 남음) |
+| 1단계 | 환경 세팅 + PQC 핵심 검증 | ✅ 완료 |
 | 2단계 | 백엔드 핵심 구현 | ✅ 완료 |
 | 3단계 | 프론트엔드 구현 | ✅ 완료 |
 | 4단계 | 기능 고도화 & 품질 강화 | 🔄 진행 중 |
-| 5단계 | AWS 배포 + SES + GitHub Actions | ⬜ 진행 전 |
-| 6단계 | Terraform + 수익화 | ⬜ 진행 전 |
-| 7단계 | Loki + Grafana + 이직 준비 | ⬜ 진행 전 |
+| 5단계 | 보안 취약점 개선 (OWASP Top 10) | ⬜ 진행 전 |
+| 6단계 | AWS 배포 + SES + GitHub Actions | ⬜ 진행 전 |
+| 7단계 | Terraform + 수익화 | ⬜ 진행 전 |
+| 8단계 | Loki + Grafana + 이직 준비 | ⬜ 진행 전 |
 
 세부 계획 → [docs/exec-plans/PLAN.md](docs/exec-plans/PLAN.md)

@@ -15,3 +15,24 @@ data class RecentRequestItem(
     val createdAt: String,
     val status: String,
 )
+
+data class DashboardSummaryResponse(
+    val sentPending: Int,
+    val sentSigned: Int,
+    val receivedUnsigned: Int,
+)
+
+data class DashboardActionItem(
+    val direction: String,       // "SENT" | "RECEIVED"
+    val docName: String,
+    val counterpart: String,     // RECEIVED: requesterEmail, SENT: signerEmail
+    val createdAt: String,
+    val signPath: String,
+    val token: String? = null,
+    val bundleToken: String? = null,
+    val bundleId: Long? = null,
+)
+
+data class DashboardActionItemsResponse(
+    val items: List<DashboardActionItem>,
+)

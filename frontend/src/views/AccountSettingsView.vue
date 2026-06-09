@@ -244,7 +244,7 @@
                     :class="['qs-switch', { 'is-on': secSession }]"
                     :aria-pressed="secSession"
                     aria-label="세션 자동 잠금"
-                    @click="updateToggle('sessionLock', () => secSession = !secSession)"></button>
+                    @click="updateToggle('sessionLock', () => auth.setSessionLock(!secSession))"></button>
                 </div>
               </div>
             </section>
@@ -440,7 +440,7 @@ function saveNotifySettings() {
 
 // Security toggles
 const secTwoFA = ref(false)
-const secSession = ref(true)
+const secSession = computed(() => auth.sessionLockEnabled)
 
 // Notification toggles (ref-wrapped for v-for reactivity)
 const notifyReq = ref(true)

@@ -6,6 +6,7 @@ import { useNotificationStore } from '@/stores/notification'
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('qusign:token'))
   const email = ref<string | null>(localStorage.getItem('qusign:email'))
+  const sessionLockEnabled = ref(localStorage.getItem('qusign:sessionLock') !== 'false')
 
   const isLoggedIn = computed(() => !!token.value)
 
@@ -39,5 +40,10 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('qusign:email')
   }
 
-  return { token, email, isLoggedIn, login, register, logout }
+  function setSessionLock(enabled: boolean) {
+    sessionLockEnabled.value = enabled
+    localStorage.setItem('qusign:sessionLock', String(enabled))
+  }
+
+  return { token, email, isLoggedIn, sessionLockEnabled, login, register, logout, setSessionLock }
 })

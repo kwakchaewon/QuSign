@@ -1,6 +1,7 @@
 <template>
   <div class="vf-page">
-    <PublicTopbar subtitle="무결성 검증" logo-to="/documents" show-pqc-badge />
+    <AppTopbar v-if="auth.isLoggedIn" />
+    <PublicTopbar v-else subtitle="무결성 검증" logo-to="/verify" show-pqc-badge />
 
     <main class="vf-main">
       <!-- Idle state -->
@@ -197,6 +198,10 @@
 import { ref } from 'vue'
 import api from '@/lib/api'
 import PublicTopbar from '@/components/layout/PublicTopbar.vue'
+import AppTopbar from '@/components/layout/AppTopbar.vue'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
 
 type Status = 'idle' | 'loading' | 'success' | 'fail'
 type Mode = 'token' | 'file'

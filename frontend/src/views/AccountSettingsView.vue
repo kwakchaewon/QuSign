@@ -318,7 +318,7 @@
         </div>
         <h3 id="del-modal-title" class="qs-modal-title">정말 계정을 삭제할까요?</h3>
         <p class="qs-modal-desc">
-          이 작업은 되돌릴 수 없어요. 진행하려면 아래에 본인 이메일을 정확히 입력해 주세요.
+          이 작업은 되돌릴 수 없어요.<br />진행하려면 아래에 본인 이메일을 정확히 입력해 주세요.
         </p>
         <span class="qs-confirm-email">{{ userEmail }}</span>
         <div class="qs-field">

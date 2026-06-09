@@ -1,8 +1,10 @@
 package com.qusign.signature.controller
 
+import com.qusign.common.audit.AuditContext
 import com.qusign.common.response.ApiResponse
 import com.qusign.signature.dto.*
 import com.qusign.signature.service.SignatureFlowService
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -30,16 +32,18 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
     fun createRequest(
         @AuthenticationPrincipal email: String,
         @Valid @RequestBody dto: CreateSignatureRequestDto,
+        request: HttpServletRequest,
     ): ApiResponse<SignatureRequestResponse> =
-        ApiResponse.ok(signatureFlowService.requestSignature(email, dto))
+        ApiResponse.ok(signatureFlowService.requestSignature(email, dto, request.auditContext()))
 
     @PostMapping("/signature-requests/batch")
     @ResponseStatus(HttpStatus.CREATED)
     fun createRequestBatch(
         @AuthenticationPrincipal email: String,
         @Valid @RequestBody dto: BatchCreateSignatureRequestDto,
+        request: HttpServletRequest,
     ): ApiResponse<List<SignatureRequestResponse>> =
-        ApiResponse.ok(signatureFlowService.requestSignatureBatch(email, dto))
+        ApiResponse.ok(signatureFlowService.requestSignatureBatch(email, dto, request.auditContext()))
 
     // ── 번들 서명 요청 ────────────────────────────────────────────────────────
     @PostMapping("/signature-requests/bundle")
@@ -47,8 +51,9 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
     fun createBundleRequest(
         @AuthenticationPrincipal email: String,
         @Valid @RequestBody dto: CreateBundleSignatureRequestDto,
+        request: HttpServletRequest,
     ): ApiResponse<BundleSignatureRequestResponse> =
-        ApiResponse.ok(signatureFlowService.requestBundleSignature(email, dto))
+        ApiResponse.ok(signatureFlowService.requestBundleSignature(email, dto, request.auditContext()))
 
     // ── 번들 상세 (요청자용) ──────────────────────────────────────────────────
     @GetMapping("/bundles/{bundleId}")
@@ -64,8 +69,9 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @AuthenticationPrincipal requesterEmail: String,
         @PathVariable bundleId: Long,
         @PathVariable signerEmail: String,
+        request: HttpServletRequest,
     ): ApiResponse<Unit> {
-        signatureFlowService.cancelBundleSigner(bundleId, signerEmail, requesterEmail)
+        signatureFlowService.cancelBundleSigner(bundleId, signerEmail, requesterEmail, request.auditContext())
         return ApiResponse.ok(Unit)
     }
 
@@ -76,9 +82,10 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @PathVariable bundleId: Long,
         @PathVariable signerEmail: String,
         @PathVariable docIndex: Int,
+        request: HttpServletRequest,
         response: HttpServletResponse,
     ) {
-        val (bytes, filename) = signatureFlowService.getBundleSignedDocByRequester(bundleId, signerEmail, docIndex, email)
+        val (bytes, filename) = signatureFlowService.getBundleSignedDocByRequester(bundleId, signerEmail, docIndex, email, request.auditContext())
         sendPdf(response, bytes, filename)
     }
 
@@ -95,8 +102,9 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @AuthenticationPrincipal email: String,
         @PathVariable token: String,
         @Valid @RequestBody dto: SignDto,
+        request: HttpServletRequest,
     ): ApiResponse<SignatureResponse> =
-        ApiResponse.ok(signatureFlowService.sign(token, email, dto.password))
+        ApiResponse.ok(signatureFlowService.sign(token, email, dto.password, request.auditContext()))
 
     @GetMapping("/signature-requests/{token}/document")
     fun getDocument(
@@ -111,7 +119,6 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         response.outputStream.write(bytes)
     }
 
-    // 번들 내 특정 원본 PDF (서명자용)
     @GetMapping("/signature-requests/{bundleToken}/bundle-documents/{index}")
     fun getBundleDocument(
         @AuthenticationPrincipal email: String,
@@ -130,21 +137,22 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
     fun getSignedDocument(
         @AuthenticationPrincipal email: String,
         @PathVariable token: String,
+        request: HttpServletRequest,
         response: HttpServletResponse,
     ) {
-        val (bytes, filename) = signatureFlowService.getSignedDocument(token, email)
+        val (bytes, filename) = signatureFlowService.getSignedDocument(token, email, request.auditContext())
         sendPdf(response, bytes, filename)
     }
 
-    // 번들 내 특정 서명된 PDF (서명자용)
     @GetMapping("/signature-requests/{bundleToken}/signed-bundle-documents/{index}")
     fun getSignedBundleDocument(
         @AuthenticationPrincipal email: String,
         @PathVariable bundleToken: String,
         @PathVariable index: Int,
+        request: HttpServletRequest,
         response: HttpServletResponse,
     ) {
-        val (bytes, filename) = signatureFlowService.getSignedBundleDocument(bundleToken, email, index)
+        val (bytes, filename) = signatureFlowService.getSignedBundleDocument(bundleToken, email, index, request.auditContext())
         sendPdf(response, bytes, filename)
     }
 
@@ -161,9 +169,10 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @AuthenticationPrincipal email: String,
         @PathVariable id: Long,
         @RequestParam signerEmail: String,
+        request: HttpServletRequest,
         response: HttpServletResponse,
     ) {
-        val (bytes, filename) = signatureFlowService.getSignedDocumentByRequester(id, signerEmail, email)
+        val (bytes, filename) = signatureFlowService.getSignedDocumentByRequester(id, signerEmail, email, request.auditContext())
         sendPdf(response, bytes, filename)
     }
 
@@ -172,8 +181,9 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @AuthenticationPrincipal requesterEmail: String,
         @PathVariable id: Long,
         @PathVariable email: String,
+        request: HttpServletRequest,
     ): ApiResponse<Unit> {
-        signatureFlowService.cancelSigner(id, email, requesterEmail)
+        signatureFlowService.cancelSigner(id, email, requesterEmail, request.auditContext())
         return ApiResponse.ok(Unit)
     }
 
@@ -197,4 +207,11 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''$encodedFilename")
         response.outputStream.write(bytes)
     }
+}
+
+private fun HttpServletRequest.auditContext(): AuditContext {
+    val ip = (getHeader("X-Forwarded-For")?.split(",")?.firstOrNull()?.trim()
+        ?: remoteAddr).take(45)
+    val ua = (getHeader("User-Agent") ?: "").take(500)
+    return AuditContext(ipAddress = ip, userAgent = ua)
 }

@@ -1,10 +1,14 @@
 package com.qusign.audit.service
 
 import com.qusign.audit.RetentionPolicy
+import com.qusign.audit.dto.AuditLogResponse
 import com.qusign.audit.entity.AuditEventType
 import com.qusign.audit.entity.AuditLog
 import com.qusign.audit.repository.AuditLogRepository
 import com.qusign.common.audit.AuditContext
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -47,4 +51,31 @@ class AuditLogService(private val auditLogRepository: AuditLogRepository) {
     @Transactional(readOnly = true)
     fun findByBundleId(bundleId: Long): List<AuditLog> =
         auditLogRepository.findByBundleIdOrderByCreatedAtAsc(bundleId)
+
+    // Admin: 전체 감사 로그 (필터 + 페이징)
+    @Transactional(readOnly = true)
+    fun findAll(
+        page: Int,
+        size: Int,
+        eventType: AuditEventType?,
+        startDate: LocalDateTime?,
+        endDate: LocalDateTime?,
+    ): Page<AuditLogResponse> {
+        val pageable = PageRequest.of(page, size, Sort.by("createdAt").descending())
+        return auditLogRepository.findAllWithFilters(eventType, startDate, endDate, pageable)
+            .map { AuditLogResponse(it) }
+    }
+
+    // Admin: 특정 사용자의 감사 로그 (페이징)
+    @Transactional(readOnly = true)
+    fun findByActorEmail(email: String, page: Int, size: Int): Page<AuditLogResponse> {
+        val pageable = PageRequest.of(page, size, Sort.by("createdAt").descending())
+        return auditLogRepository.findByActorEmailOrderByCreatedAtDesc(email, pageable)
+            .map { AuditLogResponse(it) }
+    }
+
+    // Admin: 전체 감사 로그 내보내기 (JSON)
+    @Transactional(readOnly = true)
+    fun exportAll(): List<AuditLogResponse> =
+        auditLogRepository.findAllByOrderByCreatedAtAsc().map { AuditLogResponse(it) }
 }

@@ -39,6 +39,9 @@ class User(
     @Column(name = "deleted_at")
     var deletedAt: LocalDateTime? = null,
 
+    @Column(name = "disabled_at")
+    var disabledAt: LocalDateTime? = null,
+
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: LocalDateTime? = null,
 

@@ -28,6 +28,9 @@ interface SignatureRequestRepository : JpaRepository<SignatureRequest, Long> {
     @Query("SELECT r FROM SignatureRequest r WHERE r.status = 'PENDING' AND r.expiresAt < :now")
     fun findExpiredPending(now: LocalDateTime): List<SignatureRequest>
 
+    // Admin: 상태별 서명 요청 수
+    fun countByStatus(status: String): Long
+
     // 받은 문서 목록 (서명자 이메일 기준)
     @Query("SELECT r FROM SignatureRequest r WHERE r.signerEmail = :signerEmail ORDER BY r.createdAt DESC")
     fun findBySignerEmailOrderByCreatedAtDesc(signerEmail: String): List<SignatureRequest>

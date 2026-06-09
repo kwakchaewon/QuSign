@@ -423,6 +423,9 @@
   background: var(--color-success);
   flex-shrink: 0;
 }
+.qs-settings-toast-dot.is-error {
+  background: var(--color-error);
+}
 
 /* =============== Inline button spinner =============== */
 .qs-btn-spinner {

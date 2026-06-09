@@ -131,6 +131,13 @@
                     </svg>
                     최소 8자 이상이어야 해요
                   </div>
+                  <div v-if="pwSameAsCurrent" class="qs-error-msg">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
+                      <path d="M12 7v6M12 16.5v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    현재 비밀번호와 다른 비밀번호를 입력해 주세요
+                  </div>
                 </div>
 
                 <!-- 새 비밀번호 확인 -->
@@ -300,7 +307,7 @@
     <!-- ===== Toast ===== -->
     <div :class="['qs-settings-toast-wrap', { 'is-show': !!toast }]" aria-live="polite">
       <div v-if="toast" class="qs-settings-toast">
-        <span class="qs-settings-toast-dot" aria-hidden="true"></span>
+        <span :class="['qs-settings-toast-dot', { 'is-error': toastType === 'error' }]" aria-hidden="true"></span>
         <span>{{ toast }}</span>
       </div>
     </div>
@@ -397,8 +404,10 @@ onUnmounted(() => {
 
 // Toast
 const toast = ref<string | null>(null)
-function showToast(msg: string) {
+const toastType = ref<'success' | 'error'>('success')
+function showToast(msg: string, type: 'success' | 'error' = 'success') {
   toast.value = msg
+  toastType.value = type
   setTimeout(() => { toast.value = null }, 2400)
 }
 
@@ -485,10 +494,12 @@ const pwStrengthClass = computed(() => {
 })
 const pwMismatch = computed(() => pwConfirm.value.length > 0 && pwConfirm.value !== pwNew.value)
 const pwTooShort = computed(() => pwNew.value.length > 0 && pwNew.value.length < 8)
+const pwSameAsCurrent = computed(() => pwNew.value.length > 0 && pwCurrent.value.length > 0 && pwNew.value === pwCurrent.value)
 const canSubmitPw = computed(() =>
   pwCurrent.value.length >= 1 &&
   pwNew.value.length >= 8 &&
   pwConfirm.value === pwNew.value &&
+  !pwSameAsCurrent.value &&
   !pwSubmitting.value
 )
 
@@ -506,7 +517,7 @@ async function handlePasswordChange() {
     setTimeout(() => { pwSuccess.value = false }, 3500)
   } catch (err: any) {
     const msg = err?.response?.data?.message ?? '비밀번호 변경에 실패했어요'
-    showToast(msg)
+    showToast(msg, 'error')
   } finally {
     pwSubmitting.value = false
   }

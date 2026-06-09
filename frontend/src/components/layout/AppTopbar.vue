@@ -7,8 +7,7 @@
       </RouterLink>
       <nav class="qs-topbar-nav">
         <RouterLink class="qs-nav-link" activeClass="is-active" to="/home">홈</RouterLink>
-        <RouterLink class="qs-nav-link" activeClass="is-active" to="/documents">내 문서</RouterLink>
-        <RouterLink class="qs-nav-link" activeClass="is-active" to="/received">받은 문서</RouterLink>
+        <RouterLink class="qs-nav-link" activeClass="is-active" to="/documents">문서 현황</RouterLink>
         <RouterLink class="qs-nav-link" activeClass="is-active" to="/request">서명 요청</RouterLink>
         <RouterLink class="qs-nav-link" activeClass="is-active" to="/verify">검증</RouterLink>
       </nav>

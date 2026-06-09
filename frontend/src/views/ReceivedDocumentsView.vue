@@ -5,7 +5,7 @@
     <main class="qs-main">
       <div class="qs-page-head">
         <div>
-          <h1 class="qs-page-title">받은 문서</h1>
+          <h1 class="qs-page-title">받은 서명 요청</h1>
           <p class="qs-page-sub">{{ isLoading ? '불러오는 중...' : `${filteredItems.length}개의 요청` }}</p>
         </div>
       </div>

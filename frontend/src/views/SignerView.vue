@@ -518,6 +518,12 @@
             </button>
           </template>
         </div>
+
+        <div class="qs-success-actions">
+          <RouterLink to="/home" class="qs-btn qs-btn-secondary qs-btn-lg qs-btn-block">
+            메인 화면으로 돌아가기
+          </RouterLink>
+        </div>
       </article>
 
       <!-- 푸터 trust strip -->

@@ -15,14 +15,6 @@
         <div class="vf-card-body">
           <!-- Mode tabs -->
           <div class="vf-tabs">
-            <button class="vf-tab" :class="{ 'is-active': mode === 'token' }" @click="mode = 'token'">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-              토큰 입력
-            </button>
             <button class="vf-tab" :class="{ 'is-active': mode === 'file' }" @click="mode = 'file'">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
@@ -30,6 +22,14 @@
                 <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
               </svg>
               파일 업로드
+            </button>
+            <button class="vf-tab" :class="{ 'is-active': mode === 'token' }" @click="mode = 'token'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              토큰 입력
             </button>
           </div>
 
@@ -209,7 +209,7 @@ interface VerifyResult {
 }
 
 const status = ref<Status>('idle')
-const mode = ref<Mode>('token')
+const mode = ref<Mode>('file')
 const token = ref('')
 const selectedFile = ref<File | null>(null)
 const isDragging = ref(false)

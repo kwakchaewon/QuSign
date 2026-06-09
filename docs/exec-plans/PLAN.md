@@ -484,23 +484,22 @@
 
 #### Step 2. 백엔드 — 관리자 API
 
-- [ ] `GET /api/admin/stats` — 시스템 전체 통계 (총 사용자·서명 수, 상태별 카운트)
-- [ ] `GET /api/admin/users` — 전체 사용자 목록 (페이징, 이메일 검색)
-- [ ] `PUT /api/admin/users/{email}/disable` — 사용자 비활성화 (소프트, 로그인 차단)
-- [ ] `GET /api/admin/audit` — 시스템 전체 감사 로그 (페이징, `eventType`·날짜 필터)
+- [x] `GET /api/admin/stats` — 시스템 전체 통계 (총 사용자·서명 수, 상태별 카운트)
+- [x] `GET /api/admin/users` — 전체 사용자 목록 (페이징, 이메일 검색)
+- [x] `PUT /api/admin/users/{email}/disable` — 사용자 비활성화 (소프트, 로그인 차단)
+- [x] `GET /api/admin/audit` — 시스템 전체 감사 로그 (페이징, `eventType`·날짜 필터)
   - 4-8 `AuditLogService`에 `findAll(pageable, filter)` 메서드 추가
-- [ ] `GET /api/admin/users/{email}/audit` — 특정 사용자의 감사 로그 전체 조회
-- [ ] `GET /api/admin/audit/export` — 전체 감사 로그 JSON 내보내기 (법적 분쟁·감사 대응)
-- [ ] 모든 관리자 API에 `@PreAuthorize("hasRole('ADMIN')")` 적용
+- [x] `GET /api/admin/users/{email}/audit` — 특정 사용자의 감사 로그 전체 조회
+- [x] `GET /api/admin/audit/export` — 전체 감사 로그 JSON 내보내기 (법적 분쟁·감사 대응)
+- [x] 모든 관리자 API에 `@PreAuthorize("hasRole('ADMIN')")` 적용
 
 #### Step 3. 프론트엔드
 
-- [ ] 라우터 가드: `/admin/**` → `ADMIN` 역할 없으면 `/home` 리다이렉트
-- [ ] `AdminLayout.vue` — 관리자 전용 레이아웃 (사이드바: 통계 / 사용자 / 감사 로그)
-- [ ] `AdminStatsView.vue` (`/admin`) — 통계 카드 + 최근 감사 이벤트 요약
-- [ ] `AdminUsersView.vue` (`/admin/users`) — 사용자 목록 테이블 (이메일 검색, 비활성화 버튼)
-- [ ] `AdminAuditView.vue` (`/admin/audit`) — 전체 감사 로그 테이블 (이벤트 타입·날짜 필터, 내보내기 버튼)
-  - 4-8의 `AuditTimeline.vue` 컴포넌트 재사용
+- [x] 라우터 가드: `/admin/**` → `ADMIN` 역할 없으면 `/home` 리다이렉트
+- [x] `AdminLayout.vue` — 관리자 전용 레이아웃 (사이드바: 통계 / 사용자 / 감사 로그)
+- [x] `AdminStatsView.vue` (`/admin`) — 통계 카드 + 최근 감사 이벤트 요약
+- [x] `AdminUsersView.vue` (`/admin/users`) — 사용자 목록 테이블 (이메일 검색, 비활성화 버튼)
+- [x] `AdminAuditView.vue` (`/admin/audit`) — 전체 감사 로그 테이블 (이벤트 타입·날짜 필터, 내보내기 버튼)
 
 #### Step 4. 테스트
 

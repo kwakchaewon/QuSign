@@ -394,14 +394,14 @@
 
 #### Step 1. DB + 엔티티
 
-- [ ] `V9__add_audit_logs.sql` — `audit_logs` 테이블
+- [x] `V9__add_audit_logs.sql` — `audit_logs` 테이블
   - 컬럼: `id`, `event_type`, `actor_email`, `signature_request_id (nullable)`,
     `bundle_id (nullable)`, `document_id (nullable)`, `ip_address (IPv6 대비 45자)`,
     `user_agent (500자)`, `created_at DATETIME(6)`
   - 인덱스: `(document_id)`, `(bundle_id)`, `(actor_email)`, `(created_at)`
   - **`UPDATE` · `DELETE` 문 없음** — append-only 테이블 (법적 불변성 요건)
   - `created_at`은 애플리케이션에서 `Instant.now(ZoneOffset.UTC)` 고정 (서버 시각 조작 방지)
-- [ ] `AuditLog` 엔티티 + `AuditEventType` enum
+- [x] `AuditLog` 엔티티 + `AuditEventType` enum
   ```
   SIGN_REQUEST_CREATED       — 단건 서명 요청 생성
   BUNDLE_REQUEST_CREATED     — 번들 서명 요청 생성
@@ -411,51 +411,51 @@
   BUNDLE_SIGNER_CANCELLED    — 번들 서명자 취소
   SIGNED_DOCUMENT_DOWNLOADED — 서명된 문서 다운로드 (증거 체인)
   ```
-- [ ] `AuditLogRepository` + `AuditLogService`
+- [x] `AuditLogRepository` + `AuditLogService`
   - `save()` 만 노출 — **수정·삭제 메서드 미작성** (불변성 강제)
   - `findByDocumentId(documentId)` — 시간 오름차순
   - `findByBundleId(bundleId)` — 시간 오름차순
 
 #### Step 2. 백엔드 — 감사 기록 포인트
 
-- [ ] `AuditContext(ipAddress, userAgent)` data class 추가
-- [ ] `SignatureController`에서 `HttpServletRequest`로 IP/UserAgent 추출 → `AuditContext`로 서비스에 전달
-- [ ] `SignatureFlowService` 메서드 시그니처에 `auditCtx` 파라미터 추가 (6곳)
+- [x] `AuditContext(ipAddress, userAgent)` data class 추가
+- [x] `SignatureController`에서 `HttpServletRequest`로 IP/UserAgent 추출 → `AuditContext`로 서비스에 전달
+- [x] `SignatureFlowService` 메서드 시그니처에 `auditCtx` 파라미터 추가 (6곳)
   - `requestSignatureForUser()` → `SIGN_REQUEST_CREATED`
   - `requestBundleSignature()` → `BUNDLE_REQUEST_CREATED`
   - `sign()` 단건 경로 → `SIGNED`
   - `signBundle()` → `BUNDLE_SIGNED`
   - `cancelSigner()` → `SIGNER_CANCELLED`
   - `cancelBundleSigner()` → `BUNDLE_SIGNER_CANCELLED`
-- [ ] `SignatureController` 다운로드 4개 엔드포인트에 `SIGNED_DOCUMENT_DOWNLOADED` 기록
+- [x] `SignatureController` 다운로드 4개 엔드포인트에 `SIGNED_DOCUMENT_DOWNLOADED` 기록
   - `getSignedDocument`, `getSignedBundleDocument`, `getSignedDocumentByRequester`, `getBundleSignedDocByRequester`
 
 #### Step 3. PDF 메타데이터
 
-- [ ] `PdfSignatureService.embedSignature()` 인터페이스에 `ipAddress` 파라미터 추가
-- [ ] `PdfBoxSignatureService` 구현체에서 서명자 IP·서명 일시를 PDF 메타데이터에 삽입
+- [x] `PdfSignatureService.embedSignature()` 인터페이스에 `ipAddress` 파라미터 추가
+- [x] `PdfBoxSignatureService` 구현체에서 서명자 IP·서명 일시를 PDF 메타데이터에 삽입
   - 검증(`extractMetadata`, `verify`) 로직은 변경 없음
 
 #### Step 4. API
 
-- [ ] `GET /api/documents/{documentId}/audit` — 단건 감사 로그 (요청자 본인만)
-- [ ] `GET /api/bundles/{bundleId}/audit` — 번들 감사 로그 (요청자 본인만)
-- [ ] `GET /api/documents/{documentId}/audit/export` — JSON 내보내기 (법적 분쟁 제출용, 요청자 본인만)
-- [ ] `GET /api/bundles/{bundleId}/audit/export` — 번들 감사 로그 내보내기
-- [ ] `AuditLogResponse` DTO — `id`, `eventType`, `actorEmail`, `ipAddress`, `createdAt`
+- [x] `GET /api/documents/{documentId}/audit` — 단건 감사 로그 (요청자 본인만)
+- [x] `GET /api/bundles/{bundleId}/audit` — 번들 감사 로그 (요청자 본인만)
+- [x] `GET /api/documents/{documentId}/audit/export` — JSON 내보내기 (법적 분쟁 제출용, 요청자 본인만)
+- [x] `GET /api/bundles/{bundleId}/audit/export` — 번들 감사 로그 내보내기
+- [x] `AuditLogResponse` DTO — `id`, `eventType`, `actorEmail`, `ipAddress`, `createdAt`
   - `userAgent`는 내부 기록용으로만 사용, API 응답에서 제외
 
 #### Step 5. 프론트엔드
 
-- [ ] 공용 컴포넌트 `AuditTimeline.vue` 제작 (props: `auditLogs`)
-- [ ] `DocumentDetailView.vue` 하단에 `AuditTimeline` 삽입
-- [ ] `BundleDetailView.vue` 하단에 `AuditTimeline` 삽입
+- [x] 공용 컴포넌트 `AuditTimeline.vue` 제작 (props: `documentId?`, `bundleId?`)
+- [x] `DocumentDetailView.vue` 하단에 `AuditTimeline` 삽입
+- [x] `BundleDetailView.vue` 하단에 `AuditTimeline` 삽입
 
 #### Step 6. 테스트
 
-- [ ] 단위 테스트: `AuditLogService` — 각 이벤트 타입 기록 검증, 삭제 메서드 미노출 확인
-- [ ] 통합 테스트: sign 엔드포인트 호출 → audit API 조회 → 로그 존재 확인
-- [ ] `./gradlew test` 통과
+- [x] 단위 테스트: `AuditLogService` — 각 이벤트 타입 기록 검증, 삭제 메서드 미노출 확인
+- [x] 통합 테스트: sign 엔드포인트 호출 → audit API 조회 → 로그 존재 확인
+- [x] `./gradlew test` 통과
 
 #### Step 7. 운영 정책 (법적 의무)
 

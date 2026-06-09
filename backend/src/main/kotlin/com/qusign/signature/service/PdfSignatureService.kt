@@ -6,6 +6,7 @@ interface PdfSignatureService {
         signature: ByteArray,
         signerId: String,
         documentHash: ByteArray,
+        ipAddress: String,
     ): ByteArray
 
     fun extractSignature(pdfBytes: ByteArray): ByteArray?

@@ -384,16 +384,69 @@
 
 ### 4-8. 감사 로그 (Audit Trail)
 
-**목표:** 서명 이벤트(요청·서명·취소)를 법적 증거 수준으로 기록한다
+**목표:** 서명 이벤트(요청·서명·취소·다운로드)를 법적 증거 수준으로 기록한다
 
-- [ ] `AuditLog` 엔티티 — `eventType`, `actorEmail`, `documentId`, `ipAddress`, `userAgent`, `createdAt`
-- [ ] 서비스 레이어에서 이벤트 기록 (서명 요청 생성 / 서명 실행 / 요청 취소)
-- [ ] 서명된 PDF 메타데이터에 감사 요약 삽입 (서명자 IP, 서명 일시)
-- [ ] `GET /api/signature-requests/{id}/audit` — 요청자 본인만 조회 가능
-- [ ] 상세 페이지 하단 감사 로그 타임라인 표시
+#### Step 1. DB + 엔티티
+
+- [ ] `V9__add_audit_logs.sql` — `audit_logs` 테이블
+  - 컬럼: `id`, `event_type`, `actor_email`, `signature_request_id (nullable)`,
+    `bundle_id (nullable)`, `document_id (nullable)`, `ip_address (IPv6 대비 45자)`,
+    `user_agent (500자)`, `created_at`
+  - 인덱스: `(document_id)`, `(bundle_id)`, `(actor_email)`, `(created_at)`
+- [ ] `AuditLog` 엔티티 + `AuditEventType` enum
+  ```
+  SIGN_REQUEST_CREATED     — 단건 서명 요청 생성
+  BUNDLE_REQUEST_CREATED   — 번들 서명 요청 생성
+  SIGNED                   — 단건 서명 완료
+  BUNDLE_SIGNED            — 번들 서명 완료
+  SIGNER_CANCELLED         — 단건 서명자 취소
+  BUNDLE_SIGNER_CANCELLED  — 번들 서명자 취소
+  SIGNED_DOCUMENT_DOWNLOADED — 서명된 문서 다운로드 (법적 체인)
+  ```
+- [ ] `AuditLogRepository` + `AuditLogService`
+  - `findByDocumentId(documentId)` — 시간 오름차순
+  - `findByBundleId(bundleId)` — 시간 오름차순
+
+#### Step 2. 백엔드 — 감사 기록 포인트
+
+- [ ] `AuditContext(ipAddress, userAgent)` data class 추가
+- [ ] `SignatureController`에서 `HttpServletRequest`로 IP/UserAgent 추출 → `AuditContext`로 서비스에 전달
+- [ ] `SignatureFlowService` 메서드 시그니처에 `auditCtx` 파라미터 추가 (6곳)
+  - `requestSignatureForUser()` → `SIGN_REQUEST_CREATED`
+  - `requestBundleSignature()` → `BUNDLE_REQUEST_CREATED`
+  - `sign()` 단건 경로 → `SIGNED`
+  - `signBundle()` → `BUNDLE_SIGNED`
+  - `cancelSigner()` → `SIGNER_CANCELLED`
+  - `cancelBundleSigner()` → `BUNDLE_SIGNER_CANCELLED`
+- [ ] `SignatureController` 다운로드 4개 엔드포인트에 `SIGNED_DOCUMENT_DOWNLOADED` 기록
+  - `getSignedDocument`, `getSignedBundleDocument`, `getSignedDocumentByRequester`, `getBundleSignedDocByRequester`
+
+#### Step 3. PDF 메타데이터
+
+- [ ] `PdfSignatureService.embedSignature()` 인터페이스에 `ipAddress` 파라미터 추가
+- [ ] `PdfBoxSignatureService` 구현체에서 서명자 IP·서명 일시를 PDF 메타데이터에 삽입
+  - 검증(`extractMetadata`, `verify`) 로직은 변경 없음
+
+#### Step 4. API
+
+- [ ] `GET /api/documents/{documentId}/audit` — 단건 감사 로그 (요청자 본인만)
+- [ ] `GET /api/bundles/{bundleId}/audit` — 번들 감사 로그 (요청자 본인만)
+- [ ] `AuditLogResponse` DTO — `id`, `eventType`, `actorEmail`, `ipAddress`, `createdAt`
+  - `userAgent`는 내부 기록용으로만 사용, API 응답에서 제외
+
+#### Step 5. 프론트엔드
+
+- [ ] 공용 컴포넌트 `AuditTimeline.vue` 제작 (props: `auditLogs`)
+- [ ] `DocumentDetailView.vue` 하단에 `AuditTimeline` 삽입
+- [ ] `BundleDetailView.vue` 하단에 `AuditTimeline` 삽입
+
+#### Step 6. 테스트
+
+- [ ] 단위 테스트: `AuditLogService` — 각 이벤트 타입 기록 검증
+- [ ] 통합 테스트: sign 엔드포인트 호출 → audit API 조회 → 로그 존재 확인
 - [ ] `./gradlew test` 통과
 
-**완료 기준:** 서명 완료 PDF에 감사 정보 포함 + 상세 페이지에서 이벤트 타임라인 조회
+**완료 기준:** 서명 완료 PDF에 감사 정보(IP·일시) 포함 + 상세 페이지에서 이벤트 타임라인 조회 + 다운로드 이력 기록
 
 ---
 

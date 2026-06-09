@@ -14,8 +14,8 @@
       <!-- 통계 카드 -->
       <section>
         <div class="qs-stats">
-          <template v-if="isLoading">
-            <div v-for="i in 4" :key="i" class="qs-stat-card qs-stat-skel">
+          <template v-if="summaryLoading">
+            <div v-for="i in 3" :key="i" class="qs-stat-card qs-stat-skel">
               <div class="qs-skel" style="width:36px;height:36px;border-radius:10px"></div>
               <div class="qs-skel qs-skel-line" style="width:40%;height:24px"></div>
               <div class="qs-skel qs-skel-line qs-skel-line-sm" style="width:60%"></div>
@@ -23,33 +23,17 @@
           </template>
           <template v-else>
             <div class="qs-stat-card">
-              <span class="qs-stat-icon is-primary">
+              <span class="qs-stat-icon is-error">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M5 8h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8z"
-                    stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-                  <path d="M7 5h11a2 2 0 0 1 2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                  <path d="M9 13h6M9 17h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M20 12V22H4V12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M22 7H2v5h20V7z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 22V7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                 </svg>
               </span>
               <div class="qs-stat-body">
-                <span class="qs-stat-num">{{ stats.totalDocuments }}</span>
+                <span class="qs-stat-num">{{ summary?.receivedUnsigned ?? 0 }}</span>
               </div>
-              <div class="qs-stat-label">전체 문서</div>
-            </div>
-
-            <div class="qs-stat-card">
-              <span class="qs-stat-icon is-success">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M12 3l2.4 1.6 2.9-.4 1.5 2.5 2.5 1.5-.4 2.9L22.5 13.5 21 16l.4 2.9-2.5 1.5-1.5 2.5-2.9-.4L12 24l-2.4-1.5-2.9.4-1.5-2.5-2.5-1.5.4-2.9L1.5 13.5 3 11l-.4-2.9 2.5-1.5 1.5-2.5 2.9.4L12 3z"
-                    stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-                  <path d="M8.5 12.5l2.5 2.5L16 10" stroke="currentColor" stroke-width="1.7"
-                    stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-              <div class="qs-stat-body">
-                <span class="qs-stat-num">{{ stats.signedCount }}</span>
-              </div>
-              <div class="qs-stat-label">서명 완료</div>
+              <div class="qs-stat-label">내가 서명할 것</div>
             </div>
 
             <div class="qs-stat-card">
@@ -60,33 +44,34 @@
                 </svg>
               </span>
               <div class="qs-stat-body">
-                <span class="qs-stat-num">{{ stats.pendingCount }}</span>
+                <span class="qs-stat-num">{{ summary?.sentPending ?? 0 }}</span>
               </div>
-              <div class="qs-stat-label">서명 대기 중</div>
+              <div class="qs-stat-label">상대방 대기중</div>
             </div>
 
             <div class="qs-stat-card">
-              <span class="qs-stat-icon is-neutral">
+              <span class="qs-stat-icon is-success">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M9 12.5l2.5 2.5L16 10" stroke="currentColor" stroke-width="1.7"
+                    stroke-linecap="round" stroke-linejoin="round"/>
                   <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
-                  <path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                 </svg>
               </span>
               <div class="qs-stat-body">
-                <span class="qs-stat-num">{{ stats.expiredCount }}</span>
+                <span class="qs-stat-num">{{ summary?.sentSigned ?? 0 }}</span>
               </div>
-              <div class="qs-stat-label">만료된 요청</div>
+              <div class="qs-stat-label">완료</div>
             </div>
           </template>
         </div>
       </section>
 
-      <!-- 최근 요청 -->
+      <!-- 지금 할 일 -->
       <section class="qs-section">
         <div class="qs-section-head">
-          <h2 class="qs-section-title">최근 요청</h2>
+          <h2 class="qs-section-title">지금 할 일</h2>
           <RouterLink class="qs-section-link" to="/documents">
-            <span>전체 보기</span>
+            <span>문서 현황</span>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M3 6h6m-2-3l3 3-3 3" stroke="currentColor" stroke-width="1.6"
                 stroke-linecap="round" stroke-linejoin="round"/>
@@ -94,9 +79,9 @@
           </RouterLink>
         </div>
         <div class="qs-recent-card">
-          <template v-if="isLoading">
+          <template v-if="actionLoading">
             <div v-for="i in 3" :key="i" class="qs-recent-row">
-              <div class="qs-skel" style="width:28px;height:32px;border-radius:6px"></div>
+              <div class="qs-skel" style="width:32px;height:32px;border-radius:8px"></div>
               <div>
                 <div class="qs-skel qs-skel-line" style="width:52%"></div>
                 <div class="qs-skel qs-skel-line qs-skel-line-sm" style="width:36%;margin-top:8px"></div>
@@ -106,20 +91,16 @@
               <div class="qs-skel" style="width:64px;height:18px;border-radius:6px"></div>
             </div>
           </template>
-          <template v-else-if="stats.recentRequests.length === 0">
+          <template v-else-if="actionItems.length === 0">
             <div class="qs-empty">
               <div class="qs-empty-illu" aria-hidden="true">
-                <svg width="44" height="44" viewBox="0 0 80 80" fill="none">
-                  <rect x="14" y="22" width="52" height="40" rx="8"
-                    fill="var(--surface-muted)" stroke="var(--border-default)" stroke-width="1"/>
-                  <path d="M14 44h14l4 6h16l4-6h14" stroke="var(--border-strong)" stroke-width="1.4"
-                    fill="none" stroke-linejoin="round"/>
-                  <path d="M40 16v14m-5-5l5 5 5-5" stroke="var(--color-primary-500)" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round"/>
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 12l2 2 4-4" stroke="var(--badge-success-text, #16a34a)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="12" r="9" stroke="var(--badge-success-text, #16a34a)" stroke-width="1.5"/>
                 </svg>
               </div>
-              <h3 class="qs-empty-title">아직 서명 요청이 없어요</h3>
-              <p class="qs-empty-desc">PDF를 업로드해 첫 서명 요청을 보내보세요.</p>
+              <h3 class="qs-empty-title">지금 처리할 서명 요청이 없어요</h3>
+              <p class="qs-empty-desc">새 서명 요청을 보내거나 받은 문서를 확인하세요.</p>
               <RouterLink class="qs-btn qs-btn-primary qs-btn-md" to="/request">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <rect x="4" y="3" width="13" height="18" rx="2" stroke="currentColor" stroke-width="1.6"
@@ -127,39 +108,59 @@
                   <path d="M14 12h7m-3-3l3 3-3 3" stroke="currentColor" stroke-width="1.7"
                     stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span>첫 서명 요청 만들기</span>
+                <span>서명 요청 보내기</span>
               </RouterLink>
             </div>
           </template>
           <template v-else>
             <div
-              v-for="item in stats.recentRequests"
-              :key="item.id"
+              v-for="item in actionItems"
+              :key="item.signPath"
               class="qs-recent-row"
-              @click="router.push(`/documents/${item.id}`)"
+              style="cursor:pointer"
+              @click="router.push(item.signPath)"
             >
+              <!-- 방향 아이콘 -->
               <div class="qs-recent-icon">
-                <svg width="20" height="24" viewBox="0 0 22 26" fill="none" aria-hidden="true">
-                  <path d="M2 2h11l7 7v15a0 0 0 0 1 0 0H2a0 0 0 0 1 0 0V2z"
-                    fill="var(--color-error-bg)" stroke="var(--color-error)" stroke-width="1.2"/>
-                  <path d="M13 2v7h7" stroke="var(--color-error)" stroke-width="1.2"
-                    stroke-linejoin="round" fill="none"/>
-                  <text x="11" y="20" text-anchor="middle" font-size="6" font-weight="700"
-                    fill="var(--color-error)" font-family="var(--font-mono)">PDF</text>
-                </svg>
+                <span v-if="item.direction === 'RECEIVED'" class="qs-action-dir qs-action-dir-recv">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M20 12V22H4V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22 7H2v5h20V7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 22V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span v-else class="qs-action-dir qs-action-dir-sent">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
               </div>
               <div class="qs-recent-main">
-                <div class="qs-recent-name">{{ item.documentName }}</div>
-                <div class="qs-recent-sub">{{ formatSigners(item.signers) }}</div>
+                <div class="qs-recent-name">{{ item.docName }}</div>
+                <div class="qs-recent-sub">
+                  <span v-if="item.direction === 'RECEIVED'">{{ item.counterpart }} 요청</span>
+                  <span v-else>{{ item.counterpart }} 서명 대기</span>
+                </div>
               </div>
-              <span class="qs-recent-time">{{ timeAgo(item.createdAt) }}</span>
-              <span :class="['qs-badge', statusBadgeClass(item.status)]">
-                <span class="qs-badge-dot" :style="{ background: statusDotColor(item.status) }" aria-hidden="true"></span>
-                {{ statusLabel(item.status) }}
+              <span class="qs-recent-time">{{ formatDate(item.createdAt) }}</span>
+              <span v-if="item.direction === 'RECEIVED'" class="qs-badge qs-badge-error">
+                <span class="qs-badge-dot" style="background:var(--badge-error-text, #dc2626)" aria-hidden="true"></span>
+                서명 필요
               </span>
-              <button class="qs-recent-action" @click.stop="router.push(`/documents/${item.id}`)">
-                상세 보기
-              </button>
+              <span v-else class="qs-badge qs-badge-warning">
+                <span class="qs-badge-dot" style="background:var(--color-warning)" aria-hidden="true"></span>
+                대기중
+              </span>
+              <button
+                v-if="item.direction === 'RECEIVED'"
+                class="qs-recent-action"
+                @click.stop="router.push(item.signPath)"
+              >서명하기</button>
+              <button
+                v-else
+                class="qs-recent-action"
+                @click.stop="router.push(item.signPath)"
+              >상세 보기</button>
             </div>
           </template>
         </div>
@@ -260,34 +261,30 @@ import { useAuthStore } from '@/stores/auth'
 import api from '@/lib/api'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 
-interface RecentRequestItem {
-  id: number
-  documentName: string
-  signers: string[]
-  createdAt: string
-  status: 'SIGNED' | 'PENDING' | 'EXPIRED'
+interface Summary {
+  sentPending: number
+  sentSigned: number
+  receivedUnsigned: number
 }
 
-interface DashboardData {
-  totalDocuments: number
-  signedCount: number
-  pendingCount: number
-  expiredCount: number
-  recentRequests: RecentRequestItem[]
+interface ActionItem {
+  direction: 'SENT' | 'RECEIVED'
+  docName: string
+  counterpart: string
+  createdAt: string
+  signPath: string
+  token?: string
+  bundleToken?: string
+  bundleId?: number
 }
 
 const router = useRouter()
 const auth = useAuthStore()
-const isLoading = ref(true)
+const summaryLoading = ref(true)
+const actionLoading = ref(true)
 const toast = ref<string | null>(null)
-
-const stats = ref<DashboardData>({
-  totalDocuments: 0,
-  signedCount: 0,
-  pendingCount: 0,
-  expiredCount: 0,
-  recentRequests: [],
-})
+const summary = ref<Summary | null>(null)
+const actionItems = ref<ActionItem[]>([])
 
 const namePart = computed(() => auth.email?.split('@')[0] ?? '')
 const todayString = computed(() => {
@@ -299,14 +296,14 @@ const todayString = computed(() => {
 })
 
 onMounted(async () => {
-  try {
-    const res = await api.get<{ data: DashboardData }>('/api/dashboard')
-    stats.value = res.data.data
-  } catch {
-    // 오류 시 기본값 유지
-  } finally {
-    isLoading.value = false
-  }
+  const [summaryResult, actionResult] = await Promise.all([
+    api.get<{ data: Summary }>('/api/dashboard/summary').catch(() => null),
+    api.get<{ data: { items: ActionItem[] } }>('/api/dashboard/action-items').catch(() => null),
+  ])
+  summary.value = summaryResult?.data.data ?? null
+  summaryLoading.value = false
+  actionItems.value = actionResult?.data.data?.items ?? []
+  actionLoading.value = false
 })
 
 function showToast(text: string) {
@@ -314,43 +311,10 @@ function showToast(text: string) {
   setTimeout(() => { toast.value = null }, 2400)
 }
 
-function formatSigners(signers: string[]): string {
-  if (!signers || signers.length === 0) return ''
-  if (signers.length === 1) return signers[0] ?? ''
-  return `${signers[0] ?? ''} 외 ${signers.length - 1}명`
+function formatDate(d: string | null) {
+  if (!d) return '-'
+  return d.slice(0, 10).replace(/-/g, '.')
 }
 
-function timeAgo(isoString: string): string {
-  const now = new Date()
-  const past = new Date(isoString)
-  const diffMs = now.getTime() - past.getTime()
-  const diffMin = Math.floor(diffMs / 60000)
-  const diffHour = Math.floor(diffMin / 60)
-  const diffDay = Math.floor(diffHour / 24)
-  const diffWeek = Math.floor(diffDay / 7)
-  if (diffMin < 1) return '방금 전'
-  if (diffMin < 60) return `${diffMin}분 전`
-  if (diffHour < 24) return `${diffHour}시간 전`
-  if (diffDay < 7) return `${diffDay}일 전`
-  return `${diffWeek}주일 전`
-}
-
-const STATUS_MAP = {
-  SIGNED:  { cls: 'qs-badge-success', dot: 'var(--color-success)', label: '서명 완료' },
-  PENDING: { cls: 'qs-badge-warning', dot: 'var(--color-warning)', label: '대기 중' },
-  EXPIRED: { cls: 'qs-badge-error',   dot: 'var(--color-error)',   label: '만료됨' },
-} as const
-
-function statusBadgeClass(status: string) {
-  return STATUS_MAP[status as keyof typeof STATUS_MAP]?.cls ?? 'qs-badge-warning'
-}
-function statusDotColor(status: string) {
-  return STATUS_MAP[status as keyof typeof STATUS_MAP]?.dot ?? 'var(--color-warning)'
-}
-function statusLabel(status: string) {
-  return STATUS_MAP[status as keyof typeof STATUS_MAP]?.label ?? status
-}
-
-// showToast를 외부에서 사용할 경우를 위해 유지
 void showToast
 </script>

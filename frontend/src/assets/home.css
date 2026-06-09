@@ -76,6 +76,10 @@
 .qs-stat-icon.is-warning { background: var(--color-warning-bg); color: var(--color-warning); }
 .qs-stat-icon.is-neutral { background: var(--surface-muted); color: var(--text-tertiary); }
 .qs-stat-icon.is-primary { background: var(--color-info-bg); color: var(--color-primary-500); }
+.qs-stat-icon.is-error   { background: var(--color-error-bg); color: var(--color-error); }
+.qs-action-dir { display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;flex-shrink:0; }
+.qs-action-dir-recv { background:color-mix(in srgb,var(--badge-success-text,#16a34a) 12%,transparent);color:var(--badge-success-text,#16a34a); }
+.qs-action-dir-sent { background:color-mix(in srgb,var(--color-primary-500) 12%,transparent);color:var(--color-primary-500); }
 
 .qs-stat-body { display: flex; align-items: baseline; gap: 8px; }
 .qs-stat-num {

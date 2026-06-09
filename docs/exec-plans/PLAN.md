@@ -110,7 +110,7 @@
 - [x] 전체 통합 테스트 통과
 
 **미완 (2단계 범위)**
-- [ ] Postman으로 전체 플로우 수동 확인 (회원가입 → 업로드 → 서명 → 검증)
+- [x] Postman으로 전체 플로우 수동 확인 (회원가입 → 업로드 → 서명 → 검증) — `docs/test-scenarios/service-scenario.md` 브라우저 수동 테스트로 대체
 
 ---
 
@@ -131,9 +131,10 @@
   - [x] 무결성 검증 (`/verify`) — 토큰 입력 | 파일 업로드 탭 전환
 - [x] 서명 완료 파일명 `파일명_qusigned.pdf` 형식 적용
 
-**미완**
-- [ ] `npm run dev` 브라우저 렌더링 전 화면 확인 (빌드 통과, 렌더링 미확인)
-- [ ] 문서 미리보기 PDF.js 연동 (현재 placeholder)
+**추가 구현 완료**
+- [x] `npm run dev` 브라우저 렌더링 + 전체 시나리오 수동 테스트 완료 (`service-scenario.md` 전 항목 `[V]`)
+- [x] 문서 미리보기 PDF.js 연동 — `PdfViewer.vue` 컴포넌트 구현, 서명자 화면 "크게 보기" 모달 포함
+- [x] SVG 파비콘 적용 + 라우터 meta 기반 페이지별 탭 타이틀 적용
 
 ---
 
@@ -193,7 +194,7 @@
 
 - [x] `GET /api/signature-requests/{id}` — 요청자 본인만 조회 가능
 - [x] `SignatureRequestDetailResponse` DTO 추가
-- [ ] `./gradlew test` 통과
+- [x] `./gradlew test` 통과
 
 #### Step 3. 프론트엔드
 
@@ -226,8 +227,11 @@
 
 #### Step 2. 백엔드
 
-- [x] `POST /api/documents/batch` — 복수 파일 수신, 파일별 해시+저장, 5개 초과 시 400
-- [x] `POST /api/signature-requests/batch` — 문서 ID 목록으로 서명 요청 일괄 생성
+> **구현 방식 변경:** 초기 계획(배치 API)에서 **DocumentBundle 엔티티 기반 번들 방식**으로 변경됨
+
+- [x] `DocumentBundle` / `DocumentBundleItem` 엔티티 추가
+- [x] 번들 서명 요청 생성 — 복수 파일을 하나의 번들로 묶어 서명자별 링크 1개 발급
+- [x] 번들 서명 실행 — 번들 내 모든 문서에 ML-DSA 서명 일괄 처리
 - [x] `./gradlew test` 통과 (+ 테스트 `@MockitoBean EmailService` 누락 일괄 수정)
 
 #### Step 3. 프론트엔드
@@ -235,9 +239,10 @@
 - [x] RequestView Step 1 멀티 업로드로 교체
 - [x] 드롭존 복수 파일 드래그앤드롭 (full → compact → max-reached 전환)
 - [x] 파일 5개 초과 시 클라이언트 사전 차단
-- [x] 완료 화면: 문서별 서명 링크 목록 + 전체 링크 복사
+- [x] 완료 화면: 번들 표시 ("파일명.pdf 외 N건") + 서명자별 링크 1개 생성
 - [x] Step 2 서명자 입력 — 이메일 pill 방식으로 교체
-- [x] 배치 API 연동 (단건 API → `/batch` 엔드포인트로 교체 가능)
+- [x] `BundleDetailView.vue` — 번들 서명 상세 화면 (번들 내 파일별 개별 다운로드)
+- [x] 번들 서명 API 연동 (DocumentBundle 방식)
 
 **완료 기준:** 목업 완성 → 멀티 업로드 동작 → 테스트 통과
 
@@ -652,6 +657,20 @@
 
 > 개발 중 발견된 누락 기능, 개선 아이디어, UX 요구사항을 기록한다.  
 > 단계에 배정되지 않은 항목은 여기서 관리하다가 로드맵 정기 리뷰 시 해당 단계로 편입한다.
+
+### 계획 외 구현 완료 항목
+
+> 4단계 진행 중 계획에 없던 기능이 추가 구현됨. 4단계 완료 후 로드맵 정기 리뷰 시 해당 단계로 편입한다.
+
+- [x] **보낸·받은 서명 요청 통합 대시보드** (`UnifiedDashboardView.vue`) — 요청자·서명자 시점을 하나의 화면에서 전환
+- [x] **받은 문서 전용 화면** (`ReceivedDocumentsView.vue`, `ReceivedDetailView.vue`) + `GET /api/signature-requests/received` API
+- [x] **자리비움 자동 잠금 기능** — 일정 시간 미조작 시 자동 로그아웃
+- [x] **서명 요청 message 필드** — 요청자가 서명자에게 메모 전달, 서명자 화면에 표시
+- [x] **이미 서명된 PDF 재업로드 차단** — SHA3-256 해시 중복 검사로 서명 완료 문서 재요청 방지
+- [x] **검증 페이지 로그인 시 공통 헤더 표시** — 비로그인/로그인 상태 분기 처리
+- [x] **대시보드 요약·액션 API 확장** (`GET /api/dashboard/summary`, `/api/dashboard/actions`) — 홈 화면 집계·할 일 섹션 연동
+
+---
 
 ### 서명 거절 (Signer-initiated Rejection)
 

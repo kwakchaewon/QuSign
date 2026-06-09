@@ -386,24 +386,33 @@
 
 **목표:** 서명 이벤트(요청·서명·취소·다운로드)를 법적 증거 수준으로 기록한다
 
+> **적용 법령**
+> - 전자서명법 제31조 — 인증 관련 기록 **10년** 보관 의무
+> - 전자문서법 제5조 — 진본성 보존 (작성자·수신자·일시 필수 기록)
+> - 개인정보보호법 제6·21조 — `actor_email + ip_address` 결합 시 개인정보, 수집 동의·암호화 의무
+> - NIST SP 800-53 AU-11 — 감사 기록 최소 7년 보존 (글로벌 기준)
+
 #### Step 1. DB + 엔티티
 
 - [ ] `V9__add_audit_logs.sql` — `audit_logs` 테이블
   - 컬럼: `id`, `event_type`, `actor_email`, `signature_request_id (nullable)`,
     `bundle_id (nullable)`, `document_id (nullable)`, `ip_address (IPv6 대비 45자)`,
-    `user_agent (500자)`, `created_at`
+    `user_agent (500자)`, `created_at DATETIME(6)`
   - 인덱스: `(document_id)`, `(bundle_id)`, `(actor_email)`, `(created_at)`
+  - **`UPDATE` · `DELETE` 문 없음** — append-only 테이블 (법적 불변성 요건)
+  - `created_at`은 애플리케이션에서 `Instant.now(ZoneOffset.UTC)` 고정 (서버 시각 조작 방지)
 - [ ] `AuditLog` 엔티티 + `AuditEventType` enum
   ```
-  SIGN_REQUEST_CREATED     — 단건 서명 요청 생성
-  BUNDLE_REQUEST_CREATED   — 번들 서명 요청 생성
-  SIGNED                   — 단건 서명 완료
-  BUNDLE_SIGNED            — 번들 서명 완료
-  SIGNER_CANCELLED         — 단건 서명자 취소
-  BUNDLE_SIGNER_CANCELLED  — 번들 서명자 취소
-  SIGNED_DOCUMENT_DOWNLOADED — 서명된 문서 다운로드 (법적 체인)
+  SIGN_REQUEST_CREATED       — 단건 서명 요청 생성
+  BUNDLE_REQUEST_CREATED     — 번들 서명 요청 생성
+  SIGNED                     — 단건 서명 완료
+  BUNDLE_SIGNED              — 번들 서명 완료
+  SIGNER_CANCELLED           — 단건 서명자 취소
+  BUNDLE_SIGNER_CANCELLED    — 번들 서명자 취소
+  SIGNED_DOCUMENT_DOWNLOADED — 서명된 문서 다운로드 (증거 체인)
   ```
 - [ ] `AuditLogRepository` + `AuditLogService`
+  - `save()` 만 노출 — **수정·삭제 메서드 미작성** (불변성 강제)
   - `findByDocumentId(documentId)` — 시간 오름차순
   - `findByBundleId(bundleId)` — 시간 오름차순
 
@@ -431,6 +440,8 @@
 
 - [ ] `GET /api/documents/{documentId}/audit` — 단건 감사 로그 (요청자 본인만)
 - [ ] `GET /api/bundles/{bundleId}/audit` — 번들 감사 로그 (요청자 본인만)
+- [ ] `GET /api/documents/{documentId}/audit/export` — JSON 내보내기 (법적 분쟁 제출용, 요청자 본인만)
+- [ ] `GET /api/bundles/{bundleId}/audit/export` — 번들 감사 로그 내보내기
 - [ ] `AuditLogResponse` DTO — `id`, `eventType`, `actorEmail`, `ipAddress`, `createdAt`
   - `userAgent`는 내부 기록용으로만 사용, API 응답에서 제외
 
@@ -442,11 +453,19 @@
 
 #### Step 6. 테스트
 
-- [ ] 단위 테스트: `AuditLogService` — 각 이벤트 타입 기록 검증
+- [ ] 단위 테스트: `AuditLogService` — 각 이벤트 타입 기록 검증, 삭제 메서드 미노출 확인
 - [ ] 통합 테스트: sign 엔드포인트 호출 → audit API 조회 → 로그 존재 확인
 - [ ] `./gradlew test` 통과
 
-**완료 기준:** 서명 완료 PDF에 감사 정보(IP·일시) 포함 + 상세 페이지에서 이벤트 타임라인 조회 + 다운로드 이력 기록
+#### Step 7. 운영 정책 (법적 의무)
+
+- [ ] **보존 기간 10년** 명시 — 전자서명법 제31조 기준, 자동 삭제·TTL 설정 금지
+- [ ] **약관 수정** — 회원가입 약관에 감사 로그 수집 목적·보유 기간 명시
+  - 문구 예시: *"서비스 이용 중 발생하는 서명 이벤트 및 접속 IP는 인증 보안 감시·서명 무결성 검증·분쟁 해결 목적으로 10년간 보관됩니다."*
+  - 근거: 개인정보보호법 제6조 (수집 동의 근거 명시 의무)
+- [ ] **KISA RFC 3161 타임스탬프 연동 검토** — 서버 시각 대신 공인 시각 사용 (eIDAS·법원 제출 시 증거력 강화, 3단계 이후 적용)
+
+**완료 기준:** 서명 완료 PDF에 감사 정보(IP·일시) 포함 + 상세 페이지에서 이벤트 타임라인 조회 + 다운로드 이력 기록 + 감사 로그 JSON 내보내기 + 약관 IP 수집 동의 문구 반영
 
 ---
 

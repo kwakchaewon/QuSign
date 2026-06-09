@@ -1,0 +1,382 @@
+/* QuSign Admin — 관리자 레이아웃 및 공용 컴포넌트 */
+
+/* ---- Layout ---- */
+.qs-admin-wrap {
+  display: flex;
+  min-height: 100vh;
+  background: var(--surface-page);
+}
+
+.qs-admin-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface-elevated);
+  border-right: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.qs-admin-sidebar-header {
+  padding: 0 16px 20px;
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.qs-admin-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.qs-admin-back:hover { color: var(--color-primary-500); }
+
+.qs-admin-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--color-primary-500);
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+}
+
+.qs-admin-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 8px;
+  gap: 2px;
+}
+
+.qs-admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.qs-admin-nav-item:hover { background: var(--surface-muted); color: var(--text-primary); }
+.qs-admin-nav-item.is-active { background: var(--color-info-bg); color: var(--color-primary-500); font-weight: 600; }
+
+.qs-admin-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+/* ---- Page ---- */
+.qs-admin-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 36px 32px 80px;
+}
+
+.qs-admin-page-title {
+  margin: 0 0 24px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.qs-admin-section { margin-top: 40px; }
+.qs-admin-section-title {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ---- Stats grid ---- */
+.qs-admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.qs-admin-stat-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+}
+.qs-admin-stat-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+.qs-admin-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+}
+.qs-admin-stat-success { color: var(--color-success); }
+.qs-admin-stat-warning { color: var(--color-warning); }
+.qs-admin-stat-muted   { color: var(--text-tertiary); }
+
+/* ---- Toolbar ---- */
+.qs-admin-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.qs-admin-search {
+  flex: 1;
+  min-width: 200px;
+  max-width: 320px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.qs-admin-search:focus {
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-focus);
+}
+
+.qs-admin-select {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+.qs-admin-select:focus { border-color: var(--border-focus); }
+
+.qs-admin-input-date {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+.qs-admin-input-date:focus { border-color: var(--border-focus); }
+
+.qs-admin-date-sep {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* ---- Buttons ---- */
+.qs-admin-btn {
+  height: 36px;
+  padding: 0 16px;
+  background: var(--color-primary-500);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.qs-admin-btn:hover { opacity: 0.88; }
+.qs-admin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.qs-admin-btn-ghost {
+  height: 36px;
+  padding: 0 14px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.qs-admin-btn-ghost:hover { background: var(--surface-muted); color: var(--text-primary); }
+.qs-admin-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.qs-admin-btn-danger {
+  height: 30px;
+  padding: 0 12px;
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.qs-admin-btn-danger:hover { background: rgba(240, 68, 82, 0.18); }
+.qs-admin-btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---- Table ---- */
+.qs-admin-table-wrap { overflow-x: auto; }
+
+.qs-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.qs-admin-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+.qs-admin-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border-subtle, var(--border-default));
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+.qs-admin-table tr:last-child td { border-bottom: none; }
+.qs-admin-table tr:hover td { background: var(--surface-muted); }
+
+.qs-admin-td-email  { font-size: 13px; color: var(--text-secondary); }
+.qs-admin-td-mono   { font-family: var(--font-mono); font-size: 12px; color: var(--text-tertiary); }
+.qs-admin-td-time   { font-size: 12px; color: var(--text-tertiary); white-space: nowrap; }
+.qs-admin-td-muted  { font-size: 12px; color: var(--text-tertiary); }
+
+/* ---- Badges ---- */
+.qs-admin-event-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.qs-admin-event-badge.is-success { background: var(--badge-success-bg); color: var(--badge-success-text, var(--color-success)); }
+.qs-admin-event-badge.is-warning { background: var(--badge-warning-bg); color: var(--badge-warning-text, var(--color-warning)); }
+
+.qs-admin-role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface-muted);
+  color: var(--text-tertiary);
+}
+.qs-admin-role-badge.is-admin { background: var(--color-info-bg); color: var(--color-primary-500); }
+
+.qs-admin-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+}
+.qs-admin-status-badge.is-active   { background: var(--badge-success-bg); color: var(--badge-success-text, var(--color-success)); }
+.qs-admin-status-badge.is-disabled { background: var(--color-error-bg); color: var(--color-error); }
+
+/* ---- Pagination ---- */
+.qs-admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-default);
+}
+.qs-admin-page-info { font-size: 13px; color: var(--text-tertiary); }
+
+/* ---- Empty state ---- */
+.qs-admin-empty {
+  padding: 40px 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-tertiary);
+}
+
+/* ---- Modal ---- */
+.qs-admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--surface-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+.qs-admin-modal {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  box-shadow: var(--shadow-lg);
+}
+.qs-admin-modal-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.qs-admin-modal-body {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.qs-admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---- Topbar admin link ---- */
+.qs-nav-link-admin {
+  background: var(--color-info-bg);
+  color: var(--color-primary-500) !important;
+  border-radius: var(--radius-full);
+  padding: 3px 12px !important;
+  font-weight: 600;
+}
+.qs-nav-link-admin.is-active { background: var(--color-primary-500); color: #fff !important; }
+
+/* ---- Skeleton (reuse global .qs-skel if present, else define) ---- */
+.qs-admin-audit-skeleton { display: flex; flex-direction: column; }

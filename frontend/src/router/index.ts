@@ -13,6 +13,18 @@ import AccountSettingsView from '../views/AccountSettingsView.vue'
 import NotificationsView from '../views/NotificationsView.vue'
 import ReceivedDocumentsView from '../views/ReceivedDocumentsView.vue'
 import ReceivedDetailView from '../views/ReceivedDetailView.vue'
+import AdminLayout from '../views/admin/AdminLayout.vue'
+import AdminStatsView from '../views/admin/AdminStatsView.vue'
+import AdminUsersView from '../views/admin/AdminUsersView.vue'
+import AdminAuditView from '../views/admin/AdminAuditView.vue'
+
+function parseJwtRole(token: string): string {
+  try {
+    return JSON.parse(atob(token.split('.')[1])).role ?? 'USER'
+  } catch {
+    return 'USER'
+  }
+}
 
 const AUTH_ROUTES = ['/home', '/documents', '/bundles', '/request', '/settings', '/notifications', '/sign', '/received']
 
@@ -37,15 +49,30 @@ const router = createRouter({
     { path: '/verify',          name: 'verify',           component: VerifyView,              meta: { title: '검증' } },
     { path: '/settings',        name: 'settings',         component: AccountSettingsView,     meta: { title: '계정 설정' } },
     { path: '/notifications',   name: 'notifications',    component: NotificationsView,       meta: { title: '알림' } },
+    {
+      path: '/admin',
+      component: AdminLayout,
+      meta: { requiresAdmin: true },
+      children: [
+        { path: '',        name: 'admin-stats', component: AdminStatsView, meta: { title: '관리자 대시보드' } },
+        { path: 'users',   name: 'admin-users', component: AdminUsersView, meta: { title: '사용자 관리' } },
+        { path: 'audit',   name: 'admin-audit', component: AdminAuditView, meta: { title: '감사 로그' } },
+      ],
+    },
   ],
 })
 
 const BASE_TITLE = 'QuSign'
 
 router.beforeEach((to) => {
+  const token = localStorage.getItem('qusign:token')
   const needsAuth = AUTH_ROUTES.some((p) => to.path.startsWith(p))
-  if (needsAuth && !localStorage.getItem('qusign:token')) {
+  if (needsAuth && !token) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  if (to.meta.requiresAdmin || to.matched.some((r) => r.meta.requiresAdmin)) {
+    if (!token) return { name: 'login', query: { redirect: to.fullPath } }
+    if (parseJwtRole(token) !== 'ADMIN') return { name: 'home' }
   }
 })
 

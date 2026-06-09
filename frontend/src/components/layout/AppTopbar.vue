@@ -10,6 +10,7 @@
         <RouterLink class="qs-nav-link" activeClass="is-active" to="/documents">문서 현황</RouterLink>
         <RouterLink class="qs-nav-link" activeClass="is-active" to="/request">서명 요청</RouterLink>
         <RouterLink class="qs-nav-link" activeClass="is-active" to="/verify">검증</RouterLink>
+        <RouterLink v-if="auth.isAdmin" class="qs-nav-link qs-nav-link-admin" activeClass="is-active" to="/admin">관리자</RouterLink>
       </nav>
       <div class="qs-topbar-right">
         <ThemeToggle :theme="theme" @change="setTheme" />

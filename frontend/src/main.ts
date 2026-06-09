@@ -15,6 +15,7 @@ import './assets/verify.css'
 import './assets/detail.css'
 import './assets/settings.css'
 import './assets/home.css'
+import './assets/admin.css'
 
 const app = createApp(App)
 app.use(createPinia())

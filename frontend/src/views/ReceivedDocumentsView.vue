@@ -261,13 +261,16 @@ function goToDetail(item: ReceivedDocumentItem) {
 }
 
 async function handleDownload(item: ReceivedDocumentItem) {
+  if (item.isBundle) {
+    goToDetail(item)
+    return
+  }
   try {
-    const token = item.bundleToken ?? item.token
-    const res = await api.get(`/api/signature-requests/${token}/signed-document`, { responseType: 'blob' })
+    const res = await api.get(`/api/signature-requests/${item.token}/signed-document`, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
-    a.download = displayName(item).replace('.pdf', '_qusigned.pdf')
+    a.download = item.documentName.replace(/\.pdf$/i, '_qusigned.pdf')
     a.click()
     URL.revokeObjectURL(url)
   } catch {

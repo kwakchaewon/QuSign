@@ -112,7 +112,9 @@
               </svg>
               서명하기
             </button>
-            <button v-if="effectiveStatus === 'SIGNED'"
+
+            <!-- 단건: 단일 다운로드 버튼 -->
+            <button v-if="effectiveStatus === 'SIGNED' && !info?.isBundle"
               class="qs-btn qs-btn-primary qs-btn-md"
               @click="handleDownload"
             >
@@ -122,6 +124,23 @@
               </svg>
               서명된 문서 다운로드
             </button>
+
+            <!-- 번들: 문서별 개별 다운로드 버튼 -->
+            <template v-if="effectiveStatus === 'SIGNED' && info?.isBundle">
+              <button
+                v-for="doc in bundleDocs"
+                :key="doc.index"
+                class="qs-btn qs-btn-primary qs-btn-md"
+                @click="handleBundleDownload(doc.index, doc.filename)"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                {{ doc.filename }}
+              </button>
+            </template>
+
             <button class="qs-btn qs-btn-secondary qs-btn-md" @click="router.push('/received')">
               목록으로
             </button>
@@ -233,8 +252,24 @@ const statusIconClass = computed(() => {
   }
 })
 
+const bundleDocs = computed(() => info.value?.documents ?? [])
+
 function goToSign() {
   router.push('/sign/' + token)
+}
+
+async function handleBundleDownload(index: number, filename: string) {
+  try {
+    const res = await api.get(`/api/signature-requests/${token}/signed-bundle-documents/${index}`, { responseType: 'blob' })
+    const url = URL.createObjectURL(res.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename.replace(/\.pdf$/i, '_qusigned.pdf')
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    alert('다운로드에 실패했어요.')
+  }
 }
 
 async function handleDownload() {

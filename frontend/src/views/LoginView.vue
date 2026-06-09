@@ -51,8 +51,7 @@
 
         <TermsModal
           v-model="showTermsModal"
-          @agree="showTermsModal = false"
-          @disagree="showTermsModal = false"
+          view-only
         />
       </section>
     </main>

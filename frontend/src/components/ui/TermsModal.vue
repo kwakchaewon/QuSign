@@ -6,14 +6,14 @@
       role="dialog"
       aria-labelledby="terms-modal-title"
       aria-modal="true"
-      @click.self="handleDisagree"
-      @keydown.escape="handleDisagree"
+      @click.self="handleClose"
+      @keydown.escape="handleClose"
     >
       <div class="qs-terms-modal">
         <!-- 헤더 -->
         <div class="qs-terms-head">
           <h2 id="terms-modal-title" class="qs-terms-title">이용약관 및 개인정보처리방침</h2>
-          <button class="qs-terms-close" aria-label="닫기" @click="handleDisagree">
+          <button class="qs-terms-close" aria-label="닫기" @click="handleClose">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
@@ -92,8 +92,8 @@
           <div style="height: 8px;" />
         </div>
 
-        <!-- 하단 동의 버튼 (sticky) -->
-        <div class="qs-terms-foot">
+        <!-- 하단 동의 버튼 (sticky) — 읽기 전용일 때 숨김 -->
+        <div v-if="!viewOnly" class="qs-terms-foot">
           <p v-if="!scrolledToBottom" class="qs-terms-scroll-hint">
             ↓ 아래로 스크롤하여 내용을 확인하세요
           </p>
@@ -114,7 +114,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-const props = defineProps<{ modelValue: boolean }>()
+const props = defineProps<{ modelValue: boolean; viewOnly?: boolean }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', v: boolean): void
   (e: 'agree'): void
@@ -140,6 +140,10 @@ watch(() => props.modelValue, (open) => {
     }, 50)
   }
 })
+
+function handleClose() {
+  emit('update:modelValue', false)
+}
 
 function handleAgree() {
   emit('agree')

@@ -10,8 +10,10 @@ import SignerView from '../views/SignerView.vue'
 import VerifyView from '../views/VerifyView.vue'
 import AccountSettingsView from '../views/AccountSettingsView.vue'
 import NotificationsView from '../views/NotificationsView.vue'
+import ReceivedDocumentsView from '../views/ReceivedDocumentsView.vue'
+import ReceivedDetailView from '../views/ReceivedDetailView.vue'
 
-const AUTH_ROUTES = ['/home', '/documents', '/bundles', '/request', '/settings', '/notifications', '/sign']
+const AUTH_ROUTES = ['/home', '/documents', '/bundles', '/request', '/settings', '/notifications', '/sign', '/received']
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +29,8 @@ const router = createRouter({
     { path: '/documents/:id', name: 'document-detail', component: DocumentDetailView },
     { path: '/bundles/:id', name: 'bundle-detail', component: BundleDetailView },
     { path: '/request', name: 'request', component: RequestView },
+    { path: '/received', name: 'received', component: ReceivedDocumentsView },
+    { path: '/received/:token', name: 'received-detail', component: ReceivedDetailView },
     { path: '/sign/:token?', name: 'sign', component: SignerView },
     { path: '/verify', name: 'verify', component: VerifyView },
     { path: '/settings', name: 'settings', component: AccountSettingsView },

@@ -1,0 +1,102 @@
+/* QuSign Received Documents - dashboard.css 패턴 재사용 */
+@import './dashboard.css';
+
+/* 받은 문서 특화 스타일 */
+.qs-received-meta {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.qs-received-requester {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+/* 상세 화면 카드 */
+.qs-detail-card {
+  background: var(--surface-elevated);
+  border: 0.5px solid var(--border-default);
+  border-radius: 20px;
+  overflow: hidden;
+  animation: qs-fade-up 0.3s var(--easing-default);
+}
+.qs-detail-head {
+  padding: 28px 28px 20px;
+  border-bottom: 0.5px solid var(--border-default);
+  display: flex; align-items: flex-start; gap: 20px;
+}
+.qs-detail-head-info { flex: 1; min-width: 0; }
+.qs-detail-title {
+  margin: 0 0 8px;
+  font-size: 20px; font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.qs-detail-body {
+  padding: 24px 28px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.qs-detail-row {
+  display: flex; gap: 12px;
+  font-size: 14px;
+}
+.qs-detail-label {
+  flex-shrink: 0;
+  width: 100px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.qs-detail-value {
+  flex: 1; min-width: 0;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+.qs-detail-message {
+  background: var(--surface-muted);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.qs-detail-actions {
+  padding: 20px 28px;
+  border-top: 0.5px solid var(--border-default);
+  background: var(--surface-muted);
+  display: flex; gap: 10px;
+  flex-wrap: wrap;
+}
+.qs-back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding: 8px 0;
+  margin-bottom: 20px;
+  cursor: pointer;
+  background: none; border: none; font-family: inherit;
+  transition: color 0.15s;
+}
+.qs-back-link:hover { color: var(--text-primary); }
+
+/* 상태별 색상 아이콘 */
+.qs-status-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.qs-status-icon-pending { background: var(--badge-pending-bg); color: var(--badge-pending-text); }
+.qs-status-icon-signed  { background: var(--badge-success-bg); color: var(--badge-success-text); }
+.qs-status-icon-cancel  { background: var(--badge-error-bg);   color: var(--badge-error-text); }
+.qs-status-icon-expired { background: var(--surface-muted); color: var(--text-tertiary); }
+
+@media (max-width: 720px) {
+  .qs-detail-head { flex-direction: column; }
+  .qs-detail-body { padding: 20px 16px; }
+  .qs-detail-actions { padding: 16px; }
+  .qs-detail-actions .qs-btn { flex: 1; }
+  .qs-detail-row { flex-direction: column; gap: 4px; }
+  .qs-detail-label { width: auto; }
+}

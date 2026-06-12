@@ -91,25 +91,7 @@
             <p>다만, 법령에 따른 요청이 있는 경우 예외로 합니다.</p>
 
             <h4>6. 개인정보 국외 이전 (개인정보보호법 제28조의8)</h4>
-            <p>서비스는 Amazon Web Services 싱가포르(ap-southeast-1) 리전에서 운영됩니다. 이에 따라 수집된 개인정보가 국외로 이전될 수 있습니다.</p>
-            <ul>
-              <li><strong>이전받는 자:</strong> Amazon Web Services, Inc.</li>
-              <li><strong>이전되는 국가:</strong> 싱가포르 (ap-southeast-1 리전)</li>
-              <li><strong>이전 일시 및 방법:</strong> 서비스 이용 시 네트워크를 통해 상시 전송</li>
-              <li>
-                <strong>이전되는 개인정보 항목:</strong>
-                <ul>
-                  <li>이메일 주소</li>
-                  <li>암호화된 비밀번호 해시</li>
-                  <li>ML-DSA-65 공개키 (개인키는 암호화된 형태로 저장)</li>
-                  <li>서명 이력 및 업로드된 PDF 문서</li>
-                  <li>서비스 이용 기록 (접속 IP, User-Agent, 이벤트 일시)</li>
-                </ul>
-              </li>
-              <li><strong>이전받는 자의 이용 목적:</strong> 서비스 인프라 운영 (저장, 처리, 백업)</li>
-              <li><strong>보유·이용 기간:</strong> 회원 탈퇴 후 즉시 파기. 단, 서명 이력은 전자서명법 제31조에 따라 탈퇴 후에도 보존될 수 있습니다. 감사 로그는 수집일로부터 10년간 보관됩니다.</li>
-              <li><strong>거부 시 불이익:</strong> 동의하지 않으실 경우 서비스 이용이 불가합니다. 서비스 인프라 전체가 AWS 싱가포르 리전에서 운영되기 때문입니다.</li>
-            </ul>
+            <p>서비스는 AWS 싱가포르(ap-southeast-1) 리전에서 운영되며, 수집된 개인정보가 국외로 이전됩니다. 이전 대상·항목·목적·보유기간 및 거부 시 불이익 등 상세 내용은 회원가입 시 별도 동의 절차를 통해 안내됩니다.</p>
 
             <h4>7. 문의</h4>
             <p>개인정보 관련 문의: <a href="mailto:privacy@qusign.kr">privacy@qusign.kr</a></p>

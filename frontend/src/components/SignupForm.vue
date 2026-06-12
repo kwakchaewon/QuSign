@@ -155,7 +155,11 @@
       @agree="agree = true"
       @disagree="agree = false"
     />
-    <TermsModal v-model="showTransferInfo" :viewOnly="true" />
+    <OverseasTransferModal
+      v-model="showTransferInfo"
+      @agree="agreeTransfer = true"
+      @disagree="agreeTransfer = false"
+    />
 
     <!-- 에러 알림 -->
     <div v-if="submitErr" class="qs-alert" role="alert">
@@ -196,6 +200,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import TermsModal from '@/components/ui/TermsModal.vue'
+import OverseasTransferModal from '@/components/ui/OverseasTransferModal.vue'
 
 const showTermsModal = ref(false)
 const showTransferInfo = ref(false)

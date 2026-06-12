@@ -656,48 +656,586 @@
 ## 6단계: AWS 배포 + SES + GitHub Actions
 > 기간: 이후 / (구 5단계)
 
-### 6-1. AWS 인프라 콘솔 구성
+---
 
-- [ ] VPC 생성 (퍼블릭 / 프라이빗 서브넷 분리)
-- [ ] 보안 그룹 생성 (EC2, RDS 각각)
-- [ ] EC2 생성 + Docker 설치
-- [ ] RDS MariaDB 생성 (프라이빗 서브넷)
-- [ ] S3 버킷 생성 + IAM 정책 설정
-- [ ] IAM 역할 생성 (EC2 → S3, SES 접근)
+### 아키텍처 확정
+
+```
+인터넷
+  │
+  ▼
+Route53 (qusign.com)
+  │
+  ▼
+EC2 t3.small (퍼블릭 서브넷, ap-northeast-2a)
+  ├── Nginx  → 80/443  → 리버스 프록시
+  ├── Spring Boot Docker  (8080)
+  └── Vue 3 빌드 결과물 서빙 (/dist)
+  │
+  ├── RDS db.t3.micro MariaDB (프라이빗 서브넷)  ← EC2에서만 접근 가능
+  │
+  ├── S3 (문서 저장)  ← VPC Endpoint로 인터넷 미경유
+  └── SES (이메일 발송)
+
+ECR  ← GitHub Actions가 Docker 이미지 푸시
+EventBridge Scheduler  ← KST 23:00 EC2+RDS 정지 / KST 08:00 재시작
+Lambda (start/stop)  ← EventBridge에서 호출 (RDS는 SDK 필요)
+SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
+```
+
+> **ALB 생략 결정**: ALB는 월 ~$18 고정 비용 발생. 포트폴리오 단계에서는 EC2 Nginx 직접 443으로 충분.  
+> **CloudFront 생략**: Vue 빌드 결과를 EC2 Nginx에서 서빙. 사용자가 10명 이내면 EC2 부담 없음.
 
 ---
 
-### 6-2. AWS SES 이메일 연동
+### 예상 월 비용 (비용 절감 적용 후)
 
-> 로컬은 콘솔 로그 출력으로 완료. 이 단계에서 실제 발송으로 전환한다.
+| 리소스 | 스펙 | 비고 | 월 예상 |
+|---|---|---|---|
+| EC2 | t3.small | 15h/day 가동 (9h 정지) | ~$9 |
+| RDS | db.t3.micro | 15h/day 가동 (9h 정지) | ~$11 |
+| S3 | 5GB 이하 | 문서 저장 | ~$0.12 |
+| ECR | 500MB 이하 | Docker 이미지 | ~$0.05 |
+| Route53 | 호스팅 영역 1개 | | ~$0.50 |
+| SES | 이메일 수백 건 | | ~$0.02 |
+| 도메인 | .com 구매 | 연 $12 = 월 | ~$1 |
+| **합계** | | | **~$22/월** |
 
-- [ ] SES 샌드박스 설정 및 이메일 도메인 인증
-- [ ] `SesEmailService` 실제 구현 (SesClient + HTML 템플릿)
-- [ ] 서명 요청 이메일 + 서명 완료 이메일 템플릿 작성
+> 비교: 스케줄러 없이 24시간 가동 시 ~$35/월 → **약 37% 절감**
+
+---
+
+### 6-0. 사전 준비 (로컬)
+
+- [ ] AWS CLI v2 설치 (`winget install Amazon.AWSCLI`)
+- [ ] `aws configure` — Access Key, Secret Key, 리전 `ap-northeast-2` (서울) 설정
+- [ ] Docker Desktop 로그인 확인
+- [ ] 도메인 구매 결정 (Route53에서 구매 시 자동 연동, 가비아 구매도 가능)
+- [ ] Spring Boot `application-prod.yml` 환경변수 기반 설정 확인
+  - DB URL / 유저 / 패스워드 → `${DB_URL}`, `${DB_USER}`, `${DB_PASS}` 환경변수로 읽는지 확인
+  - S3 버킷명, 리전 → 환경변수로 읽는지 확인
+  - JWT 시크릿 → 환경변수로 읽는지 확인
+
+---
+
+### 6-1. IAM 설정 (최소 권한 원칙)
+
+> 콘솔: IAM → 역할/사용자 생성
+
+#### EC2 인스턴스 역할 (EC2가 AWS 서비스에 접근하기 위한 역할)
+- [ ] IAM 역할 생성: `qusign-ec2-role`
+  - 신뢰 정책: EC2 서비스
+  - 권한 정책:
+    - `AmazonS3FullAccess` (나중에 버킷 한정으로 축소)
+    - `AmazonSESFullAccess`
+    - `AmazonSSMReadOnlyAccess` (Parameter Store 읽기)
+    - `AmazonEC2ContainerRegistryReadOnly` (ECR 이미지 풀)
+
+#### GitHub Actions 배포용 IAM 사용자
+- [ ] IAM 사용자 생성: `github-actions-deployer`
+  - 프로그래밍 방식 액세스 (Access Key 발급)
+  - 권한 정책:
+    - `AmazonEC2ContainerRegistryFullAccess` (ECR 푸시)
+    - `AmazonSSMFullAccess` (EC2 Run Command로 배포)
+    - EC2 start/stop 권한 (인라인 정책):
+      ```json
+      {
+        "Effect": "Allow",
+        "Action": ["ec2:StartInstances", "ec2:StopInstances"],
+        "Resource": "arn:aws:ec2:ap-northeast-2:ACCOUNT_ID:instance/INSTANCE_ID"
+      }
+      ```
+
+#### EventBridge + Lambda용 역할
+- [ ] IAM 역할 생성: `qusign-scheduler-role`
+  - 신뢰 정책: Lambda 서비스
+  - 권한 정책:
+    - EC2 start/stop 인라인 정책
+    - RDS start/stop 인라인 정책
+
+---
+
+### 6-2. 네트워크 (VPC)
+
+> 콘솔: VPC → VPC 생성 (리전: ap-northeast-2 서울)
+
+- [ ] VPC 생성
+  - 이름: `qusign-vpc`
+  - IPv4 CIDR: `10.0.0.0/16`
+- [ ] 서브넷 생성
+  - 퍼블릭: `10.0.1.0/24` (ap-northeast-2a) — EC2
+  - 프라이빗: `10.0.2.0/24` (ap-northeast-2a) — RDS
+  - 프라이빗: `10.0.3.0/24` (ap-northeast-2c) — RDS Multi-AZ용 (RDS는 서브넷 그룹에 2개 가용 영역 필요)
+- [ ] 인터넷 게이트웨이 생성 → VPC에 연결
+- [ ] 라우팅 테이블
+  - 퍼블릭: `0.0.0.0/0 → IGW`
+  - 프라이빗: 인터넷 없음 (로컬 라우팅만)
+- [ ] S3 VPC 엔드포인트 생성 (Gateway 타입, 무료)
+  - EC2→S3 트래픽이 인터넷을 거치지 않아 데이터 전송 비용 0원
+
+#### 보안 그룹
+
+- [ ] `qusign-ec2-sg`
+  | 방향 | 포트 | 소스 | 용도 |
+  |---|---|---|---|
+  | 인바운드 | 22 | 내 IP만 | SSH |
+  | 인바운드 | 80 | 0.0.0.0/0 | HTTP (→ 443 리다이렉트) |
+  | 인바운드 | 443 | 0.0.0.0/0 | HTTPS |
+  | 아웃바운드 | 전체 | 0.0.0.0/0 | 나가는 트래픽 |
+
+- [ ] `qusign-rds-sg`
+  | 방향 | 포트 | 소스 | 용도 |
+  |---|---|---|---|
+  | 인바운드 | 3306 | `qusign-ec2-sg` 참조 | EC2에서만 접근 |
+  | 아웃바운드 | 전체 | 0.0.0.0/0 | |
+
+---
+
+### 6-3. ECR (Docker 이미지 레지스트리)
+
+> 콘솔: ECR → 리포지토리 생성
+
+- [ ] ECR 리포지토리 생성: `qusign-backend`
+  - 리전: `ap-northeast-2`
+  - 이미지 스캔 활성화 (보안 취약점 자동 감지)
+  - 수명 주기 정책 설정: 최신 3개 이미지만 유지 (스토리지 비용 절감)
+    ```json
+    {
+      "rules": [{
+        "rulePriority": 1,
+        "selection": { "tagStatus": "any", "countType": "imageCountMoreThan", "countNumber": 3 },
+        "action": { "type": "expire" }
+      }]
+    }
+    ```
+- [ ] 로컬에서 ECR 로그인 테스트
+  ```bash
+  aws ecr get-login-password --region ap-northeast-2 | \
+    docker login --username AWS --password-stdin \
+    ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com
+  ```
+
+---
+
+### 6-4. RDS MariaDB 설정
+
+> 콘솔: RDS → 데이터베이스 생성
+
+- [ ] DB 서브넷 그룹 생성
+  - 이름: `qusign-db-subnet-group`
+  - 서브넷: 프라이빗 서브넷 2개 선택 (2a, 2c)
+- [ ] RDS 인스턴스 생성
+  - 엔진: MariaDB 10.11
+  - 템플릿: **개발/테스트** (Multi-AZ 비활성화로 비용 절감)
+  - 인스턴스 클래스: `db.t3.micro`
+  - 스토리지: gp2 20GB (자동 확장 비활성화)
+  - VPC: `qusign-vpc`
+  - 서브넷 그룹: `qusign-db-subnet-group`
+  - 보안 그룹: `qusign-rds-sg`
+  - DB 이름: `qusign`
+  - 마스터 사용자: `admin`
+  - 마스터 비밀번호: → SSM Parameter Store에 저장할 것
+  - 백업 보존 기간: 1일 (비용 최소화)
+  - 자동 마이너 버전 업그레이드: 비활성화
+- [ ] RDS 엔드포인트 확인 후 SSM Parameter Store에 저장
+
+---
+
+### 6-5. SSM Parameter Store (민감값 관리)
+
+> 콘솔: Systems Manager → Parameter Store  
+> `.env` 파일을 서버에 올리지 않고 SSM에서 주입
+
+- [ ] 파라미터 생성 (타입: SecureString, 암호화: AWS managed key)
+  | 파라미터 이름 | 값 |
+  |---|---|
+  | `/qusign/prod/db-url` | `jdbc:mariadb://RDS엔드포인트:3306/qusign` |
+  | `/qusign/prod/db-username` | `admin` |
+  | `/qusign/prod/db-password` | (실제 비밀번호) |
+  | `/qusign/prod/jwt-secret` | (랜덤 256bit 시크릿) |
+  | `/qusign/prod/s3-bucket` | `qusign-documents-prod` |
+  | `/qusign/prod/cors-origins` | `https://qusign.com` |
+
+- [ ] EC2 배포 스크립트에서 SSM 값을 환경변수로 주입하는 방식 사용:
+  ```bash
+  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
+    --with-decryption --query Parameter.Value --output text)
+  ```
+
+---
+
+### 6-6. S3 버킷 설정
+
+> 콘솔: S3 → 버킷 만들기
+
+- [ ] 버킷 생성: `qusign-documents-prod-{AccountId}`
+  - 리전: `ap-northeast-2`
+  - 퍼블릭 액세스 차단: **전체 차단** (EC2 IAM 역할로만 접근)
+  - 버전 관리: 비활성화 (비용 절감)
+  - 서버 측 암호화: SSE-S3 (AES-256) 활성화
+- [ ] 버킷 정책: EC2 역할만 허용
+  ```json
+  {
+    "Effect": "Allow",
+    "Principal": { "AWS": "arn:aws:iam::ACCOUNT_ID:role/qusign-ec2-role" },
+    "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+    "Resource": "arn:aws:s3:::qusign-documents-prod-*/*"
+  }
+  ```
+- [ ] 수명 주기 정책: 180일 이상 미접근 객체 Glacier로 이동 (장기 비용 절감)
+
+---
+
+### 6-7. EC2 인스턴스 설정
+
+> 콘솔: EC2 → 인스턴스 시작
+
+- [ ] 인스턴스 생성
+  - AMI: Amazon Linux 2023
+  - 인스턴스 유형: `t3.small` (vCPU 2, RAM 2GB — Spring Boot + Docker 최소 사양)
+  - 키 페어: 새로 생성 → `.pem` 파일 안전하게 보관
+  - VPC: `qusign-vpc` / 서브넷: 퍼블릭
+  - 퍼블릭 IP 자동 할당: 활성화
+  - IAM 인스턴스 프로필: `qusign-ec2-role`
+  - 보안 그룹: `qusign-ec2-sg`
+  - 스토리지: gp3 20GB
+  - 태그: `Name=qusign-app, Env=prod`
+
+- [ ] Elastic IP 할당 및 연결 (EC2 재시작 시 IP 변경 방지)
+  > ⚠️ EC2가 **실행 중일 때만 Elastic IP 무료**. 정지 시에도 EC2에 연결되어 있으면 요금 발생.  
+  > → EventBridge로 정지하는 동안 Elastic IP 요금 발생 (월 ~$0.005/hr × 9h × 30일 = ~$1.35)  
+  > → 수용 가능한 비용이므로 연결 유지
+
+- [ ] EC2 접속 후 초기 설정
+  ```bash
+  # Docker 설치
+  sudo dnf install -y docker
+  sudo systemctl enable --now docker
+  sudo usermod -aG docker ec2-user
+
+  # Docker Compose 설치
+  sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
+    -o /usr/local/bin/docker-compose
+  sudo chmod +x /usr/local/bin/docker-compose
+
+  # AWS CLI 확인 (AL2023은 기본 설치됨)
+  aws --version
+
+  # Nginx 설치
+  sudo dnf install -y nginx
+  sudo systemctl enable nginx
+  ```
+
+- [ ] Nginx 설정 (`/etc/nginx/conf.d/qusign.conf`)
+  ```nginx
+  server {
+      listen 80;
+      server_name qusign.com www.qusign.com;
+      return 301 https://$host$request_uri;
+  }
+
+  server {
+      listen 443 ssl;
+      server_name qusign.com www.qusign.com;
+
+      ssl_certificate /etc/letsencrypt/live/qusign.com/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/qusign.com/privkey.pem;
+
+      # Vue 3 정적 파일
+      root /var/www/qusign/dist;
+      index index.html;
+
+      # Vue Router history mode 지원
+      location / {
+          try_files $uri $uri/ /index.html;
+      }
+
+      # Spring Boot API 프록시
+      location /api/ {
+          proxy_pass http://localhost:8080;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+      }
+
+      # SSE 엔드포인트 (긴 커넥션)
+      location /api/sse {
+          proxy_pass http://localhost:8080;
+          proxy_buffering off;
+          proxy_cache off;
+          proxy_read_timeout 3600s;
+      }
+  }
+  ```
+
+- [ ] Let's Encrypt SSL 인증서 발급
+  ```bash
+  sudo dnf install -y certbot python3-certbot-nginx
+  sudo certbot --nginx -d qusign.com -d www.qusign.com
+  # 자동 갱신 확인
+  sudo systemctl status certbot-renew.timer
+  ```
+
+- [ ] 배포 스크립트 생성 (`/home/ec2-user/deploy.sh`)
+  ```bash
+  #!/bin/bash
+  set -e
+
+  ECR_URL="ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com"
+  IMAGE="$ECR_URL/qusign-backend:latest"
+
+  # SSM에서 환경변수 로드
+  DB_URL=$(aws ssm get-parameter --name /qusign/prod/db-url --with-decryption --query Parameter.Value --output text)
+  DB_USER=$(aws ssm get-parameter --name /qusign/prod/db-username --with-decryption --query Parameter.Value --output text)
+  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password --with-decryption --query Parameter.Value --output text)
+  JWT_SECRET=$(aws ssm get-parameter --name /qusign/prod/jwt-secret --with-decryption --query Parameter.Value --output text)
+  S3_BUCKET=$(aws ssm get-parameter --name /qusign/prod/s3-bucket --query Parameter.Value --output text)
+  CORS_ORIGINS=$(aws ssm get-parameter --name /qusign/prod/cors-origins --query Parameter.Value --output text)
+
+  # ECR 로그인
+  aws ecr get-login-password --region ap-northeast-2 | \
+    docker login --username AWS --password-stdin $ECR_URL
+
+  # 기존 컨테이너 중지 및 새 이미지로 시작
+  docker pull $IMAGE
+  docker stop qusign-app 2>/dev/null || true
+  docker rm qusign-app 2>/dev/null || true
+
+  docker run -d \
+    --name qusign-app \
+    --restart unless-stopped \
+    -p 8080:8080 \
+    -e SPRING_PROFILES_ACTIVE=prod \
+    -e DB_URL="$DB_URL" \
+    -e DB_USER="$DB_USER" \
+    -e DB_PASS="$DB_PASS" \
+    -e JWT_SECRET="$JWT_SECRET" \
+    -e S3_BUCKET="$S3_BUCKET" \
+    -e CORS_ORIGINS="$CORS_ORIGINS" \
+    $IMAGE
+  ```
+
+---
+
+### 6-8. EventBridge 스케줄러 (핵심 비용 절감)
+
+> KST 23:00 = UTC 14:00 → 정지  
+> KST 08:00 = UTC 23:00 → 시작  
+> cron 표현식: `cron(분 시 * * ? *)`
+
+#### Lambda 함수 생성 (EC2 + RDS 동시 제어)
+
+- [ ] Lambda 함수 생성: `qusign-start-instances`
+  - 런타임: Python 3.12
+  - 실행 역할: `qusign-scheduler-role`
+  - 코드:
+    ```python
+    import boto3
+
+    ec2 = boto3.client('ec2', region_name='ap-northeast-2')
+    rds = boto3.client('rds', region_name='ap-northeast-2')
+
+    EC2_ID = 'i-XXXXXXXXXXXX'   # 실제 인스턴스 ID로 교체
+    RDS_ID = 'qusign-db'        # RDS 식별자
+
+    def lambda_handler(event, context):
+        action = event.get('action')  # 'start' or 'stop'
+
+        if action == 'start':
+            rds.start_db_instance(DBInstanceIdentifier=RDS_ID)
+            # RDS가 완전히 시작될 때까지 EC2보다 먼저 시작 (약 2-3분 소요)
+            # EC2는 별도 EventBridge 규칙으로 1분 후 시작 (또는 여기서 같이 시작)
+            ec2.start_instances(InstanceIds=[EC2_ID])
+            return {'status': 'started'}
+
+        elif action == 'stop':
+            ec2.stop_instances(InstanceIds=[EC2_ID])
+            rds.stop_db_instance(DBInstanceIdentifier=RDS_ID)
+            return {'status': 'stopped'}
+    ```
+
+- [ ] EventBridge Scheduler 규칙 2개 생성
+  | 이름 | Cron 표현식 | payload | 설명 |
+  |---|---|---|---|
+  | `qusign-nightly-stop` | `cron(0 14 * * ? *)` | `{"action": "stop"}` | KST 23:00 정지 |
+  | `qusign-morning-start` | `cron(0 23 * * ? *)` | `{"action": "start"}` | KST 08:00 시작 |
+
+  > ⚠️ RDS는 정지 후 **7일이 지나면 자동으로 다시 시작**됨 (AWS 제한).  
+  > 매일 정지/시작 스케줄이므로 7일 제한에 걸리지 않아 문제 없음.
+
+- [ ] Lambda 테스트 (콘솔에서 `{"action": "stop"}` 으로 직접 실행)
+- [ ] CloudWatch Logs에서 실행 확인
+- [ ] EventBridge Scheduler에 Lambda 연결 확인
+
+---
+
+### 6-9. AWS SES 이메일 연동
+
+> 콘솔: SES → 리전: ap-northeast-2 (서울)
+
+- [ ] 이메일 주소 자격 증명 (샌드박스 테스트용)
+  - 발신자 이메일 인증: `noreply@qusign.com` (도메인 구매 후) 또는 개인 이메일로 먼저 테스트
+- [ ] 도메인 자격 증명
+  - SES → 자격 증명 → 도메인 추가 → Route53에 DKIM CNAME 레코드 자동 추가
+- [ ] 샌드박스 제한 확인
+  - 샌드박스 상태: 검증된 이메일로만 발송 가능
+  - 베타 단계에서는 샌드박스로 충분 (실서비스 전에 프로덕션 접근 요청)
+- [ ] `SesEmailService` 실제 구현
+  ```kotlin
+  // application-prod.yml 추가
+  cloud:
+    aws:
+      ses:
+        region: ap-northeast-2
+  ```
+  - `SesClient` 빈 등록 (EC2 IAM 역할로 자동 인증, 별도 AccessKey 불필요)
+  - 서명 요청 HTML 템플릿 작성
+  - 서명 완료 HTML 템플릿 작성
 - [ ] 실제 이메일 수신 테스트
 
 ---
 
-### 6-3. GitHub Actions CI/CD
+### 6-10. Route53 + 도메인 연결
 
-- [ ] workflow 파일 작성 (`push → main → 빌드 → Docker → ECR → EC2 배포`)
-- [ ] GitHub Secrets 등록 (AWS 키, EC2 SSH 키 등)
-- [ ] 파이프라인 동작 확인
+- [ ] 도메인 구매
+  - Route53에서 직접 구매 시 자동 연동 (추천)
+  - 가비아/후이즈에서 구매 시 NS 레코드를 Route53 네임서버로 교체
+- [ ] 호스팅 영역 생성: `qusign.com`
+- [ ] A 레코드 등록
+  | 레코드 | 타입 | 값 |
+  |---|---|---|
+  | `qusign.com` | A | EC2 Elastic IP |
+  | `www.qusign.com` | CNAME | `qusign.com` |
+- [ ] SES DKIM 레코드 추가 (SES 콘솔에서 자동 생성된 값 사용)
+- [ ] DNS 전파 확인 (`nslookup qusign.com`)
 
 ---
 
-### 6-4. 배포 마무리
+### 6-11. GitHub Actions CI/CD
 
-- [ ] MinIO → AWS S3 전환
-- [ ] 로컬 DB → AWS RDS 전환
-- [ ] 도메인 구매 + Route53 연결
-- [ ] HTTPS 설정 (Let's Encrypt)
-- [ ] 베타 사용자 10명 모집
+> `.github/workflows/deploy.yml`
+
+- [ ] Dockerfile 작성 (백엔드용)
+  ```dockerfile
+  FROM amazoncorretto:21-alpine
+  WORKDIR /app
+  COPY build/libs/*.jar app.jar
+  # liboqs 네이티브 라이브러리 포함 확인
+  EXPOSE 8080
+  ENTRYPOINT ["java", "-jar", "app.jar"]
+  ```
+
+- [ ] GitHub Secrets 등록 (Settings → Secrets and variables → Actions)
+  | Secret 이름 | 값 |
+  |---|---|
+  | `AWS_ACCESS_KEY_ID` | github-actions-deployer Access Key |
+  | `AWS_SECRET_ACCESS_KEY` | github-actions-deployer Secret Key |
+  | `EC2_HOST` | EC2 Elastic IP |
+  | `EC2_SSH_KEY` | EC2 .pem 파일 내용 전체 |
+  | `ECR_REGISTRY` | ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com |
+
+- [ ] GitHub Actions workflow 파일 작성
+  ```yaml
+  name: Deploy to AWS
+
+  on:
+    push:
+      branches: [ main ]
+
+  jobs:
+    deploy:
+      runs-on: ubuntu-latest
+
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Set up JDK 21
+          uses: actions/setup-java@v4
+          with:
+            java-version: '21'
+            distribution: 'corretto'
+
+        - name: Build with Gradle
+          run: ./gradlew build -x test
+
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ap-northeast-2
+
+        - name: Login to Amazon ECR
+          uses: aws-actions/amazon-ecr-login@v2
+
+        - name: Build and push Docker image
+          run: |
+            docker build -t ${{ secrets.ECR_REGISTRY }}/qusign-backend:latest .
+            docker push ${{ secrets.ECR_REGISTRY }}/qusign-backend:latest
+
+        - name: Deploy to EC2 via SSH
+          uses: appleboy/ssh-action@v1
+          with:
+            host: ${{ secrets.EC2_HOST }}
+            username: ec2-user
+            key: ${{ secrets.EC2_SSH_KEY }}
+            script: bash /home/ec2-user/deploy.sh
+
+        - name: Build Vue frontend
+          run: |
+            cd frontend
+            npm ci
+            npm run build
+
+        - name: Copy frontend to EC2
+          uses: appleboy/scp-action@v0.1.7
+          with:
+            host: ${{ secrets.EC2_HOST }}
+            username: ec2-user
+            key: ${{ secrets.EC2_SSH_KEY }}
+            source: "frontend/dist/*"
+            target: "/var/www/qusign/"
+            strip_components: 2
+  ```
+
+- [ ] Push 후 Actions 탭에서 파이프라인 동작 확인
+
+---
+
+### 6-12. 최종 검증
+
+- [ ] `https://qusign.com` HTTPS 접속 확인
+- [ ] SSL 인증서 만료일 확인 (`Let's Encrypt` 자동 갱신 동작 확인)
+- [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 이메일 수신 → 서명 → 검증 전체 플로우
+- [ ] EventBridge 스케줄러 동작 확인 (KST 23:00에 정지, 08:00에 시작)
+- [ ] GitHub Actions push → 자동 배포 확인
+- [ ] CloudWatch Logs에서 Lambda 실행 로그 확인
+
+---
+
+### 비용 추가 절감 팁 (직장인 사이드 프로젝트)
+
+| 전략 | 절감액 | 방법 |
+|---|---|---|
+| **EventBridge 야간 정지** | ~37% | KST 23:00-08:00 EC2+RDS 정지 (확정 적용) |
+| **주말 전체 정지 추가** | 추가 ~28% | 금 23:00 ~ 월 08:00 정지 (베타 사용자 없을 때) |
+| **t3.micro 강등** | ~50% | Spring Boot 메모리 최적화 후 검토 (`-Xmx512m`) |
+| **1년 예약 인스턴스** | ~30% | 6개월 운영 확신 후 구매 (선불 없음 옵션) |
+| **RDS 대신 EC2에 MariaDB** | ~$11/월 | DB도 EC2에 설치 (단, 운영 부담 증가) |
+| **Free Tier 신규 계정** | 12개월 무료 | EC2 t2.micro 750h/월, RDS 750h/월, S3 5GB 무료 |
+
+> **추천 순서**: EventBridge(확정) → 주말 정지 추가 → Free Tier 계정 활용 → 안정화 후 예약 인스턴스  
+> Free Tier 계정은 신규 AWS 계정으로 12개월간 t2.micro + RDS micro 무료 → 포트폴리오 기간에 거의 $0 가능
+
+---
 
 **6단계 완료 기준**
 - [ ] 실제 도메인으로 HTTPS 접속 가능
 - [ ] 이메일로 서명 링크 수신 후 서명까지 전체 플로우 동작
-- [ ] GitHub Actions 푸시 시 자동 배포
+- [ ] GitHub Actions push 시 자동 배포
+- [ ] EventBridge로 KST 23:00-08:00 자동 정지/시작 동작 확인
+- [ ] CloudWatch에서 Lambda 스케줄러 실행 로그 확인
 
 ---
 

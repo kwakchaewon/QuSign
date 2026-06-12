@@ -136,11 +136,26 @@
       </span>
     </label>
 
+    <!-- 국외 이전 동의 -->
+    <label :class="['qs-check', 'qs-check-block', { 'is-agree-err': agreeTransferErr }]">
+      <input type="checkbox" v-model="agreeTransfer" :disabled="isLoading || isDone" @change="agreeTransferErr = false" />
+      <span class="qs-check-box" aria-hidden="true">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
+      <span>
+        <a href="#" @click.prevent="showTransferInfo = true">개인정보 국외 이전</a>(싱가포르 AWS)에
+        {{ agreeTransfer ? '동의했어요.' : '동의가 필요해요.' }}
+      </span>
+    </label>
+
     <TermsModal
       v-model="showTermsModal"
       @agree="agree = true"
       @disagree="agree = false"
     />
+    <TermsModal v-model="showTransferInfo" :viewOnly="true" />
 
     <!-- 에러 알림 -->
     <div v-if="submitErr" class="qs-alert" role="alert">
@@ -183,6 +198,7 @@ import { useAuthStore } from '@/stores/auth'
 import TermsModal from '@/components/ui/TermsModal.vue'
 
 const showTermsModal = ref(false)
+const showTransferInfo = ref(false)
 
 const emit = defineEmits<{ success: [email: string] }>()
 const auth = useAuthStore()
@@ -195,6 +211,8 @@ const showPw = ref(false)
 const showPw2 = ref(false)
 const agree = ref(false)
 const agreeErr = ref(false)
+const agreeTransfer = ref(false)
+const agreeTransferErr = ref(false)
 const touched = ref({ email: false, pw: false, pw2: false })
 const submitErr = ref<string | null>(null)
 const phase = ref<'idle' | 'generating' | 'done'>('idle')
@@ -240,7 +258,9 @@ async function handleSubmit() {
   touched.value = { email: true, pw: true, pw2: true }
   submitErr.value = null
   if (!emailValid.value || !pwValid.value || !pw2Match.value) return
-  if (!agree.value) { agreeErr.value = true; return }
+  if (!agree.value) agreeErr.value = true
+  if (!agreeTransfer.value) agreeTransferErr.value = true
+  if (agreeErr.value || agreeTransferErr.value) return
 
   phase.value = 'generating'
   try {

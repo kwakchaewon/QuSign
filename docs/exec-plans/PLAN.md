@@ -677,7 +677,7 @@ EC2 t3.small (퍼블릭 서브넷, ap-southeast-1a)  ← 싱가포르 리전
   └── SES (이메일 발송)
 
 ECR  ← GitHub Actions가 Docker 이미지 푸시
-EventBridge Scheduler  ← KST 22:00 EC2 정지 / KST 08:30 재시작
+EventBridge Scheduler  ← KST 21:30 EC2 정지 / KST 09:00 재시작
 Lambda (start/stop)  ← EventBridge에서 호출 (EC2만 제어)
 SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 ```
@@ -689,20 +689,20 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 예상 월 비용 (비용 절감 적용 후)
 
-> 기준 리전: **ap-southeast-1 (싱가포르)** / 단가: EC2 t3.small $0.0230/h / 스케줄: KST 08:30~22:00 (13.5h/day)
+> 기준 리전: **ap-southeast-1 (싱가포르)** / 단가: EC2 t3.small $0.0230/h / 스케줄: KST 09:00~21:30 (12.5h/day)
 
 | 리소스 | 스펙 | 비고 | 월 예상 |
 |---|---|---|---|
-| EC2 | t3.small | 13.5h/day 가동 (405h × $0.0230) + MariaDB 포함 | ~$9.3 |
-| Elastic IP | 고정 IP | 정지 중 과금 (10.5h × 30일 × $0.005) | ~$1.6 |
+| EC2 | t3.small | 12.5h/day 가동 (375h × $0.0230) + MariaDB 포함 | ~$8.6 |
+| Elastic IP | 고정 IP | 정지 중 과금 (11.5h × 30일 × $0.005) | ~$1.7 |
 | S3 | 5GB 이하 | 문서 저장 + DB 백업 ($0.025/GB) | ~$0.15 |
 | ECR | 500MB 이하 | Docker 이미지 | ~$0.05 |
 | Route53 | 호스팅 영역 1개 | | ~$0.50 |
 | SES | 이메일 수백 건 | | ~$0.02 |
 | 도메인 | .com 구매 | 연 $12 = 월 | ~$1 |
-| **합계** | | | **~$13/월** |
+| **합계** | | | **~$12/월** |
 
-> 비교: 스케줄러 없이 24시간 가동 시 ~$18/월 → **약 28% 절감**  
+> 비교: 스케줄러 없이 24시간 가동 시 ~$18/월 → **약 33% 절감**  
 > 비교: RDS 사용 대비 월 **~$9.5 절감** (구성 단순화)
 
 ---
@@ -884,8 +884,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   ```
   ```bash
   chmod +x /home/ec2-user/backup-db.sh
-  # crontab -e 로 등록 (KST 22:00 = UTC 13:00, 정지 1시간 전)
-  (crontab -l 2>/dev/null; echo "0 13 * * * /home/ec2-user/backup-db.sh") | crontab -
+  # crontab -e 로 등록 (KST 21:00 = UTC 12:00, 정지 30분 전)
+  (crontab -l 2>/dev/null; echo "0 12 * * * /home/ec2-user/backup-db.sh") | crontab -
   ```
 
 ---
@@ -1069,8 +1069,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 6-8. EventBridge 스케줄러 (핵심 비용 절감)
 
-> KST 22:00 = UTC 13:00 → 정지  
-> KST 08:30 = UTC 23:30 → 시작  
+> KST 21:30 = UTC 12:30 → 정지  
+> KST 09:00 = UTC 00:00 → 시작  
 > cron 표현식: `cron(분 시 * * ? *)`
 
 #### Lambda 함수 생성 (EC2만 제어)
@@ -1102,8 +1102,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] EventBridge Scheduler 규칙 2개 생성
   | 이름 | Cron 표현식 | payload | 설명 |
   |---|---|---|---|
-  | `qusign-nightly-stop` | `cron(0 13 * * ? *)` | `{"action": "stop"}` | KST 22:00 정지 |
-  | `qusign-morning-start` | `cron(30 23 * * ? *)` | `{"action": "start"}` | KST 08:30 시작 |
+  | `qusign-nightly-stop` | `cron(30 12 * * ? *)` | `{"action": "stop"}` | KST 21:30 정지 |
+  | `qusign-morning-start` | `cron(0 0 * * ? *)` | `{"action": "start"}` | KST 09:00 시작 |
 
 - [ ] Lambda 테스트 (콘솔에서 `{"action": "stop"}` 으로 직접 실행)
 - [ ] CloudWatch Logs에서 실행 확인
@@ -1249,7 +1249,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] `https://qusign.com` HTTPS 접속 확인
 - [ ] SSL 인증서 만료일 확인 (`Let's Encrypt` 자동 갱신 동작 확인)
 - [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 이메일 수신 → 서명 → 검증 전체 플로우
-- [ ] EventBridge 스케줄러 동작 확인 (KST 22:00에 정지, 08:30에 시작)
+- [ ] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
 - [ ] GitHub Actions push → 자동 배포 확인
 - [ ] CloudWatch Logs에서 Lambda 실행 로그 확인
 
@@ -1260,8 +1260,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 | 전략 | 절감액 | 방법 |
 |---|---|---|
 | **EC2 내장 MariaDB** | ~$9.5/월 | RDS 제거 (확정 적용) |
-| **EventBridge 야간 정지** | ~33% | KST 22:00-08:30 EC2 정지 (확정 적용) |
-| **주말 전체 정지 추가** | 추가 ~28% | 금 22:00 ~ 월 08:30 정지 (베타 사용자 없을 때) |
+| **EventBridge 야간 정지** | ~33% | KST 21:30-09:00 EC2 정지 (확정 적용) |
+| **주말 전체 정지 추가** | 추가 ~28% | 금 21:30 ~ 월 09:00 정지 (베타 사용자 없을 때) |
 | **t3.micro 강등** | ~50% | Spring Boot 메모리 최적화 후 검토 (`-Xmx512m`) |
 | **1년 예약 인스턴스** | ~30% | 6개월 운영 확신 후 구매 (선불 없음 옵션) |
 | **Free Tier 신규 계정** | 12개월 무료 | EC2 t2.micro 750h/월, S3 5GB 무료 (RDS Free Tier는 불필요) |
@@ -1275,7 +1275,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] 실제 도메인으로 HTTPS 접속 가능
 - [ ] 이메일로 서명 링크 수신 후 서명까지 전체 플로우 동작
 - [ ] GitHub Actions push 시 자동 배포
-- [ ] EventBridge로 KST 22:00-08:30 자동 정지/시작 동작 확인
+- [ ] EventBridge로 KST 21:30-09:00 자동 정지/시작 동작 확인
 - [ ] CloudWatch에서 Lambda 스케줄러 실행 로그 확인
 
 ---

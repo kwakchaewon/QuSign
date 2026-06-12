@@ -670,16 +670,15 @@ Route53 (qusign.com)
 EC2 t3.small (퍼블릭 서브넷, ap-southeast-1a)  ← 싱가포르 리전
   ├── Nginx  → 80/443  → 리버스 프록시
   ├── Spring Boot Docker  (8080)
+  ├── MariaDB Docker  (127.0.0.1:3306, 로컬 볼륨)  ← 루프백만 노출
   └── Vue 3 빌드 결과물 서빙 (/dist)
-  │
-  ├── RDS db.t3.micro MariaDB (프라이빗 서브넷)  ← EC2에서만 접근 가능
   │
   ├── S3 (문서 저장)  ← VPC Endpoint로 인터넷 미경유
   └── SES (이메일 발송)
 
 ECR  ← GitHub Actions가 Docker 이미지 푸시
-EventBridge Scheduler  ← KST 23:00 EC2+RDS 정지 / KST 08:00 재시작
-Lambda (start/stop)  ← EventBridge에서 호출 (RDS는 SDK 필요)
+EventBridge Scheduler  ← KST 23:00 EC2 정지 / KST 08:00 재시작
+Lambda (start/stop)  ← EventBridge에서 호출 (EC2만 제어)
 SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 ```
 
@@ -690,21 +689,20 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 예상 월 비용 (비용 절감 적용 후)
 
-> 기준 리전: **ap-southeast-1 (싱가포르)** / 단가: EC2 t3.small $0.0230/h, RDS db.t3.micro $0.021/h
+> 기준 리전: **ap-southeast-1 (싱가포르)** / 단가: EC2 t3.small $0.0230/h / MariaDB EC2 내장 (별도 비용 없음)
 
 | 리소스 | 스펙 | 비고 | 월 예상 |
 |---|---|---|---|
-| EC2 | t3.small | 15h/day 가동 (450h × $0.0230) | ~$10.4 |
-| RDS | db.t3.micro | 15h/day 가동 (450h × $0.021) | ~$9.5 |
-| S3 | 5GB 이하 | 문서 저장 ($0.025/GB) | ~$0.13 |
+| EC2 | t3.small | 15h/day 가동 (450h × $0.0230) + MariaDB 포함 | ~$10.4 |
+| S3 | 5GB 이하 | 문서 저장 + DB 백업 ($0.025/GB) | ~$0.15 |
 | ECR | 500MB 이하 | Docker 이미지 | ~$0.05 |
 | Route53 | 호스팅 영역 1개 | | ~$0.50 |
 | SES | 이메일 수백 건 | | ~$0.02 |
 | 도메인 | .com 구매 | 연 $12 = 월 | ~$1 |
-| **합계** | | | **~$22/월** |
+| **합계** | | | **~$12/월** |
 
-> 비교: 스케줄러 없이 24시간 가동 시 ~$33/월 → **약 33% 절감**  
-> 비교: 서울(ap-northeast-2) 기준 대비 월 **~$2 절감** (~8%)
+> 비교: 스케줄러 없이 24시간 가동 시 ~$18/월 → **약 33% 절감**  
+> 비교: RDS 사용 대비 월 **~$9.5 절감** (구성 단순화)
 
 ---
 
@@ -776,7 +774,6 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - 신뢰 정책: Lambda 서비스
   - 권한 정책:
     - EC2 start/stop 인라인 정책
-    - RDS start/stop 인라인 정책
 
 ---
 
@@ -788,13 +785,9 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - 이름: `qusign-vpc`
   - IPv4 CIDR: `10.0.0.0/16`
 - [ ] 서브넷 생성
-  - 퍼블릭: `10.0.1.0/24` (ap-southeast-1a) — EC2
-  - 프라이빗: `10.0.2.0/24` (ap-southeast-1a) — RDS
-  - 프라이빗: `10.0.3.0/24` (ap-southeast-1b) — RDS Multi-AZ용 (RDS는 서브넷 그룹에 2개 가용 영역 필요)
+  - 퍼블릭: `10.0.1.0/24` (ap-southeast-1a) — EC2 (MariaDB 포함)
 - [ ] 인터넷 게이트웨이 생성 → VPC에 연결
-- [ ] 라우팅 테이블
-  - 퍼블릭: `0.0.0.0/0 → IGW`
-  - 프라이빗: 인터넷 없음 (로컬 라우팅만)
+- [ ] 라우팅 테이블: 퍼블릭 `0.0.0.0/0 → IGW`
 - [ ] S3 VPC 엔드포인트 생성 (Gateway 타입, 무료)
   - EC2→S3 트래픽이 인터넷을 거치지 않아 데이터 전송 비용 0원
 
@@ -808,11 +801,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   | 인바운드 | 443 | 0.0.0.0/0 | HTTPS |
   | 아웃바운드 | 전체 | 0.0.0.0/0 | 나가는 트래픽 |
 
-- [ ] `qusign-rds-sg`
-  | 방향 | 포트 | 소스 | 용도 |
-  |---|---|---|---|
-  | 인바운드 | 3306 | `qusign-ec2-sg` 참조 | EC2에서만 접근 |
-  | 아웃바운드 | 전체 | 0.0.0.0/0 | |
+  > MariaDB(3306)는 `127.0.0.1`만 바인딩 — 보안 그룹 인바운드 규칙 불필요
 
 ---
 
@@ -842,27 +831,61 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-4. RDS MariaDB 설정
+### 6-4. EC2 MariaDB 설치 (Docker)
 
-> 콘솔: RDS → 데이터베이스 생성
+> RDS 대신 EC2 내 Docker 컨테이너로 MariaDB 운영.  
+> EC2 정지 시 DB도 함께 정지 → EventBridge 스케줄러가 EC2 하나만 제어하면 됨.
 
-- [ ] DB 서브넷 그룹 생성
-  - 이름: `qusign-db-subnet-group`
-  - 서브넷: 프라이빗 서브넷 2개 선택 (2a, 2c)
-- [ ] RDS 인스턴스 생성
-  - 엔진: MariaDB 10.11
-  - 템플릿: **개발/테스트** (Multi-AZ 비활성화로 비용 절감)
-  - 인스턴스 클래스: `db.t3.micro`
-  - 스토리지: gp2 20GB (자동 확장 비활성화)
-  - VPC: `qusign-vpc`
-  - 서브넷 그룹: `qusign-db-subnet-group`
-  - 보안 그룹: `qusign-rds-sg`
-  - DB 이름: `qusign`
-  - 마스터 사용자: `admin`
-  - 마스터 비밀번호: → SSM Parameter Store에 저장할 것
-  - 백업 보존 기간: 1일 (비용 최소화)
-  - 자동 마이너 버전 업그레이드: 비활성화
-- [ ] RDS 엔드포인트 확인 후 SSM Parameter Store에 저장
+- [ ] MariaDB 컨테이너 초기 실행 (EC2 접속 후 최초 1회)
+  ```bash
+  # 데이터 영속 디렉토리 생성
+  sudo mkdir -p /var/lib/qusign-db
+
+  # SSM에서 비밀번호 로드
+  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
+    --with-decryption --query Parameter.Value --output text)
+
+  # MariaDB 컨테이너 실행
+  docker run -d \
+    --name qusign-db \
+    --restart always \
+    -e MYSQL_DATABASE=qusign \
+    -e MYSQL_USER=qsadmin \
+    -e MYSQL_PASSWORD="$DB_PASS" \
+    -e MYSQL_RANDOM_ROOT_PASSWORD=yes \
+    -p 127.0.0.1:3306:3306 \
+    -v /var/lib/qusign-db:/var/lib/mysql \
+    mariadb:10.11
+  ```
+  > `-p 127.0.0.1:3306:3306`: 루프백만 노출 — 외부에서 3306 직접 접근 불가
+
+- [ ] 초기화 확인
+  ```bash
+  docker exec -it qusign-db mariadb -uqsadmin -p qusign -e "SHOW TABLES;"
+  ```
+
+- [ ] 일별 백업 스크립트 등록 (`/home/ec2-user/backup-db.sh`)
+  ```bash
+  #!/bin/bash
+  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
+    --with-decryption --query Parameter.Value --output text)
+  BUCKET=$(aws ssm get-parameter --name /qusign/prod/s3-bucket \
+    --query Parameter.Value --output text)
+  DATE=$(date +%Y%m%d)
+
+  docker exec qusign-db \
+    mariadb-dump -uqsadmin -p"$DB_PASS" qusign \
+    | gzip > /tmp/qusign-db-$DATE.sql.gz
+
+  aws s3 cp /tmp/qusign-db-$DATE.sql.gz \
+    s3://$BUCKET/backups/db-$DATE.sql.gz
+  rm -f /tmp/qusign-db-$DATE.sql.gz
+  ```
+  ```bash
+  chmod +x /home/ec2-user/backup-db.sh
+  # crontab -e 로 등록 (KST 22:00 = UTC 13:00, 정지 1시간 전)
+  (crontab -l 2>/dev/null; echo "0 13 * * * /home/ec2-user/backup-db.sh") | crontab -
+  ```
 
 ---
 
@@ -874,8 +897,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] 파라미터 생성 (타입: SecureString, 암호화: AWS managed key)
   | 파라미터 이름 | 값 |
   |---|---|
-  | `/qusign/prod/db-url` | `jdbc:mariadb://RDS엔드포인트:3306/qusign` |
-  | `/qusign/prod/db-username` | `admin` |
+  | `/qusign/prod/db-url` | `jdbc:mariadb://localhost:3306/qusign` |
+  | `/qusign/prod/db-username` | `qsadmin` |
   | `/qusign/prod/db-password` | (실제 비밀번호) |
   | `/qusign/prod/jwt-secret` | (랜덤 256bit 시크릿) |
   | `/qusign/prod/s3-bucket` | `qusign-documents-prod` |
@@ -1049,7 +1072,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 > KST 08:00 = UTC 23:00 → 시작  
 > cron 표현식: `cron(분 시 * * ? *)`
 
-#### Lambda 함수 생성 (EC2 + RDS 동시 제어)
+#### Lambda 함수 생성 (EC2만 제어)
 
 - [ ] Lambda 함수 생성: `qusign-start-instances`
   - 런타임: Python 3.12
@@ -1059,35 +1082,27 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
     import boto3
 
     ec2 = boto3.client('ec2', region_name='ap-southeast-1')
-    rds = boto3.client('rds', region_name='ap-southeast-1')
 
     EC2_ID = 'i-XXXXXXXXXXXX'   # 실제 인스턴스 ID로 교체
-    RDS_ID = 'qusign-db'        # RDS 식별자
 
     def lambda_handler(event, context):
         action = event.get('action')  # 'start' or 'stop'
 
         if action == 'start':
-            rds.start_db_instance(DBInstanceIdentifier=RDS_ID)
-            # RDS가 완전히 시작될 때까지 EC2보다 먼저 시작 (약 2-3분 소요)
-            # EC2는 별도 EventBridge 규칙으로 1분 후 시작 (또는 여기서 같이 시작)
             ec2.start_instances(InstanceIds=[EC2_ID])
             return {'status': 'started'}
 
         elif action == 'stop':
             ec2.stop_instances(InstanceIds=[EC2_ID])
-            rds.stop_db_instance(DBInstanceIdentifier=RDS_ID)
             return {'status': 'stopped'}
     ```
+  > MariaDB가 EC2 내부에 있으므로 EC2 정지 시 DB도 함께 정지됨 — RDS 별도 제어 불필요
 
 - [ ] EventBridge Scheduler 규칙 2개 생성
   | 이름 | Cron 표현식 | payload | 설명 |
   |---|---|---|---|
   | `qusign-nightly-stop` | `cron(0 14 * * ? *)` | `{"action": "stop"}` | KST 23:00 정지 |
   | `qusign-morning-start` | `cron(0 23 * * ? *)` | `{"action": "start"}` | KST 08:00 시작 |
-
-  > ⚠️ RDS는 정지 후 **7일이 지나면 자동으로 다시 시작**됨 (AWS 제한).  
-  > 매일 정지/시작 스케줄이므로 7일 제한에 걸리지 않아 문제 없음.
 
 - [ ] Lambda 테스트 (콘솔에서 `{"action": "stop"}` 으로 직접 실행)
 - [ ] CloudWatch Logs에서 실행 확인
@@ -1243,15 +1258,15 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 | 전략 | 절감액 | 방법 |
 |---|---|---|
-| **EventBridge 야간 정지** | ~37% | KST 23:00-08:00 EC2+RDS 정지 (확정 적용) |
+| **EC2 내장 MariaDB** | ~$9.5/월 | RDS 제거 (확정 적용) |
+| **EventBridge 야간 정지** | ~33% | KST 23:00-08:00 EC2 정지 (확정 적용) |
 | **주말 전체 정지 추가** | 추가 ~28% | 금 23:00 ~ 월 08:00 정지 (베타 사용자 없을 때) |
 | **t3.micro 강등** | ~50% | Spring Boot 메모리 최적화 후 검토 (`-Xmx512m`) |
 | **1년 예약 인스턴스** | ~30% | 6개월 운영 확신 후 구매 (선불 없음 옵션) |
-| **RDS 대신 EC2에 MariaDB** | ~$11/월 | DB도 EC2에 설치 (단, 운영 부담 증가) |
-| **Free Tier 신규 계정** | 12개월 무료 | EC2 t2.micro 750h/월, RDS 750h/월, S3 5GB 무료 |
+| **Free Tier 신규 계정** | 12개월 무료 | EC2 t2.micro 750h/월, S3 5GB 무료 (RDS Free Tier는 불필요) |
 
-> **추천 순서**: EventBridge(확정) → 주말 정지 추가 → Free Tier 계정 활용 → 안정화 후 예약 인스턴스  
-> Free Tier 계정은 신규 AWS 계정으로 12개월간 t2.micro + RDS micro 무료 → 포트폴리오 기간에 거의 $0 가능
+> **추천 순서**: EC2 내장 MariaDB(확정) → EventBridge(확정) → 주말 정지 추가 → Free Tier 계정 활용 → 안정화 후 예약 인스턴스  
+> Free Tier 신규 계정: t2.micro 750h/월 무료 → 포트폴리오 기간 EC2 비용 거의 $0 가능
 
 ---
 

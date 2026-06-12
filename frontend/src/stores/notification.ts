@@ -44,22 +44,27 @@ export const useNotificationStore = defineStore('notification', () => {
     unreadCount.value = 0
   }
 
-  function connectSSE(token: string) {
+  async function connectSSE() {
     if (eventSource) return
-    const url = `http://localhost:8080/api/notifications/stream?token=${encodeURIComponent(token)}`
-    eventSource = new EventSource(url)
+    try {
+      const res = await api.post<{ data: { sseToken: string } }>('/api/notifications/sse-token')
+      const sseToken = res.data.data.sseToken
+      const url = `http://localhost:8080/api/notifications/stream?token=${encodeURIComponent(sseToken)}`
+      eventSource = new EventSource(url)
 
-    eventSource.addEventListener('notification', (e) => {
-      const incoming: Notification = JSON.parse(e.data)
-      notifications.value.unshift(incoming)
-      if (!incoming.isRead) unreadCount.value++
-    })
+      eventSource.addEventListener('notification', (e) => {
+        const incoming: Notification = JSON.parse(e.data)
+        notifications.value.unshift(incoming)
+        if (!incoming.isRead) unreadCount.value++
+      })
 
-    eventSource.onerror = () => {
-      eventSource?.close()
-      eventSource = null
-      // 5초 후 재연결 시도
-      setTimeout(() => connectSSE(token), 5000)
+      eventSource.onerror = () => {
+        eventSource?.close()
+        eventSource = null
+        setTimeout(() => connectSSE(), 5000)
+      }
+    } catch {
+      // 인증 실패 시 재시도 없음
     }
   }
 

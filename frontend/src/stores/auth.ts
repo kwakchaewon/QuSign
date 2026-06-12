@@ -35,7 +35,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     const notificationStore = useNotificationStore()
     await notificationStore.fetchNotifications()
-    notificationStore.connectSSE(accessToken)
+    notificationStore.connectSSE()
   }
 
   async function register(emailVal: string, password: string) {

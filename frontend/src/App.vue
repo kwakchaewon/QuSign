@@ -37,7 +37,7 @@ useIdleTimer(computed(() => auth.sessionLockEnabled))
 onMounted(async () => {
   if (auth.isLoggedIn && auth.token) {
     await notificationStore.fetchNotifications()
-    notificationStore.connectSSE(auth.token)
+    notificationStore.connectSSE()
   }
 })
 </script>

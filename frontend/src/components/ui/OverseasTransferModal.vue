@@ -26,7 +26,8 @@
             <h3 class="qs-terms-section-title">개인정보 국외 이전 안내</h3>
             <p class="qs-terms-updated">근거: 개인정보보호법 제28조의8</p>
 
-            <p>서비스는 Amazon Web Services 싱가포르(ap-southeast-1) 리전에서 운영됩니다. 이에 따라 수집된 개인정보가 아래와 같이 국외로 이전될 수 있으며, 이에 대한 별도 동의가 필요합니다.</p>
+            <p>서비스는 Amazon Web Services 싱가포르(ap-southeast-1) 리전에서 운영됩니다.</p>
+            <p>이에 따라 수집된 개인정보가 아래와 같이 국외로 이전될 수 있으며, 이에 대한 별도 동의가 필요합니다.</p>
 
             <h4>이전받는 자</h4>
             <p>Amazon Web Services, Inc.</p>
@@ -54,7 +55,8 @@
             <p>감사 로그는 수집일로부터 10년간 보관됩니다.</p>
 
             <h4>거부 시 불이익</h4>
-            <p>위 국외 이전에 동의하지 않으실 경우 서비스 이용이 불가합니다. 서비스 인프라 전체가 AWS 싱가포르 리전에서 운영되기 때문입니다.</p>
+            <p>위 국외 이전에 동의하지 않으실 경우 서비스 이용이 불가합니다.</p>
+            <p>서비스 인프라 전체가 AWS 싱가포르 리전에서 운영되기 때문입니다.</p>
 
             <h4>문의</h4>
             <p>개인정보 관련 문의: <a href="mailto:privacy@qusign.kr">privacy@qusign.kr</a></p>

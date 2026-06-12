@@ -19,11 +19,15 @@
   - **B (서명자):** `signer@test.com` / `Test1234!`
   - **ADMIN:** 환경변수 `ADMIN_EMAIL` / `ADMIN_PASSWORD` 로 지정 (앱 시작 시 자동 생성)
 
-> ⚠️ **SSE 주의:** 5단계 A07 보안 패치로 백엔드 SSE 엔드포인트가 단기 토큰 방식으로 변경됨.
-> 프론트엔드 `stores/notification.ts`가 아직 구 방식(JWT 직접 전달)을 사용 중이므로
-> **시나리오 1-6번, 알림 관련 항목은 프론트 패치 전까지 정상 동작 불가**.
-> → 프론트 패치 방법: `connectSSE()` 호출 전 `POST /api/notifications/sse-token`으로
->   단기 토큰을 발급 받아 `EventSource` URL에 전달.
+> ⚠️ **SSE 실시간 push 미동작 (프론트 미패치):**
+> 5단계 A07 패치로 **백엔드는 완료** — `POST /api/notifications/sse-token`으로 발급된 UUID 단기 토큰만
+> `GET /api/notifications/stream?token=`에 허용.
+> 그러나 `auth.ts:38` · `App.vue:40`이 여전히 JWT를 `connectSSE()`에 직접 전달하므로 백엔드가 401 반환.
+>
+> - **영향 있음:** 알림 실시간 push 안 됨 (벨 아이콘 즉시 갱신 ✗) — 시나리오 1 항목 5·6·9, 알림 실시간성 확인, 시나리오 9 A07 8번
+> - **영향 없음:** REST 기반 알림 목록·카운트 조회 정상 (`fetchNotifications()` / `GET /api/notifications`)
+>
+> → 수정 위치: `auth.ts` · `App.vue` — `connectSSE(jwt)` 호출 전 `POST /api/notifications/sse-token` 호출 후 UUID를 전달해야 함.
 
 ---
 
@@ -180,10 +184,11 @@
 
 ### A07 — SSE 단기 토큰
 
-> ⚠️ 프론트엔드 `stores/notification.ts` 패치 완료 후 테스트 가능
+> 백엔드 패치 완료. 항목 7·9·10·11은 curl/Postman으로 직접 테스트 가능.
+> 항목 8 (브라우저 SSE 스트림 수립)은 `auth.ts` · `App.vue` 프론트엔드 패치 완료 후 테스트 가능.
 
-- [ ] **7** `POST /api/notifications/sse-token` (인증 필요) → `sseToken` UUID 반환 확인
-- [ ] **8** 반환된 `sseToken`으로 `GET /api/notifications/stream?token={sseToken}` 연결 → SSE 스트림 수립 확인
+- [ ] **7** `POST /api/notifications/sse-token` (인증 필요, `Authorization: Bearer <jwt>`) → `sseToken` UUID 반환 확인
+- [ ] **8** 반환된 `sseToken`으로 `GET /api/notifications/stream?token={sseToken}` 연결 → SSE 스트림 수립 확인 *(프론트 패치 후)*
 - [ ] **9** 동일 `sseToken` 재사용 시도 → 401 반환 (일회성 소비 확인)
 - [ ] **10** 30초 후 미사용 `sseToken`으로 연결 시도 → 401 반환 (TTL 만료 확인)
 - [ ] **11** 서버 접근 로그 확인 → SSE 연결 URL에 JWT 원문 미노출 (`?token=UUID` 형태만 기록)
@@ -192,7 +197,8 @@
 
 ## 알림 실시간성 확인
 
-> ⚠️ `stores/notification.ts` SSE 단기 토큰 패치 완료 후 테스트
+> ⚠️ `auth.ts` · `App.vue` — SSE 단기 토큰 패치 완료 후 테스트
+> (현재 JWT 직접 전달 → 백엔드 401 → SSE 연결 실패 → 실시간 push 미동작)
 
 A/B 두 창을 나란히 열고:
 

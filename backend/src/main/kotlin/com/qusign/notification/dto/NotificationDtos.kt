@@ -25,3 +25,5 @@ data class NotificationResponse(
 }
 
 data class UnreadCountResponse(val count: Long)
+
+data class SseTokenResponse(val sseToken: String)

@@ -70,7 +70,7 @@ const BASE_TITLE = 'QuSign'
 
 router.beforeEach((to) => {
   const token = localStorage.getItem('qusign:token')
-  const needsAuth = AUTH_ROUTES.some((p) => to.path.startsWith(p))
+  const needsAuth = AUTH_ROUTES.some((p) => to.path === p || to.path.startsWith(p + '/'))
   if (needsAuth && !token) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }

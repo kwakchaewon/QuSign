@@ -44,15 +44,12 @@
         </div>
 
         <p class="qs-legal">
-          로그인하면
-          <a href="#" @click.prevent="showTermsModal = true">이용약관 및 개인정보처리방침</a>에
-          동의한 것으로 간주됩니다.
+          로그인하면 <a href="#" @click.prevent="showTermsModal = true">이용약관 및 개인정보처리방침</a>,<br />
+          <a href="#" @click.prevent="showTransferModal = true">개인정보 국외 이전(싱가포르 AWS)</a>에 동의한 것으로 간주됩니다.
         </p>
 
-        <TermsModal
-          v-model="showTermsModal"
-          view-only
-        />
+        <TermsModal v-model="showTermsModal" view-only />
+        <OverseasTransferModal v-model="showTransferModal" view-only />
       </section>
     </main>
 
@@ -69,9 +66,11 @@ import Toast from '@/components/ui/Toast.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import PublicTopbar from '@/components/layout/PublicTopbar.vue'
 import TermsModal from '@/components/ui/TermsModal.vue'
+import OverseasTransferModal from '@/components/ui/OverseasTransferModal.vue'
 
 const toast = ref({ show: false, email: '' })
 const showTermsModal = ref(false)
+const showTransferModal = ref(false)
 
 function handleLogin(email: string) {
   toast.value = { show: true, email }

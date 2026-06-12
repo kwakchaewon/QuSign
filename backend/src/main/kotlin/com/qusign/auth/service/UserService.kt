@@ -67,8 +67,8 @@ class UserService(
     fun searchUsers(requesterEmail: String, q: String): List<String> {
         if (q.length < 2) return emptyList()
         return userRepository.findTop8ByEmailContainingIgnoreCaseAndDeletedAtIsNullOrderByEmail(q)
+            .filter { it.role != "ADMIN" && it.email != requesterEmail }
             .map { it.email }
-            .filter { it != requesterEmail }
     }
 
     @Transactional

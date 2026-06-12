@@ -30,3 +30,9 @@ storage:
 jwt:
   secret: QuSignTestSecretKeyForUnitTests2024
   expiration-ms: 3600000
+
+cors:
+  allowed-origins: http://localhost:5173
+
+proxy:
+  trusted: false

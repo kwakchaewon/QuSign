@@ -33,7 +33,11 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: () => (localStorage.getItem('qusign:token') ? '/home' : '/login'),
+      redirect: () => {
+        const token = localStorage.getItem('qusign:token')
+        if (!token) return '/login'
+        return parseJwtRole(token) === 'ADMIN' ? '/admin' : '/home'
+      },
     },
     { path: '/home',            name: 'home',             component: HomeView,                meta: { title: '홈' } },
     { path: '/login',           name: 'login',            component: LoginView,               meta: { title: '로그인' } },
@@ -69,6 +73,9 @@ router.beforeEach((to) => {
   const needsAuth = AUTH_ROUTES.some((p) => to.path.startsWith(p))
   if (needsAuth && !token) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  if (token && parseJwtRole(token) === 'ADMIN' && to.name === 'home') {
+    return { name: 'admin-stats' }
   }
   if (to.meta.requiresAdmin || to.matched.some((r) => r.meta.requiresAdmin)) {
     if (!token) return { name: 'login', query: { redirect: to.fullPath } }

@@ -2,13 +2,7 @@
   <div class="qs-admin-wrap">
     <aside class="qs-admin-sidebar">
       <div class="qs-admin-sidebar-header">
-        <RouterLink to="/home" class="qs-admin-back">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          QuSign
-        </RouterLink>
+        <span class="qs-admin-brand">QuSign</span>
         <span class="qs-admin-badge">관리자</span>
       </div>
       <nav class="qs-admin-nav">
@@ -36,6 +30,15 @@
           감사 로그
         </RouterLink>
       </nav>
+      <div class="qs-admin-sidebar-footer">
+        <button class="qs-admin-logout" @click="handleLogout">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          로그아웃
+        </button>
+      </div>
     </aside>
     <main class="qs-admin-main">
       <RouterView />
@@ -44,4 +47,14 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const router = useRouter()
+const auth = useAuthStore()
+
+function handleLogout() {
+  auth.logout()
+  router.push('/login')
+}
 </script>

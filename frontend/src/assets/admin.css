@@ -30,17 +30,11 @@
   gap: 8px;
 }
 
-.qs-admin-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.qs-admin-brand {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
-  text-decoration: none;
-  transition: color 0.15s;
 }
-.qs-admin-back:hover { color: var(--color-primary-500); }
 
 .qs-admin-badge {
   font-size: 10px;
@@ -74,6 +68,29 @@
 }
 .qs-admin-nav-item:hover { background: var(--surface-muted); color: var(--text-primary); }
 .qs-admin-nav-item.is-active { background: var(--color-info-bg); color: var(--color-primary-500); font-weight: 600; }
+
+.qs-admin-sidebar-footer {
+  margin-top: auto;
+  padding: 8px 8px 0;
+  border-top: 1px solid var(--border-default);
+}
+
+.qs-admin-logout {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.qs-admin-logout:hover { background: var(--color-error-bg); color: var(--color-error); }
 
 .qs-admin-main {
   flex: 1;

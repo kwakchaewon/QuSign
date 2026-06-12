@@ -721,8 +721,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 | 이전받는 자의 이용 목적 | 서비스 인프라 운영 (저장, 처리) |
 | 이전받는 자의 보유·이용 기간 | 회원 탈퇴 후 즉시 파기 또는 법령에 따른 보존 기간 |
 
-- [ ] 개인정보 처리방침에 국외 이전 항목 추가
-- [ ] 회원가입 화면에 국외 이전 동의 체크박스 추가 (또는 처리방침 링크 명시)
+- [x] 개인정보 처리방침에 국외 이전 항목 추가
+- [x] 회원가입 화면에 국외 이전 동의 체크박스 추가 (또는 처리방침 링크 명시)
 - [ ] 실서비스 전환 시 `ap-northeast-2` (서울) 복귀 검토 → 개인정보보호법 국외 이전 의무 소멸
 
 > ℹ️ 포트폴리오 단계에서 실제 개인정보를 수집·처리하지 않는다면 법적 의무는 낮으나, 서비스 구조상 미리 적용해두는 것을 권장.
@@ -742,7 +742,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-1. IAM 설정 (최소 권한 원칙)
+### 6-2. IAM 설정 (최소 권한 원칙)
 
 > 콘솔: IAM → 역할/사용자 생성
 
@@ -778,7 +778,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-2. 네트워크 (VPC)
+### 6-3. 네트워크 (VPC)
 
 > 콘솔: VPC → VPC 생성 (리전: ap-southeast-1 싱가포르)
 
@@ -806,7 +806,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-3. ECR (Docker 이미지 레지스트리)
+### 6-4. ECR (Docker 이미지 레지스트리)
 
 > 콘솔: ECR → 리포지토리 생성
 
@@ -832,7 +832,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-4. EC2 MariaDB 설치 (Docker)
+### 6-5. EC2 MariaDB 설치 (Docker)
 
 > RDS 대신 EC2 내 Docker 컨테이너로 MariaDB 운영.  
 > EC2 정지 시 DB도 함께 정지 → EventBridge 스케줄러가 EC2 하나만 제어하면 됨.
@@ -890,7 +890,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-5. SSM Parameter Store (민감값 관리)
+### 6-6. SSM Parameter Store (민감값 관리)
 
 > 콘솔: Systems Manager → Parameter Store  
 > `.env` 파일을 서버에 올리지 않고 SSM에서 주입
@@ -913,7 +913,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-6. S3 버킷 설정
+### 6-7. S3 버킷 설정
 
 > 콘솔: S3 → 버킷 만들기
 
@@ -935,7 +935,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-7. EC2 인스턴스 설정
+### 6-8. EC2 인스턴스 설정
 
 > 콘솔: EC2 → 인스턴스 시작
 
@@ -952,7 +952,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 - [ ] Elastic IP 할당 및 연결 (EC2 재시작 시 IP 변경 방지)
   > ⚠️ EC2가 **실행 중일 때만 Elastic IP 무료**. 정지 시에도 EC2에 연결되어 있으면 요금 발생.  
-  > → EventBridge로 정지하는 동안 Elastic IP 요금 발생 (월 ~$0.005/hr × 9h × 30일 = ~$1.35)  
+  > → EventBridge로 정지하는 동안 Elastic IP 요금 발생 (월 ~$0.005/hr × 11.5h × 30일 = ~$1.7)  
   > → 수용 가능한 비용이므로 연결 유지
 
 - [ ] EC2 접속 후 초기 설정
@@ -1054,7 +1054,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   docker run -d \
     --name qusign-app \
     --restart unless-stopped \
-    -p 8080:8080 \
+    --network host \
     -e SPRING_PROFILES_ACTIVE=prod \
     -e DB_URL="$DB_URL" \
     -e DB_USER="$DB_USER" \
@@ -1067,7 +1067,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-8. EventBridge 스케줄러 (핵심 비용 절감)
+### 6-9. EventBridge 스케줄러 (핵심 비용 절감)
 
 > KST 21:30 = UTC 12:30 → 정지  
 > KST 09:00 = UTC 00:00 → 시작  
@@ -1111,7 +1111,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-9. AWS SES 이메일 연동
+### 6-10. AWS SES 이메일 연동
 
 > 콘솔: SES → 리전: ap-southeast-1 (싱가포르)
 
@@ -1137,7 +1137,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-10. Route53 + 도메인 연결
+### 6-11. Route53 + 도메인 연결
 
 - [ ] 도메인 구매
   - Route53에서 직접 구매 시 자동 연동 (추천)
@@ -1153,7 +1153,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-11. GitHub Actions CI/CD
+### 6-12. GitHub Actions CI/CD
 
 > `.github/workflows/deploy.yml`
 
@@ -1244,7 +1244,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-12. 최종 검증
+### 6-13. 최종 검증
 
 - [ ] `https://qusign.com` HTTPS 접속 확인
 - [ ] SSL 인증서 만료일 확인 (`Let's Encrypt` 자동 갱신 동작 확인)

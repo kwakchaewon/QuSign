@@ -13,7 +13,7 @@
 | 2단계 | 백엔드 핵심 구현 | ✅ 완료 |
 | 3단계 | 프론트엔드 구현 | ✅ 완료 |
 | 4단계 | 기능 고도화 & 품질 강화 | 🔄 진행 중 (다음 단계) |
-| 5단계 | 보안 취약점 개선 (OWASP Top 10) | ⬜ 진행 전 |
+| 5단계 | 보안 취약점 개선 (OWASP Top 10) | ✅ 완료 |
 | 6단계 | AWS 배포 + SES + GitHub Actions | ⬜ 진행 전 |
 | 7단계 | Terraform + 수익화 | ⬜ 진행 전 |
 | 8단계 | Loki + Grafana + 이직 준비 | ⬜ 진행 전 |
@@ -602,18 +602,54 @@
 
 **목표:** OWASP Top 10 기준 전 영역 점검·수정
 
-- [ ] `/security-review` 스킬로 현재 브랜치 전체 보안 리뷰
-- [ ] A01 — 접근 제어 (JWT 권한 검사, 토큰 범위 제한)
-- [ ] A02 — 암호화 실패 (개인키 메모리 잔류, 전송 중 평문 노출)
-- [ ] A03 — 인젝션 (SQL/NoSQL, API 파라미터 검증)
-- [ ] A05 — 보안 설정 오류 (CORS, HTTPS only, 쿠키 플래그)
-- [ ] A07 — 인증/세션 관리 (토큰 만료, 재사용 방지)
-- [ ] A09 — 보안 로깅 부족 (서명 이벤트 감사 로그 확인)
-- [ ] 프론트엔드 XSS / CSRF 점검
-- [ ] API 응답 민감 필드 노출 여부 점검
-- [ ] Critical / High 항목 전부 수정
+---
 
-**5단계 완료 기준:** Critical / High 취약점 0건
+### 실행 절차
+
+#### Phase 1 — Scan (발견)
+
+- [x] 피처 브랜치 생성 (`security/owasp-review`)
+- [x] `/security-review` 스킬 실행 → findings 목록 확보
+- [x] OWASP 점검 항목 수동 확인 (아래 체크리스트 기준)
+
+#### Phase 2 — Triage (등급 분류)
+
+발견 항목을 아래 기준으로 분류한다:
+
+| 등급 | 기준 | 처리 |
+|---|---|---|
+| Critical | 인증 우회 / RCE / 데이터 직접 노출 가능 | 즉시 수정 (이번 사이클) |
+| High | 권한 상승 / 암호화 오류 / 인젝션 가능 | 즉시 수정 (이번 사이클) |
+| Medium | 특정 조건 필요, 영향 있음 | 다음 단계까지 허용 |
+| Low | 심층 방어 항목 | backlog 이슈로만 기록 |
+
+#### Phase 3 — Fix (수정)
+
+- [x] Critical / High 항목 하나씩 커밋
+- [x] 커밋 메시지에 OWASP 항목 태그 포함 (예: `fix(A01): JWT 권한 검사 누락`)
+- [x] 수정 전후 테스트 케이스 작성 필수
+
+#### Phase 4 — Verify (검증)
+
+- [x] Critical / High 항목은 `/security-review` 재실행으로 닫힘 확인
+- [x] `./gradlew test` 통과
+
+---
+
+### OWASP 점검 체크리스트
+
+- [x] A01 — 접근 제어 (비활성/탈퇴 계정 JWT 즉시 차단, ADMIN 경로 `@PreAuthorize` 보호)
+- [x] A02 — 암호화 실패 (PBKDF2+AES-256-GCM 개인키 암호화, BCrypt 비밀번호, 서명 후 키 메모리 zeroing)
+- [x] A03 — 인젝션 (JPA 사용으로 SQL 인젝션 없음, 입력 검증 `@Valid` 적용)
+- [x] A05 — 보안 설정 오류 (HTTP 보안 헤더 추가, CORS 환경변수 기반 설정, X-Forwarded-For 신뢰 설정)
+- [x] A07 — 인증/세션 관리 (SSE 단기 토큰으로 JWT URL 노출 완화, 토큰 일회성 소비)
+- [x] A09 — 보안 로깅 (서명·취소·다운로드 이벤트 AuditLog 기록 확인)
+- [x] 프론트엔드 XSS / CSRF (Vue 3 기본 이스케이핑, Stateless JWT → CSRF 불필요)
+- [x] API 응답 민감 필드 노출 여부 (userAgent API 미노출, privateKey 미노출 확인)
+
+---
+
+**5단계 완료 기준:** Critical / High 취약점 0건 (재스캔으로 확인)
 
 ---
 

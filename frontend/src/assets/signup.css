@@ -51,10 +51,12 @@
   color: var(--text-secondary);
   align-items: flex-start;
   gap: 10px;
-  padding: 4px 0;
+  padding: 2px 0;
   line-height: 1.5;
   margin-top: 16px;
 }
+.qs-check-block + .qs-check-block { margin-top: 4px; }
+.qs-check-block ~ .qs-btn { margin-top: 8px; }
 .qs-check-block .qs-check-box { margin-top: 1px; }
 .qs-check-block a {
   color: var(--text-secondary);
@@ -76,6 +78,14 @@
   color: var(--color-error);
   text-decoration-color: var(--color-error);
 }
+
+.qs-check-label-link { display: inline; }
+.qs-check-label-status {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-left: 0.25em;
+}
+.qs-check-block.is-agree-err .qs-check-label-status { color: var(--color-error); }
 
 /* ---- Success overlay ---- */
 .qs-success {

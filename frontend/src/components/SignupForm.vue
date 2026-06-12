@@ -131,8 +131,10 @@
         </svg>
       </span>
       <span>
-        <a href="#" @click.prevent="showTermsModal = true">이용약관 및 개인정보처리방침</a>에 대해
-        {{ agree ? '동의했어요.' : '확인과 동의가 필요해요.' }}
+        <span class="qs-check-label-link">
+          <a href="#" @click.prevent="showTermsModal = true">이용약관 및 개인정보처리방침</a>
+        </span>
+        <span class="qs-check-label-status">{{ agree ? '동의했어요.' : '확인과 동의가 필요해요.' }}</span>
       </span>
     </label>
 
@@ -145,8 +147,10 @@
         </svg>
       </span>
       <span>
-        <a href="#" @click.prevent="showTransferInfo = true">개인정보 국외 이전</a>(싱가포르 AWS)에
-        {{ agreeTransfer ? '동의했어요.' : '동의가 필요해요.' }}
+        <span class="qs-check-label-link">
+          <a href="#" @click.prevent="showTransferInfo = true">개인정보 국외 이전</a> (싱가포르 AWS)
+        </span>
+        <span class="qs-check-label-status">{{ agreeTransfer ? '동의했어요.' : '동의가 필요해요.' }}</span>
       </span>
     </label>
 

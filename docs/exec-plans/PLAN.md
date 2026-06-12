@@ -667,7 +667,7 @@
 Route53 (qusign.com)
   │
   ▼
-EC2 t3.small (퍼블릭 서브넷, ap-northeast-2a)
+EC2 t3.small (퍼블릭 서브넷, ap-southeast-1a)  ← 싱가포르 리전
   ├── Nginx  → 80/443  → 리버스 프록시
   ├── Spring Boot Docker  (8080)
   └── Vue 3 빌드 결과물 서빙 (/dist)
@@ -690,27 +690,50 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 예상 월 비용 (비용 절감 적용 후)
 
-> 기준 리전: **ap-northeast-2 (서울)** / 단가: EC2 t3.small $0.0256/h, RDS db.t3.micro $0.025/h
+> 기준 리전: **ap-southeast-1 (싱가포르)** / 단가: EC2 t3.small $0.0230/h, RDS db.t3.micro $0.021/h
 
 | 리소스 | 스펙 | 비고 | 월 예상 |
 |---|---|---|---|
-| EC2 | t3.small | 15h/day 가동 (450h × $0.0256) | ~$11.5 |
-| RDS | db.t3.micro | 15h/day 가동 (450h × $0.025) | ~$11 |
+| EC2 | t3.small | 15h/day 가동 (450h × $0.0230) | ~$10.4 |
+| RDS | db.t3.micro | 15h/day 가동 (450h × $0.021) | ~$9.5 |
 | S3 | 5GB 이하 | 문서 저장 ($0.025/GB) | ~$0.13 |
 | ECR | 500MB 이하 | Docker 이미지 | ~$0.05 |
 | Route53 | 호스팅 영역 1개 | | ~$0.50 |
 | SES | 이메일 수백 건 | | ~$0.02 |
 | 도메인 | .com 구매 | 연 $12 = 월 | ~$1 |
-| **합계** | | | **~$24/월** |
+| **합계** | | | **~$22/월** |
 
-> 비교: 스케줄러 없이 24시간 가동 시 ~$38/월 → **약 37% 절감**
+> 비교: 스케줄러 없이 24시간 가동 시 ~$33/월 → **약 33% 절감**  
+> 비교: 서울(ap-northeast-2) 기준 대비 월 **~$2 절감** (~8%)
 
 ---
 
-### 6-0. 사전 준비 (로컬)
+### 6-0. 개인정보보호법 — 국외 이전 고지 (필수)
+
+> **한국 개인정보보호법 제28조의8**: 싱가포르 리전 사용 시 이용자 개인정보가 국외로 이전됨.  
+> 서비스 운영 전 아래 의무 고지 사항을 개인정보 처리방침 및 회원가입 동의서에 반드시 포함해야 함.
+
+| 고지 항목 | 내용 |
+|---|---|
+| 이전받는 자 | Amazon Web Services, Inc. |
+| 이전되는 국가 | 싱가포르 (ap-southeast-1) |
+| 이전 일시 및 방법 | 서비스 이용 시 네트워크를 통해 전송 |
+| 이전되는 개인정보 항목 | 이메일, 이름, 서명 데이터, 업로드 문서 |
+| 이전받는 자의 이용 목적 | 서비스 인프라 운영 (저장, 처리) |
+| 이전받는 자의 보유·이용 기간 | 회원 탈퇴 후 즉시 파기 또는 법령에 따른 보존 기간 |
+
+- [ ] 개인정보 처리방침에 국외 이전 항목 추가
+- [ ] 회원가입 화면에 국외 이전 동의 체크박스 추가 (또는 처리방침 링크 명시)
+- [ ] 실서비스 전환 시 `ap-northeast-2` (서울) 복귀 검토 → 개인정보보호법 국외 이전 의무 소멸
+
+> ℹ️ 포트폴리오 단계에서 실제 개인정보를 수집·처리하지 않는다면 법적 의무는 낮으나, 서비스 구조상 미리 적용해두는 것을 권장.
+
+---
+
+### 6-1. 사전 준비 (로컬)
 
 - [ ] AWS CLI v2 설치 (`winget install Amazon.AWSCLI`)
-- [ ] `aws configure` — Access Key, Secret Key, 리전 `ap-northeast-2` (서울) 설정
+- [ ] `aws configure` — Access Key, Secret Key, 리전 `ap-southeast-1` (싱가포르) 설정
 - [ ] Docker Desktop 로그인 확인
 - [ ] 도메인 구매 결정 (Route53에서 구매 시 자동 연동, 가비아 구매도 가능)
 - [ ] Spring Boot `application-prod.yml` 환경변수 기반 설정 확인
@@ -744,7 +767,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
       {
         "Effect": "Allow",
         "Action": ["ec2:StartInstances", "ec2:StopInstances"],
-        "Resource": "arn:aws:ec2:ap-northeast-2:ACCOUNT_ID:instance/INSTANCE_ID"
+        "Resource": "arn:aws:ec2:ap-southeast-1:ACCOUNT_ID:instance/INSTANCE_ID"
       }
       ```
 
@@ -759,15 +782,15 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 6-2. 네트워크 (VPC)
 
-> 콘솔: VPC → VPC 생성 (리전: ap-northeast-2 서울)
+> 콘솔: VPC → VPC 생성 (리전: ap-southeast-1 싱가포르)
 
 - [ ] VPC 생성
   - 이름: `qusign-vpc`
   - IPv4 CIDR: `10.0.0.0/16`
 - [ ] 서브넷 생성
-  - 퍼블릭: `10.0.1.0/24` (ap-northeast-2a) — EC2
-  - 프라이빗: `10.0.2.0/24` (ap-northeast-2a) — RDS
-  - 프라이빗: `10.0.3.0/24` (ap-northeast-2c) — RDS Multi-AZ용 (RDS는 서브넷 그룹에 2개 가용 영역 필요)
+  - 퍼블릭: `10.0.1.0/24` (ap-southeast-1a) — EC2
+  - 프라이빗: `10.0.2.0/24` (ap-southeast-1a) — RDS
+  - 프라이빗: `10.0.3.0/24` (ap-southeast-1b) — RDS Multi-AZ용 (RDS는 서브넷 그룹에 2개 가용 영역 필요)
 - [ ] 인터넷 게이트웨이 생성 → VPC에 연결
 - [ ] 라우팅 테이블
   - 퍼블릭: `0.0.0.0/0 → IGW`
@@ -798,7 +821,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 > 콘솔: ECR → 리포지토리 생성
 
 - [ ] ECR 리포지토리 생성: `qusign-backend`
-  - 리전: `ap-northeast-2`
+  - 리전: `ap-southeast-1`
   - 이미지 스캔 활성화 (보안 취약점 자동 감지)
   - 수명 주기 정책 설정: 최신 3개 이미지만 유지 (스토리지 비용 절감)
     ```json
@@ -812,9 +835,9 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
     ```
 - [ ] 로컬에서 ECR 로그인 테스트
   ```bash
-  aws ecr get-login-password --region ap-northeast-2 | \
+  aws ecr get-login-password --region ap-southeast-1 | \
     docker login --username AWS --password-stdin \
-    ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com
+    ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com
   ```
 
 ---
@@ -871,7 +894,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 > 콘솔: S3 → 버킷 만들기
 
 - [ ] 버킷 생성: `qusign-documents-prod-{AccountId}`
-  - 리전: `ap-northeast-2`
+  - 리전: `ap-southeast-1`
   - 퍼블릭 액세스 차단: **전체 차단** (EC2 IAM 역할로만 접근)
   - 버전 관리: 비활성화 (비용 절감)
   - 서버 측 암호화: SSE-S3 (AES-256) 활성화
@@ -984,7 +1007,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   #!/bin/bash
   set -e
 
-  ECR_URL="ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com"
+  ECR_URL="ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com"
   IMAGE="$ECR_URL/qusign-backend:latest"
 
   # SSM에서 환경변수 로드
@@ -996,7 +1019,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   CORS_ORIGINS=$(aws ssm get-parameter --name /qusign/prod/cors-origins --query Parameter.Value --output text)
 
   # ECR 로그인
-  aws ecr get-login-password --region ap-northeast-2 | \
+  aws ecr get-login-password --region ap-southeast-1 | \
     docker login --username AWS --password-stdin $ECR_URL
 
   # 기존 컨테이너 중지 및 새 이미지로 시작
@@ -1035,8 +1058,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
     ```python
     import boto3
 
-    ec2 = boto3.client('ec2', region_name='ap-northeast-2')
-    rds = boto3.client('rds', region_name='ap-northeast-2')
+    ec2 = boto3.client('ec2', region_name='ap-southeast-1')
+    rds = boto3.client('rds', region_name='ap-southeast-1')
 
     EC2_ID = 'i-XXXXXXXXXXXX'   # 실제 인스턴스 ID로 교체
     RDS_ID = 'qusign-db'        # RDS 식별자
@@ -1074,7 +1097,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 6-9. AWS SES 이메일 연동
 
-> 콘솔: SES → 리전: ap-northeast-2 (서울)
+> 콘솔: SES → 리전: ap-southeast-1 (싱가포르)
 
 - [ ] 이메일 주소 자격 증명 (샌드박스 테스트용)
   - 발신자 이메일 인증: `noreply@qusign.com` (도메인 구매 후) 또는 개인 이메일로 먼저 테스트
@@ -1089,7 +1112,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   cloud:
     aws:
       ses:
-        region: ap-northeast-2
+        region: ap-southeast-1
   ```
   - `SesClient` 빈 등록 (EC2 IAM 역할로 자동 인증, 별도 AccessKey 불필요)
   - 서명 요청 HTML 템플릿 작성
@@ -1135,7 +1158,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   | `AWS_SECRET_ACCESS_KEY` | github-actions-deployer Secret Key |
   | `EC2_HOST` | EC2 Elastic IP |
   | `EC2_SSH_KEY` | EC2 .pem 파일 내용 전체 |
-  | `ECR_REGISTRY` | ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com |
+  | `ECR_REGISTRY` | ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com |
 
 - [ ] GitHub Actions workflow 파일 작성
   ```yaml
@@ -1166,7 +1189,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
           with:
             aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
             aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: ap-northeast-2
+            aws-region: ap-southeast-1
 
         - name: Login to Amazon ECR
           uses: aws-actions/amazon-ecr-login@v2

@@ -1,6 +1,6 @@
 # QuSign 서비스 테스트 시나리오
 
-> 현재 구현된 기능 기반 수동 테스트용 시나리오 (2026-06-05 기준)
+> 현재 구현된 기능 기반 수동 테스트용 시나리오 (2026-06-12 기준)
 >
 > 체크 방법: 통과 `[V]` / 실패 `[X]` / 미확인 `[ ]`
 
@@ -14,9 +14,16 @@
   ./gradlew bootRun             # 백엔드 (local 프로파일)
   cd frontend && npm run dev    # 프론트엔드
   ```
-- 테스트 계정 2개 필요
+- 테스트 계정 3개 필요
   - **A (요청자):** `requester@test.com` / `Test1234!`
   - **B (서명자):** `signer@test.com` / `Test1234!`
+  - **ADMIN:** 환경변수 `ADMIN_EMAIL` / `ADMIN_PASSWORD` 로 지정 (앱 시작 시 자동 생성)
+
+> ⚠️ **SSE 주의:** 5단계 A07 보안 패치로 백엔드 SSE 엔드포인트가 단기 토큰 방식으로 변경됨.
+> 프론트엔드 `stores/notification.ts`가 아직 구 방식(JWT 직접 전달)을 사용 중이므로
+> **시나리오 1-6번, 알림 관련 항목은 프론트 패치 전까지 정상 동작 불가**.
+> → 프론트 패치 방법: `connectSSE()` 호출 전 `POST /api/notifications/sse-token`으로
+>   단기 토큰을 발급 받아 `EventSource` URL에 전달.
 
 ---
 
@@ -37,6 +44,7 @@
 - [V] **11** [A] 서명된 PDF 다운로드 → `파일명_qusigned.pdf` 다운로드 확인
 - [V] **12** [A] `/verify` → 토큰 입력 → ✅ 유효한 서명 + 서명자 이메일 표시
 - [V] **13** [A] `/verify` → 서명된 PDF 파일 업로드 → 동일한 검증 결과
+- [ ] **14** [A] 문서 상세 페이지 하단 감사 로그 타임라인 → `SIGN_REQUEST_CREATED` → `SIGNED` → `SIGNED_DOCUMENT_DOWNLOADED` 이벤트 순서 확인
 
 ---
 
@@ -56,6 +64,7 @@
 - [V] **10** [B] 서명 완료 화면에서 문서별 다운로드 버튼 3개 확인 → 각각 클릭 시 `파일명_qusigned.pdf` 개별 다운로드
 - [ ] **11** [A] 번들 상세 페이지 새로고침 → 서명자 상태 `SIGNED` + 서명 일시 표시 + 문서별 다운로드 버튼 3개 확인
 - [V] **12** PDF 5개 초과 업로드 시도 → 클라이언트 차단 메시지 표시
+- [ ] **13** [A] 번들 상세 페이지 하단 감사 로그 타임라인 → `BUNDLE_REQUEST_CREATED` → `BUNDLE_SIGNED` 이벤트 확인
 
 ---
 
@@ -69,6 +78,7 @@
 - [ ] **4** [B] 알림 확인 → ❌ "서명 요청 취소" 알림
 - [ ] **5** [B] 서명 링크 직접 접속 → "취소된 요청" 안내 화면
 - [ ] **6** [A] CANCELLED 상태 서명자 행 → 취소 버튼 미표시 확인
+- [ ] **7** [A] 감사 로그 타임라인 → `SIGNER_CANCELLED` 이벤트 기록 확인
 
 ---
 
@@ -94,6 +104,7 @@
 - [ ] **6** 다른 계정이 서명 완료 후 [A] 알림 확인 → 알림 미생성
 - [ ] **7** 계정 탈퇴: 이메일 입력 확인 → 탈퇴 → 로그인 화면으로 이동
 - [ ] **8** 탈퇴한 이메일로 로그인 시도 → "탈퇴한 계정" 오류
+- [ ] **9** 탈퇴 전 발급된 JWT로 API 직접 호출 (`Authorization: Bearer <token>`) → 401 반환 확인 (**A01 보안 패치 검증**)
 
 ---
 
@@ -108,7 +119,80 @@
 
 ---
 
+## 시나리오 7 — 감사 로그 (Audit Trail)
+
+**목적:** 법적 증거 수준 감사 이벤트 기록·조회 확인 (4-8)
+
+- [ ] **1** [A] 서명 요청 생성 → 문서 상세 페이지 하단 **감사 로그 타임라인** 확인
+  - `SIGN_REQUEST_CREATED` 이벤트, 요청자 이메일, 타임스탬프 표시
+- [ ] **2** [B] 서명 완료 후 타임라인 새로고침 → `SIGNED` 이벤트 추가 확인
+- [ ] **3** [A] 서명된 PDF 다운로드 → 타임라인에 `SIGNED_DOCUMENT_DOWNLOADED` 기록 확인
+- [ ] **4** [A] 상세 페이지 → "감사 로그 내보내기" 버튼 클릭 → JSON 파일 다운로드 → 이벤트 배열 포함 확인
+- [ ] **5** 번들 서명 완료 후 `/bundles/{id}` 상세 페이지 감사 로그 타임라인 → `BUNDLE_REQUEST_CREATED`, `BUNDLE_SIGNED` 확인
+- [ ] **6** API 직접 호출: `GET /api/documents/{id}/audit` → `userAgent` 필드 미포함 확인 (내부 기록 전용)
+- [ ] **7** 감사 로그 DB 직접 확인: `DELETE FROM audit_logs` 실행 시 권한 오류 또는 서비스 단에서 삭제 메서드 미존재 확인 (불변성)
+
+---
+
+## 시나리오 8 — 관리자 페이지
+
+**목적:** ADMIN 계정의 시스템 전체 조회·관리 기능 및 접근 제어 확인 (4-9)
+
+### 사전 준비
+- 환경변수 `ADMIN_EMAIL=admin@qusign.com` / `ADMIN_PASSWORD=Admin1234!` 설정 후 앱 재시작
+- 관리자 계정 자동 생성 확인 (`AdminInitializer` 동작)
+
+### 접근 제어
+- [ ] **1** [A] 일반 계정으로 `/admin` 진입 시도 → `/home` 리다이렉트 확인
+- [ ] **2** [A] JWT로 `GET /api/admin/stats` 직접 호출 → 403 반환 확인
+
+### 관리자 기능
+- [ ] **3** 관리자 계정으로 로그인 → `/admin` 진입 → 통계 카드 (총 사용자·서명 수·상태별 카운트) 표시
+- [ ] **4** 사이드바 "사용자" → `/admin/users` → 전체 사용자 목록 표시, 이메일 검색 동작 확인
+- [ ] **5** `signer@test.com` 검색 → 해당 사용자 행의 "비활성화" 버튼 클릭 → 확인 모달 → 처리
+- [ ] **6** [B] 비활성화 후 기존 JWT로 `GET /api/signature-requests/received` 호출 → **401 반환 확인** (A01 패치)
+- [ ] **7** [B] 로그인 재시도 → "비활성화된 계정" 오류 확인
+- [ ] **8** 사이드바 "감사 로그" → `/admin/audit` → 전체 감사 로그 테이블 표시
+- [ ] **9** 이벤트 타입 필터(`SIGNED`) + 날짜 범위 필터 → 필터링 결과 반영 확인
+- [ ] **10** "전체 감사 로그 내보내기" 버튼 → JSON 다운로드 → 전체 이벤트 포함 확인
+- [ ] **11** `GET /api/admin/users/{email}/audit` 직접 호출 → 해당 사용자 이벤트만 반환 확인
+
+---
+
+## 시나리오 9 — OWASP 보안 검증
+
+**목적:** 5단계 보안 패치 동작 확인
+
+### A01 — 계정 상태 즉시 차단
+- [ ] **1** [A] 로그인 → JWT 토큰 복사
+- [ ] **2** 관리자가 [A] 계정 비활성화 (`PUT /api/admin/users/{email}/disable`)
+- [ ] **3** 복사한 JWT로 즉시 API 호출 (`GET /api/documents`) → **401 반환** (만료 전이어도 차단)
+- [ ] **4** [A] 계정 탈퇴 후 동일 JWT로 API 호출 → 401 반환
+
+### A05 — HTTP 보안 헤더
+- [ ] **5** 임의 API 응답 헤더 확인 (curl 또는 브라우저 DevTools):
+  - `X-Frame-Options: DENY` 포함 확인
+  - `X-Content-Type-Options: nosniff` 포함 확인
+  - `Referrer-Policy: no-referrer` 포함 확인
+
+### A05 — CORS
+- [ ] **6** `Origin: http://malicious.example.com` 헤더로 API 요청 → CORS 오류 (허용되지 않은 오리진 차단)
+
+### A07 — SSE 단기 토큰
+
+> ⚠️ 프론트엔드 `stores/notification.ts` 패치 완료 후 테스트 가능
+
+- [ ] **7** `POST /api/notifications/sse-token` (인증 필요) → `sseToken` UUID 반환 확인
+- [ ] **8** 반환된 `sseToken`으로 `GET /api/notifications/stream?token={sseToken}` 연결 → SSE 스트림 수립 확인
+- [ ] **9** 동일 `sseToken` 재사용 시도 → 401 반환 (일회성 소비 확인)
+- [ ] **10** 30초 후 미사용 `sseToken`으로 연결 시도 → 401 반환 (TTL 만료 확인)
+- [ ] **11** 서버 접근 로그 확인 → SSE 연결 URL에 JWT 원문 미노출 (`?token=UUID` 형태만 기록)
+
+---
+
 ## 알림 실시간성 확인
+
+> ⚠️ `stores/notification.ts` SSE 단기 토큰 패치 완료 후 테스트
 
 A/B 두 창을 나란히 열고:
 
@@ -116,3 +200,22 @@ A/B 두 창을 나란히 열고:
 - [ ] [B]가 서명 실행 → [A] 화면에서 벨 아이콘 배지가 **즉시** 증가
 
 페이지 새로고침 없이 실시간으로 반응하면 SSE 정상 동작 확인 완료.
+
+---
+
+## 미구현 시나리오 (향후 추가 예정)
+
+### 4-7 — 서명 링크 재발송 (미구현)
+
+> `POST /api/signature-requests/{id}/resend` 구현 후 테스트 예정
+
+- [ ] EXPIRED 상태 서명자 행 → "재발송" 버튼 표시 확인
+- [ ] 재발송 클릭 → 새 토큰 발급 + 기존 토큰 무효화 확인
+- [ ] 기존(만료된) 링크 접속 → "유효하지 않은 링크" 안내 화면
+
+### 서명 거절 (미구현)
+
+> `POST /api/signature-requests/{token}/reject` 구현 후 테스트 예정
+
+- [ ] 서명자가 "거절" 버튼 클릭 + 사유 입력 → 요청자에게 `SIGN_REJECTED` 알림
+- [ ] 상세 페이지 `REJECTED` 배지 + 사유 표시

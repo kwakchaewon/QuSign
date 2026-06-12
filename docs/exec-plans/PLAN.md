@@ -1309,6 +1309,150 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] 클라우드 보안 엔지니어 채용 공고 분석 (KT / SKT / 삼성SDS / LG CNS / 금융보안원)
 - [ ] 이직 지원 시작
 
+---
+
+### 8-4. PQC 하이브리드 TLS 심화 (이직 포트폴리오 차별화)
+
+> 목표: "전송 계층 ML-KEM + 응용 계층 ML-DSA를 한 사람이 다 만진" 풀스택 PQC 포트폴리오  
+> 선행 조건: 6단계 AWS 배포 완료 (실서버에서 작업)
+
+---
+
+#### 8-4-0. 환경 준비
+
+- [ ] EC2에서 OpenSSL 버전 확인
+  ```bash
+  openssl version          # 3.5+ 필요
+  openssl list -kem-algorithms | grep ML-KEM
+  ```
+- [ ] OpenSSL 3.5 미만이면 소스 빌드 또는 패키지 설치
+  - Amazon Linux 2023 기준 기본 버전이 3.5 미만일 경우 소스 컴파일 필요
+- [ ] Nginx를 OpenSSL 3.5와 연동하여 재빌드 (패키지 매니저 버전은 번들 OpenSSL 사용)
+- [ ] Nginx `ssl_conf_command Groups X25519MLKEM768:X25519` 설정 추가
+  - X25519MLKEM768 우선 협상, PQC 미지원 클라이언트는 X25519로 자동 폴백
+
+---
+
+#### 8-4-1. 데모를 "증명"으로 끌어올리기 (1~2주)
+
+> "연결된다"가 아니라 "PQC로 협상됐다는 증거가 있다" 수준
+
+- [ ] Chrome에서 `https://qusign.com` 접속 → DevTools Security 패널에서 키 교환 알고리즘 확인
+  - `X25519MLKEM768` 표시 스크린샷 저장
+- [ ] tshark로 TLS 핸드셰이크 패킷 캡처
+  ```bash
+  tshark -i eth0 -f "port 443" -w handshake.pcap
+  # ClientHello key_share extension에 MLKEM 바이트 확인
+  tshark -r handshake.pcap -Y "tls.handshake.type == 1" -V | grep -A5 "Key Share"
+  ```
+- [ ] 고전 vs 하이브리드 오버헤드 직접 측정 및 비교표 작성
+
+  | | X25519 (고전) | X25519MLKEM768 (하이브리드) |
+  |---|---|---|
+  | ClientHello 크기 | ~300B | ~1,600B (+약 1,200B) |
+  | 핸드셰이크 지연 | 기준 | 거의 동일 (~1ms 미만) |
+  | 보안 레벨 | 128-bit classical | 128-bit classical + PQC |
+
+- [ ] 블로그/README 작성 (이 두 질문에 반드시 답할 것)
+  - "왜 순수 MLKEM이 아니라 X25519와의 하이브리드인가"
+  - "왜 oqs-provider가 아니라 OpenSSL 3.5 네이티브인가"
+
+---
+
+#### 8-4-2. 운영 현실 이해 (2~3주)
+
+> 실무에서 PQC 전환 비용을 이해하는 단계 — 데모 단계에서 안 보이는 것들
+
+- [ ] 폴백 직접 재현
+  ```bash
+  # PQC 미지원 클라이언트로 접속 → X25519로 폴백되는지 확인
+  openssl s_client -connect qusign.com:443 -groups X25519
+  ```
+- [ ] Nginx 로그에 협상된 그룹 기록
+  ```nginx
+  log_format pqc '$remote_addr "$ssl_protocol" "$ssl_cipher" curve="$ssl_curve"';
+  ```
+- [ ] 큰 ClientHello 문제 정리
+  - 1,600B+ ClientHello가 MTU(1,500B) 초과 → IP 단편화 발생
+  - 일부 미들박스/방화벽이 분할된 패킷을 드롭하는 시나리오 이해
+- [ ] Grafana 대시보드에 "PQC 협상 비율" 메트릭 추가 (8-1 Loki 연동)
+- [ ] 블로그 작성: "왜 키 교환(KEM)은 실용 단계고 TLS 인증서는 아직인가"
+
+---
+
+#### 8-4-3. ML-DSA 사설 CA + 인증서 오버헤드 실측 (3~4주) ★희소성 최고
+
+> 공개 PKI(Let's Encrypt, AWS ACM)는 ML-DSA 미지원 → 사설 CA로 직접 체험
+
+- [ ] OpenSSL 3.5로 ML-DSA 사설 CA 구성
+  ```bash
+  # ML-DSA-65 루트 CA 생성
+  openssl genpkey -algorithm ML-DSA-65 -out root-ca.key
+  openssl req -new -x509 -key root-ca.key -out root-ca.crt -days 3650 \
+    -subj "/CN=QuSign Test CA/O=QuSign"
+
+  # 서버 인증서 생성 및 CA 서명
+  openssl genpkey -algorithm ML-DSA-65 -out server.key
+  openssl req -new -key server.key -out server.csr -subj "/CN=qusign.com"
+  openssl x509 -req -in server.csr -CA root-ca.crt -CAkey root-ca.key -out server.crt -days 365
+  ```
+- [ ] 인증서 크기 비교표 작성 (직접 측정)
+
+  | | RSA-2048 | ECDSA P-256 | ML-DSA-65 |
+  |---|---|---|---|
+  | 공개키 크기 | ~270B | 65B | 1,952B |
+  | 서명 크기 | 256B | ~72B | 3,309B |
+  | 핸드셰이크 추가 비용 | 기준 | 작음 | ~5KB 증가 |
+
+- [ ] ML-DSA mTLS 핸드셰이크 동작 확인 (서버 + 클라이언트 모두 ML-DSA 인증서)
+  ```bash
+  # 서버
+  openssl s_server -cert server.crt -key server.key -CAfile root-ca.crt -Verify 1
+  # 클라이언트
+  openssl s_client -connect localhost:4433 -cert client.crt -key client.key -CAfile root-ca.crt
+  ```
+- [ ] (선택) AWS Private CA에서 ML-DSA GA 지원 여부 확인 → 클라우드 버전 실험
+- [ ] 미래 방향 정리 문서 작성
+  - Merkle Tree Certificates — Google/Let's Encrypt가 논의 중인 대형 인증서 압축 방식
+  - Composite 인증서 — RSA + ML-DSA 병렬 서명으로 점진적 전환
+  - FN-DSA (FALCON) — ML-DSA보다 서명 크기가 작은 대안 (FIPS 206)
+  - "지금은 안 되지만 이렇게 풀릴 것" — 현재 한계를 데이터로 설명하는 글
+
+---
+
+#### 8-4-4. QuSign에 crypto-agility 적용 (병행, 4주+)
+
+> QuSign만이 만들 수 있는 차별점 — 전송·응용 두 계층 PQC를 한 설계로 묶기
+
+- [ ] 서명 알고리즘 추상화 (`SignatureAlgorithm` 인터페이스 추출)
+  ```kotlin
+  interface SignatureAlgorithm {
+      fun generateKeyPair(): KeyPair
+      fun sign(privateKey: PrivateKey, data: ByteArray): ByteArray
+      fun verify(publicKey: PublicKey, data: ByteArray, signature: ByteArray): Boolean
+  }
+  // 구현체: MlDsa44Algorithm, MlDsa65Algorithm, MlDsa87Algorithm
+  // application.yml: pqc.signature.algorithm: ML-DSA-65
+  ```
+- [ ] ML-DSA 서명값이 QuSign 시스템에 주는 크기 영향 실측
+  - DB 저장 크기 (ML-DSA-65 서명 ~3.3KB vs RSA 256B)
+  - PDF 메타데이터 삽입 후 파일 크기 변화
+  - 서명·검증 처리 시간 (liboqs-java vs BouncyCastle 1.84 비교)
+- [ ] JDK 네이티브 PQC 전환 로드맵 정리
+  - JEP 496 (ML-KEM) — JDK 24 Preview
+  - JEP 527 (TLS 하이브리드) — 논의 중
+  - "현재는 liboqs-java, 표준 라이브러리 출시 시 교체 가능한 구조" 문서화
+
+---
+
+**8-4 완료 기준**
+- [ ] Chrome DevTools에서 X25519MLKEM768 협상 스크린샷 + tshark 패킷 캡처 확보
+- [ ] 고전 vs 하이브리드 오버헤드 비교표 블로그 게시
+- [ ] ML-DSA 사설 CA로 mTLS 핸드셰이크 동작 확인 및 인증서 크기 비교표 작성
+- [ ] QuSign `SignatureAlgorithm` 인터페이스 추출 및 알고리즘 교체 가능 구조 구현
+
+---
+
 **8단계 완료 기준**
 - [ ] Loki + Grafana 운영 중
 - [ ] GitHub README 완성

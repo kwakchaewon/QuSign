@@ -94,11 +94,21 @@
             <p>서비스는 Amazon Web Services 싱가포르(ap-southeast-1) 리전에서 운영됩니다. 이에 따라 수집된 개인정보가 국외로 이전될 수 있습니다.</p>
             <ul>
               <li><strong>이전받는 자:</strong> Amazon Web Services, Inc.</li>
-              <li><strong>이전되는 국가:</strong> 싱가포르</li>
-              <li><strong>이전 일시 및 방법:</strong> 서비스 이용 시 네트워크를 통해 전송</li>
-              <li><strong>이전되는 개인정보 항목:</strong> 이메일, 이름, 서명 데이터, 업로드 문서</li>
-              <li><strong>이전받는 자의 이용 목적:</strong> 서비스 인프라 운영 (저장, 처리)</li>
-              <li><strong>보유·이용 기간:</strong> 회원 탈퇴 후 즉시 파기 또는 법령에 따른 보존 기간</li>
+              <li><strong>이전되는 국가:</strong> 싱가포르 (ap-southeast-1 리전)</li>
+              <li><strong>이전 일시 및 방법:</strong> 서비스 이용 시 네트워크를 통해 상시 전송</li>
+              <li>
+                <strong>이전되는 개인정보 항목:</strong>
+                <ul>
+                  <li>이메일 주소</li>
+                  <li>암호화된 비밀번호 해시</li>
+                  <li>ML-DSA-65 공개키 (개인키는 암호화된 형태로 저장)</li>
+                  <li>서명 이력 및 업로드된 PDF 문서</li>
+                  <li>서비스 이용 기록 (접속 IP, User-Agent, 이벤트 일시)</li>
+                </ul>
+              </li>
+              <li><strong>이전받는 자의 이용 목적:</strong> 서비스 인프라 운영 (저장, 처리, 백업)</li>
+              <li><strong>보유·이용 기간:</strong> 회원 탈퇴 후 즉시 파기. 단, 서명 이력은 전자서명법 제31조에 따라 탈퇴 후에도 보존될 수 있습니다. 감사 로그는 수집일로부터 10년간 보관됩니다.</li>
+              <li><strong>거부 시 불이익:</strong> 동의하지 않으실 경우 서비스 이용이 불가합니다. 서비스 인프라 전체가 AWS 싱가포르 리전에서 운영되기 때문입니다.</li>
             </ul>
 
             <h4>7. 문의</h4>

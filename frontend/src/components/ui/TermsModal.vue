@@ -87,7 +87,18 @@
             <h4>5. 제3자 제공</h4>
             <p>수집된 개인정보는 원칙적으로 제3자에게 제공하지 않습니다. 다만, 법령에 따른 요청이 있는 경우 예외로 합니다.</p>
 
-            <h4>6. 문의</h4>
+            <h4>6. 개인정보 국외 이전 (개인정보보호법 제28조의8)</h4>
+            <p>서비스는 Amazon Web Services 싱가포르(ap-southeast-1) 리전에서 운영됩니다. 이에 따라 수집된 개인정보가 국외로 이전될 수 있습니다.</p>
+            <ul>
+              <li><strong>이전받는 자:</strong> Amazon Web Services, Inc.</li>
+              <li><strong>이전되는 국가:</strong> 싱가포르</li>
+              <li><strong>이전 일시 및 방법:</strong> 서비스 이용 시 네트워크를 통해 전송</li>
+              <li><strong>이전되는 개인정보 항목:</strong> 이메일, 이름, 서명 데이터, 업로드 문서</li>
+              <li><strong>이전받는 자의 이용 목적:</strong> 서비스 인프라 운영 (저장, 처리)</li>
+              <li><strong>보유·이용 기간:</strong> 회원 탈퇴 후 즉시 파기 또는 법령에 따른 보존 기간</li>
+            </ul>
+
+            <h4>7. 문의</h4>
             <p>개인정보 관련 문의: <a href="mailto:privacy@qusign.kr">privacy@qusign.kr</a></p>
           </section>
 

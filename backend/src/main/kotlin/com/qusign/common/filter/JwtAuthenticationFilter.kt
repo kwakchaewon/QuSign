@@ -1,5 +1,6 @@
 package com.qusign.common.filter
 
+import com.qusign.auth.repository.UserRepository
 import com.qusign.auth.service.JwtService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -12,7 +13,10 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
-class JwtAuthenticationFilter(private val jwtService: JwtService) : OncePerRequestFilter() {
+class JwtAuthenticationFilter(
+    private val jwtService: JwtService,
+    private val userRepository: UserRepository,
+) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -22,10 +26,14 @@ class JwtAuthenticationFilter(private val jwtService: JwtService) : OncePerReque
         val token = extractToken(request)
         if (token != null && jwtService.isValid(token)) {
             val email = jwtService.extractEmail(token)
-            val role = jwtService.extractRole(token)
-            val auth = UsernamePasswordAuthenticationToken(email, null, listOf(SimpleGrantedAuthority("ROLE_$role")))
-            auth.details = WebAuthenticationDetailsSource().buildDetails(request)
-            SecurityContextHolder.getContext().authentication = auth
+            val user = userRepository.findByEmail(email)
+            // 비활성화 또는 탈퇴 계정이면 인증 컨텍스트를 설정하지 않아 즉시 차단
+            if (user != null && user.disabledAt == null && user.deletedAt == null) {
+                val role = jwtService.extractRole(token)
+                val auth = UsernamePasswordAuthenticationToken(email, null, listOf(SimpleGrantedAuthority("ROLE_$role")))
+                auth.details = WebAuthenticationDetailsSource().buildDetails(request)
+                SecurityContextHolder.getContext().authentication = auth
+            }
         }
         chain.doFilter(request, response)
     }

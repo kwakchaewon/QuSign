@@ -1,6 +1,6 @@
 package com.qusign.signature.controller
 
-import com.qusign.common.audit.AuditContext
+import com.qusign.common.audit.AuditContextExtractor
 import com.qusign.common.response.ApiResponse
 import com.qusign.signature.dto.*
 import com.qusign.signature.service.SignatureFlowService
@@ -17,7 +17,10 @@ import java.nio.charset.StandardCharsets
 
 @RestController
 @RequestMapping("/api")
-class SignatureController(private val signatureFlowService: SignatureFlowService) {
+class SignatureController(
+    private val signatureFlowService: SignatureFlowService,
+    private val auditContextExtractor: AuditContextExtractor,
+) {
 
     // ── 받은 문서 목록 (서명자용) ─────────────────────────────────────────────
     @GetMapping("/signature-requests/received")
@@ -34,7 +37,7 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @Valid @RequestBody dto: CreateSignatureRequestDto,
         request: HttpServletRequest,
     ): ApiResponse<SignatureRequestResponse> =
-        ApiResponse.ok(signatureFlowService.requestSignature(email, dto, request.auditContext()))
+        ApiResponse.ok(signatureFlowService.requestSignature(email, dto, auditContextExtractor.from(request)))
 
     @PostMapping("/signature-requests/batch")
     @ResponseStatus(HttpStatus.CREATED)
@@ -43,7 +46,7 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @Valid @RequestBody dto: BatchCreateSignatureRequestDto,
         request: HttpServletRequest,
     ): ApiResponse<List<SignatureRequestResponse>> =
-        ApiResponse.ok(signatureFlowService.requestSignatureBatch(email, dto, request.auditContext()))
+        ApiResponse.ok(signatureFlowService.requestSignatureBatch(email, dto, auditContextExtractor.from(request)))
 
     // ── 번들 서명 요청 ────────────────────────────────────────────────────────
     @PostMapping("/signature-requests/bundle")
@@ -53,7 +56,7 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @Valid @RequestBody dto: CreateBundleSignatureRequestDto,
         request: HttpServletRequest,
     ): ApiResponse<BundleSignatureRequestResponse> =
-        ApiResponse.ok(signatureFlowService.requestBundleSignature(email, dto, request.auditContext()))
+        ApiResponse.ok(signatureFlowService.requestBundleSignature(email, dto, auditContextExtractor.from(request)))
 
     // ── 번들 상세 (요청자용) ──────────────────────────────────────────────────
     @GetMapping("/bundles/{bundleId}")
@@ -71,7 +74,7 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @PathVariable signerEmail: String,
         request: HttpServletRequest,
     ): ApiResponse<Unit> {
-        signatureFlowService.cancelBundleSigner(bundleId, signerEmail, requesterEmail, request.auditContext())
+        signatureFlowService.cancelBundleSigner(bundleId, signerEmail, requesterEmail, auditContextExtractor.from(request))
         return ApiResponse.ok(Unit)
     }
 
@@ -85,7 +88,7 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         request: HttpServletRequest,
         response: HttpServletResponse,
     ) {
-        val (bytes, filename) = signatureFlowService.getBundleSignedDocByRequester(bundleId, signerEmail, docIndex, email, request.auditContext())
+        val (bytes, filename) = signatureFlowService.getBundleSignedDocByRequester(bundleId, signerEmail, docIndex, email, auditContextExtractor.from(request))
         sendPdf(response, bytes, filename)
     }
 
@@ -104,7 +107,7 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @Valid @RequestBody dto: SignDto,
         request: HttpServletRequest,
     ): ApiResponse<SignatureResponse> =
-        ApiResponse.ok(signatureFlowService.sign(token, email, dto.password, request.auditContext()))
+        ApiResponse.ok(signatureFlowService.sign(token, email, dto.password, auditContextExtractor.from(request)))
 
     @GetMapping("/signature-requests/{token}/document")
     fun getDocument(
@@ -140,7 +143,7 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         request: HttpServletRequest,
         response: HttpServletResponse,
     ) {
-        val (bytes, filename) = signatureFlowService.getSignedDocument(token, email, request.auditContext())
+        val (bytes, filename) = signatureFlowService.getSignedDocument(token, email, auditContextExtractor.from(request))
         sendPdf(response, bytes, filename)
     }
 
@@ -152,7 +155,7 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         request: HttpServletRequest,
         response: HttpServletResponse,
     ) {
-        val (bytes, filename) = signatureFlowService.getSignedBundleDocument(bundleToken, email, index, request.auditContext())
+        val (bytes, filename) = signatureFlowService.getSignedBundleDocument(bundleToken, email, index, auditContextExtractor.from(request))
         sendPdf(response, bytes, filename)
     }
 
@@ -172,7 +175,7 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         request: HttpServletRequest,
         response: HttpServletResponse,
     ) {
-        val (bytes, filename) = signatureFlowService.getSignedDocumentByRequester(id, signerEmail, email, request.auditContext())
+        val (bytes, filename) = signatureFlowService.getSignedDocumentByRequester(id, signerEmail, email, auditContextExtractor.from(request))
         sendPdf(response, bytes, filename)
     }
 
@@ -183,7 +186,7 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         @PathVariable email: String,
         request: HttpServletRequest,
     ): ApiResponse<Unit> {
-        signatureFlowService.cancelSigner(id, email, requesterEmail, request.auditContext())
+        signatureFlowService.cancelSigner(id, email, requesterEmail, auditContextExtractor.from(request))
         return ApiResponse.ok(Unit)
     }
 
@@ -207,11 +210,4 @@ class SignatureController(private val signatureFlowService: SignatureFlowService
         response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''$encodedFilename")
         response.outputStream.write(bytes)
     }
-}
-
-private fun HttpServletRequest.auditContext(): AuditContext {
-    val ip = (getHeader("X-Forwarded-For")?.split(",")?.firstOrNull()?.trim()
-        ?: remoteAddr).take(45)
-    val ua = (getHeader("User-Agent") ?: "").take(500)
-    return AuditContext(ipAddress = ip, userAgent = ua)
 }

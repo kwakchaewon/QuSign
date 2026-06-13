@@ -34,14 +34,14 @@
     </div>
 
     <div v-if="!isLoading && !error && logs.length > 0" class="qs-audit-export">
-      <a :href="exportUrl" class="qs-link-quiet" download>
+      <button type="button" class="qs-link-quiet" @click="downloadAudit">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M12 4v12M6 10l6 6 6-6" stroke="currentColor"
             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
         JSON 내보내기 (법적 분쟁 제출용)
-      </a>
+      </button>
     </div>
   </div>
 </template>
@@ -70,9 +70,21 @@ const logs = ref<AuditLog[]>([])
 const isLoading = ref(true)
 const error = ref(false)
 
-const exportUrl = props.documentId
-  ? `/api/documents/${props.documentId}/audit/export`
-  : `/api/bundles/${props.bundleId}/audit/export`
+async function downloadAudit() {
+  const url = props.documentId
+    ? `/api/documents/${props.documentId}/audit/export`
+    : `/api/bundles/${props.bundleId}/audit/export`
+  const filename = props.documentId
+    ? `audit_document_${props.documentId}.json`
+    : `audit_bundle_${props.bundleId}.json`
+  const res = await api.get(url, { responseType: 'blob' })
+  const href = URL.createObjectURL(new Blob([res.data], { type: 'application/json' }))
+  const a = document.createElement('a')
+  a.href = href
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(href)
+}
 
 onMounted(async () => {
   try {
@@ -208,12 +220,16 @@ function formatDate(d: string) {
   font-size: 12px;
 }
 
-.qs-audit-export a {
+.qs-audit-export button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   color: var(--text-tertiary);
-  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  cursor: pointer;
 }
-.qs-audit-export a:hover { color: var(--text-secondary) }
+.qs-audit-export button:hover { color: var(--text-secondary) }
 </style>

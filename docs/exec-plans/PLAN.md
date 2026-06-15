@@ -731,7 +731,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 6-1. 사전 준비 (로컬)
 
-- [ ] AWS CLI v2 설치 (`winget install Amazon.AWSCLI`)
+- [x] AWS CLI v2 설치 (`winget install Amazon.AWSCLI`)
 - [ ] `aws configure` — Access Key, Secret Key, 리전 `ap-southeast-1` (싱가포르) 설정
 - [ ] Docker Desktop 로그인 확인
 - [ ] 도메인 구매 결정 (Route53에서 구매 시 자동 연동, 가비아 구매도 가능)

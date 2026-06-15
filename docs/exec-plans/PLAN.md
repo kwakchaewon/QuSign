@@ -733,6 +733,10 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 - [x] AWS CLI v2 설치 (`winget install Amazon.AWSCLI`)
 - [ ] `aws configure` — Access Key, Secret Key, 리전 `ap-southeast-1` (싱가포르) 설정
+  - [ ] IAM 콘솔 → 사용자 → 보안 자격증명 → 액세스 키 발급
+  - [x] `aws configure set region ap-southeast-1` (리전 사전 설정 완료)
+  - [ ] `aws configure` 실행 후 Access Key ID / Secret Access Key 입력
+  - [ ] `aws sts get-caller-identity` 로 인증 확인
 - [ ] Docker Desktop 로그인 확인
 - [ ] 도메인 구매 결정 (Route53에서 구매 시 자동 연동, 가비아 구매도 가능)
 - [ ] Spring Boot `application-prod.yml` 환경변수 기반 설정 확인

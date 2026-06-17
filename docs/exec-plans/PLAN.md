@@ -763,7 +763,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - [x] 도메인 선택 및 구매: **`qusign.link`** ($5/년) — 2026-06-17 등록 완료, 만료 2027-06-17
   - [x] 구매 완료 시 호스팅 영역(Hosted Zone) 자동 생성 확인
     - Route53 → 호스팅 영역 → `qusign.link` 존재 여부 확인
-  - [ ] ⚠️ **이메일 인증 필수** — ksh03003@naver.com 수신 메일 링크 클릭 (15일 내 미인증 시 도메인 일시 중지)
+  - [x] ⚠️ **이메일 인증 필수** — ksh03003@naver.com 수신 메일 링크 클릭 (15일 내 미인증 시 도메인 일시 중지)
   - [ ] 이후 EC2 연결 시 A 레코드 추가 예정 (§6-3에서 처리)
 - [x] Spring Boot `application-prod.yml` 환경변수 기반 설정 확인
   - DB URL / 유저 / 패스워드 → `${DB_URL}`, `${DB_USERNAME}`, `${DB_PASSWORD}` 환경변수로 읽는지 확인
@@ -778,7 +778,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 > 콘솔: IAM → 역할/사용자 생성
 
 #### EC2 인스턴스 역할 (EC2가 AWS 서비스에 접근하기 위한 역할)
-- [ ] IAM 역할 생성: `qusign-ec2-role`
+- [x] IAM 역할 생성: `qusign_ec2_role`
   - 신뢰 정책: EC2 서비스
   - 권한 정책:
     - `AmazonS3FullAccess` (나중에 버킷 한정으로 축소)
@@ -802,7 +802,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
       ```
 
 #### EventBridge + Lambda용 역할
-- [ ] IAM 역할 생성: `qusign-scheduler-role`
+- [ ] IAM 역할 생성: `qusign_scheduler_role`
   - 신뢰 정책: Lambda 서비스
   - 권한 정책:
     - EC2 start/stop 인라인 정책
@@ -814,7 +814,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 > 콘솔: VPC → VPC 생성 (리전: ap-southeast-1 싱가포르)
 
 - [ ] VPC 생성
-  - 이름: `qusign-vpc`
+  - 이름: `qusign_vpc`
   - IPv4 CIDR: `10.0.0.0/16`
 - [ ] 서브넷 생성
   - 퍼블릭: `10.0.1.0/24` (ap-southeast-1a) — EC2 (MariaDB 포함)
@@ -825,7 +825,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 #### 보안 그룹
 
-- [ ] `qusign-ec2-sg`
+- [ ] `qusign_ec2_sg`
   | 방향 | 포트 | 소스 | 용도 |
   |---|---|---|---|
   | 인바운드 | 22 | 내 IP만 | SSH |
@@ -841,7 +841,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 > 콘솔: ECR → 리포지토리 생성
 
-- [ ] ECR 리포지토리 생성: `qusign-backend`
+- [ ] ECR 리포지토리 생성: `qusign_backend`
   - 리전: `ap-southeast-1`
   - 이미지 스캔 활성화 (보안 취약점 자동 감지)
   - 수명 주기 정책 설정: 최신 3개 이미지만 유지 (스토리지 비용 절감)
@@ -933,7 +933,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   | `/qusign/prod/db-username` | `qsadmin` |
   | `/qusign/prod/db-password` | (실제 비밀번호) |
   | `/qusign/prod/jwt-secret` | (랜덤 256bit 시크릿) |
-  | `/qusign/prod/s3-bucket` | `qusign-documents-prod` |
+  | `/qusign/prod/s3-bucket` | `qusign_documents_prod` |
   | `/qusign/prod/cors-origins` | `https://qusign.com` |
 
 - [ ] EC2 배포 스크립트에서 SSM 값을 환경변수로 주입하는 방식 사용:
@@ -948,7 +948,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 > 콘솔: S3 → 버킷 만들기
 
-- [ ] 버킷 생성: `qusign-documents-prod-{AccountId}`
+- [ ] 버킷 생성: `qusign_documents_prod_{AccountId}`
   - 리전: `ap-southeast-1`
   - 퍼블릭 액세스 차단: **전체 차단** (EC2 IAM 역할로만 접근)
   - 버전 관리: 비활성화 (비용 절감)
@@ -957,9 +957,9 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   ```json
   {
     "Effect": "Allow",
-    "Principal": { "AWS": "arn:aws:iam::ACCOUNT_ID:role/qusign-ec2-role" },
+    "Principal": { "AWS": "arn:aws:iam::ACCOUNT_ID:role/qusign_ec2_role" },
     "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-    "Resource": "arn:aws:s3:::qusign-documents-prod-*/*"
+    "Resource": "arn:aws:s3:::qusign_documents_prod_*/*"
   }
   ```
 - [ ] 수명 주기 정책: 180일 이상 미접근 객체 Glacier로 이동 (장기 비용 절감)
@@ -974,10 +974,10 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - AMI: Amazon Linux 2023
   - 인스턴스 유형: `t3.small` (vCPU 2, RAM 2GB — Spring Boot + Docker 최소 사양)
   - 키 페어: 새로 생성 → `.pem` 파일 안전하게 보관
-  - VPC: `qusign-vpc` / 서브넷: 퍼블릭
+  - VPC: `qusign_vpc` / 서브넷: 퍼블릭
   - 퍼블릭 IP 자동 할당: 활성화
-  - IAM 인스턴스 프로필: `qusign-ec2-role`
-  - 보안 그룹: `qusign-ec2-sg`
+  - IAM 인스턴스 프로필: `qusign_ec2_role`
+  - 보안 그룹: `qusign_ec2_sg`
   - 스토리지: gp3 20GB
   - 태그: `Name=qusign-app, Env=prod`
 
@@ -1063,7 +1063,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   set -e
 
   ECR_URL="ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com"
-  IMAGE="$ECR_URL/qusign-backend:latest"
+  IMAGE="$ECR_URL/qusign_backend:latest"
 
   # SSM에서 환경변수 로드
   DB_URL=$(aws ssm get-parameter --name /qusign/prod/db-url --with-decryption --query Parameter.Value --output text)
@@ -1106,9 +1106,9 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 #### Lambda 함수 생성 (EC2만 제어)
 
-- [ ] Lambda 함수 생성: `qusign-start-instances`
+- [ ] Lambda 함수 생성: `qusign_start_instances`
   - 런타임: Python 3.12
-  - 실행 역할: `qusign-scheduler-role`
+  - 실행 역할: `qusign_scheduler_role`
   - 코드:
     ```python
     import boto3
@@ -1133,8 +1133,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] EventBridge Scheduler 규칙 2개 생성
   | 이름 | Cron 표현식 | payload | 설명 |
   |---|---|---|---|
-  | `qusign-nightly-stop` | `cron(30 12 * * ? *)` | `{"action": "stop"}` | KST 21:30 정지 |
-  | `qusign-morning-start` | `cron(0 0 * * ? *)` | `{"action": "start"}` | KST 09:00 시작 |
+  | `qusign_nightly_stop` | `cron(30 12 * * ? *)` | `{"action": "stop"}` | KST 21:30 정지 |
+  | `qusign_morning_start` | `cron(0 0 * * ? *)` | `{"action": "start"}` | KST 09:00 시작 |
 
 - [ ] Lambda 테스트 (콘솔에서 `{"action": "stop"}` 으로 직접 실행)
 - [ ] CloudWatch Logs에서 실행 확인
@@ -1243,8 +1243,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
         - name: Build and push Docker image
           run: |
-            docker build -t ${{ secrets.ECR_REGISTRY }}/qusign-backend:latest .
-            docker push ${{ secrets.ECR_REGISTRY }}/qusign-backend:latest
+            docker build -t ${{ secrets.ECR_REGISTRY }}/qusign_backend:latest .
+            docker push ${{ secrets.ECR_REGISTRY }}/qusign_backend:latest
 
         - name: Deploy to EC2 via SSH
           uses: appleboy/ssh-action@v1

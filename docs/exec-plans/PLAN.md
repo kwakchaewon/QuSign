@@ -729,6 +729,21 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
+### 6-0. AWS 계정 사용 기준
+
+| 작업 | 사용 계정 | 이유 |
+|------|-----------|------|
+| 도메인 구매 (Route53) | **루트 계정** | 결제 수반 작업 |
+| 결제 정보 변경 / 예산 알림 설정 | **루트 계정** | 결제 콘솔은 루트만 접근 |
+| IAM 사용자·그룹·정책 생성 | **루트 계정** | IAM 관리 권한 |
+| EC2 / S3 / RDS / SES 실제 작업 | **IAM 계정** (`qusign_cwkwak`) | 최소 권한 원칙 |
+| AWS CLI (`aws` 명령) | **IAM 계정** | Access Key는 IAM 계정 발급분 사용 |
+| GitHub Actions 배포 | **IAM 계정** (`github-actions-deployer`) | 별도 배포 전용 계정 |
+
+> 루트 계정은 도메인 구매·결제·IAM 초기 설정 외에는 **절대 사용 금지** (AWS 보안 모범 사례)
+
+---
+
 ### 6-1. 사전 준비 (로컬)
 
 - [x] AWS CLI v2 설치 (`winget install Amazon.AWSCLI`)
@@ -743,11 +758,13 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - [x] `aws sts get-caller-identity` 로 인증 확인
 - [x] Docker Desktop 로그인 확인
 - [ ] 도메인 구매 (Route53)
+  > ⚠️ **루트 계정 사용** — 도메인 구매는 결제가 포함되므로 반드시 루트 계정(kwakchaewon)으로 콘솔 로그인 후 진행
   - [ ] AWS 콘솔 → Route53 → 도메인 등록 → 도메인 이름 검색
-  - [ ] 도메인 선택 및 구매 (`.com` 약 $13/년)
-    - 후보: `qusign.com` / `qusign.io` / `qusign.app` 등
+  - [ ] 도메인 선택 및 구매 (`.com` 약 $15/년)
+    - 후보: `qu-sign.com` ($15) — Route53 검색 결과 "정확히 일치" 확인됨
+    - `qusign.com` 가용 여부도 재확인 권장
   - [ ] 구매 완료 시 호스팅 영역(Hosted Zone) 자동 생성 확인
-    - Route53 → 호스팅 영역 → `qusign.xxx` 존재 여부 확인
+    - Route53 → 호스팅 영역 → `qu-sign.com` 존재 여부 확인
   - [ ] 이후 EC2 연결 시 A 레코드 추가 예정 (§6-3에서 처리)
 - [ ] Spring Boot `application-prod.yml` 환경변수 기반 설정 확인
   - DB URL / 유저 / 패스워드 → `${DB_URL}`, `${DB_USER}`, `${DB_PASS}` 환경변수로 읽는지 확인

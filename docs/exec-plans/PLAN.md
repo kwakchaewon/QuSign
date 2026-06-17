@@ -742,7 +742,13 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - [x] `aws configure` 실행 후 Access Key ID / Secret Access Key 입력
   - [x] `aws sts get-caller-identity` 로 인증 확인
 - [x] Docker Desktop 로그인 확인
-- [ ] 도메인 구매 결정 (Route53에서 구매 시 자동 연동, 가비아 구매도 가능)
+- [ ] 도메인 구매 (Route53)
+  - [ ] AWS 콘솔 → Route53 → 도메인 등록 → 도메인 이름 검색
+  - [ ] 도메인 선택 및 구매 (`.com` 약 $13/년)
+    - 후보: `qusign.com` / `qusign.io` / `qusign.app` 등
+  - [ ] 구매 완료 시 호스팅 영역(Hosted Zone) 자동 생성 확인
+    - Route53 → 호스팅 영역 → `qusign.xxx` 존재 여부 확인
+  - [ ] 이후 EC2 연결 시 A 레코드 추가 예정 (§6-3에서 처리)
 - [ ] Spring Boot `application-prod.yml` 환경변수 기반 설정 확인
   - DB URL / 유저 / 패스워드 → `${DB_URL}`, `${DB_USER}`, `${DB_PASS}` 환경변수로 읽는지 확인
   - S3 버킷명, 리전 → 환경변수로 읽는지 확인

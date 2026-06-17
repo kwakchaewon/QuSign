@@ -809,10 +809,11 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - ⚠️ EC2 인스턴스 생성 후 인라인 정책 Resource를 특정 인스턴스 ID로 교체 필요
 
 #### EventBridge + Lambda용 역할
-- [ ] IAM 역할 생성: `qusign_lambda_eventbridge_role`
-  - 신뢰 정책: Lambda 서비스
+- [x] IAM 역할 생성: `qusign_lambda_eventbridge_role`
+  - ARN: `arn:aws:iam::285868221698:role/qusign_lambda_eventbridge_role`
+  - 신뢰 정책: Lambda 서비스 (`lambda.amazonaws.com`)
   - 권한 정책:
-    - EC2 start/stop 인라인 정책
+    - 고객 관리형 정책 `qusign_lambda_ec2_control` 연결 (EC2 start/stop)
 
 ---
 

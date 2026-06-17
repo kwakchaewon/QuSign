@@ -734,6 +734,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [x] AWS CLI v2 설치 (`winget install Amazon.AWSCLI`)
 - [ ] `aws configure` — Access Key, Secret Key, 리전 `ap-southeast-1` (싱가포르) 설정
   - [x] IAM 콘솔 → 사용자 → 보안 자격증명 → 액세스 키 발급
+    - AWS 계정 ID: `285868221698`
     - IAM 사용자: `qusign_cwkwak` (그룹: `qusign_developers`)
     - 태그: `Project=qusign`, `Environment=prod`, `Owner=cwkwak`
     - 다음 단계: 보안 자격증명 탭 → 액세스 키 만들기 → CLI 선택

@@ -741,7 +741,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - [x] `aws configure set region ap-southeast-1` (리전 사전 설정 완료)
   - [x] `aws configure` 실행 후 Access Key ID / Secret Access Key 입력
   - [x] `aws sts get-caller-identity` 로 인증 확인
-- [ ] Docker Desktop 로그인 확인
+- [x] Docker Desktop 로그인 확인
 - [ ] 도메인 구매 결정 (Route53에서 구매 시 자동 연동, 가비아 구매도 가능)
 - [ ] Spring Boot `application-prod.yml` 환경변수 기반 설정 확인
   - DB URL / 유저 / 패스워드 → `${DB_URL}`, `${DB_USER}`, `${DB_PASS}` 환경변수로 읽는지 확인

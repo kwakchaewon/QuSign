@@ -787,7 +787,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
     - `AmazonEC2ContainerRegistryReadOnly` (ECR 이미지 풀)
 
 #### GitHub Actions 배포용 IAM 사용자
-- [ ] IAM 사용자 생성: `github-actions-deployer`
+- [ ] IAM 사용자 생성: `qusign_github_actions_deployer`
   - 프로그래밍 방식 액세스 (Access Key 발급)
   - 권한 정책:
     - `AmazonEC2ContainerRegistryFullAccess` (ECR 푸시)

@@ -739,8 +739,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
     - 태그: `Project=qusign`, `Environment=prod`, `Owner=cwkwak`
     - 다음 단계: 보안 자격증명 탭 → 액세스 키 만들기 → CLI 선택
   - [x] `aws configure set region ap-southeast-1` (리전 사전 설정 완료)
-  - [ ] `aws configure` 실행 후 Access Key ID / Secret Access Key 입력
-  - [ ] `aws sts get-caller-identity` 로 인증 확인
+  - [x] `aws configure` 실행 후 Access Key ID / Secret Access Key 입력
+  - [x] `aws sts get-caller-identity` 로 인증 확인
 - [ ] Docker Desktop 로그인 확인
 - [ ] 도메인 구매 결정 (Route53에서 구매 시 자동 연동, 가비아 구매도 가능)
 - [ ] Spring Boot `application-prod.yml` 환경변수 기반 설정 확인

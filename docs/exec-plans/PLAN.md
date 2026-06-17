@@ -787,19 +787,26 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
     - `AmazonEC2ContainerRegistryReadOnly` (ECR 이미지 풀)
 
 #### GitHub Actions 배포용 IAM 사용자
-- [ ] IAM 사용자 생성: `qusign_github_actions_deployer`
-  - 프로그래밍 방식 액세스 (Access Key 발급)
+- [x] IAM 사용자 생성: `qusign_github_actions_deployer`
+  - 프로그래밍 방식 액세스 (Access Key 발급 완료)
   - 권한 정책:
     - `AmazonEC2ContainerRegistryFullAccess` (ECR 푸시)
     - `AmazonSSMFullAccess` (EC2 Run Command로 배포)
-    - EC2 start/stop 권한 (인라인 정책):
+    - EC2 start/stop 권한 (인라인 정책 `qusign_github_actions_ec2_control`):
       ```json
       {
-        "Effect": "Allow",
-        "Action": ["ec2:StartInstances", "ec2:StopInstances"],
-        "Resource": "arn:aws:ec2:ap-southeast-1:ACCOUNT_ID:instance/INSTANCE_ID"
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": ["ec2:StartInstances", "ec2:StopInstances"],
+            "Resource": "arn:aws:ec2:ap-northeast-2:285868221698:instance/*"
+          }
+        ]
       }
       ```
+  - Access Key → GitHub Secrets 등록 완료 (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
+  - ⚠️ EC2 인스턴스 생성 후 인라인 정책 Resource를 특정 인스턴스 ID로 교체 필요
 
 #### EventBridge + Lambda용 역할
 - [ ] IAM 역할 생성: `qusign_scheduler_role`

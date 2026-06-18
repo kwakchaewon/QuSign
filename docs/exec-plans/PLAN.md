@@ -859,7 +859,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 > 콘솔: ECR → 리포지토리 생성
 
-- [ ] ECR 리포지토리 생성: `qusign_backend`
+- [x] ECR 리포지토리 생성: `qusign_backend`
   - 리전: `ap-southeast-1`
   - 이미지 스캔 활성화 (보안 취약점 자동 감지)
   - 수명 주기 정책 설정: 최신 3개 이미지만 유지 (스토리지 비용 절감)
@@ -872,7 +872,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
       }]
     }
     ```
-- [ ] 로컬에서 ECR 로그인 테스트
+- [x] 로컬에서 ECR 로그인 테스트
   ```bash
   aws ecr get-login-password --region ap-southeast-1 | \
     docker login --username AWS --password-stdin \

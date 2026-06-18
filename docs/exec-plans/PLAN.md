@@ -918,7 +918,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   ```
   > PuTTY: PuTTYgen으로 `.pem` → `.ppk` 변환 후 Connection → SSH → Auth → Credentials에서 `.ppk` 지정
 
-- [ ] EC2 접속 후 초기 설정
+- [x] EC2 접속 후 초기 설정 ✅ 완료 (2026-06-18)
   ```bash
   # Docker 설치
   sudo dnf install -y docker

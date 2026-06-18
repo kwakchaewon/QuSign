@@ -39,7 +39,7 @@ LANE 2 — 자동화 스케줄러 (bottom half):
   (KST 09:00 / 21:30)                                    ↓
                                                    [CloudWatch Logs]
 
-Lane separator: 1px dashed #e6e6e6, full width, labeled "AUTOMATION" on left
+Lane separator: 1.5px dashed #e6e6e6, full width, labeled "AUTOMATION" on left
 
 ━━━ COMPONENT CARD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -58,6 +58,14 @@ Rounded rect enclosing related cards:
   Border        : 2px solid [group color]
   Background    : [group tint]
   Label         : top of box, 12px JetBrains Mono ALL CAPS, [group color]
+
+━━━ CAPTION LAYOUT RULE (전체 적용) ━━━━━━━━━━━━
+
+모든 캡션은 해당 카드 name 바로 아래에 수직 배치:
+  Placement  : card name 아래에 세로 스택 — 아이콘 옆(오른쪽)에 절대 배치 금지
+  Alignment  : 카드 열 내 수평 중앙 정렬
+  Max-width  : 그룹 inner width; word-wrap 항상 활성화
+  Word-wrap  : 항상 활성화 — 긴 텍스트는 다음 줄로 줄바꿈, 절대 경계 밖으로 오버플로우 금지
 
 ━━━ LANE 1 — CI/CD PIPELINE ━━━━━━━━━━━━━━━━━━━
 
@@ -84,13 +92,13 @@ GROUP C — GITHUB ACTIONS
   Group color : #2088ff (Actions blue)
   Group tint  : #f0f6ff
   Group label : [GitHub Actions icon 16px]  "GITHUB ACTIONS"
-  Group width : ~560px  (widest group in Lane 1)
+  Group width : ~600px  (widest group in Lane 1)
 
   Inside: vertical pipeline of step cards (NOT component cards — smaller):
 
   Step card style:
     Background: #ffffff, border: 1px solid #d0d7de, radius: 8px
-    Width: ~520px, Height: ~48px
+    Width: ~560px, Height: ~48px
     Left: step number circle (filled #2088ff, white text, 24px)
     Center: step name (13px Inter 600, #000000) + sub (12px Inter, #666666)
     Right: tool badge pill
@@ -165,12 +173,14 @@ GROUP G — LAMBDA
   Group color : #f0a040 (Lambda orange)
   Group tint  : #fffaf0
   Group label : "LAMBDA"
-  Group width : ~240px
+  Group width : ~320px
 
   Card: [AWS Lambda orange λ icon]  name: "Lambda"
-  Sub: "qusign_start_instances · Python 3.12"  11px Inter, #666666
-  Caption: "event.action == 'start' → ec2.start_instances()"  10px JetBrains Mono, #888888
-  Caption line 2: "event.action == 'stop'  → ec2.stop_instances()"
+  Sub (BELOW card name, centered, max-width 280px):
+    "qusign_start_instances · Python 3.12"  11px Inter, #666666
+  Caption (BELOW Sub, max-width 280px, word-wrap, centered, 10px JetBrains Mono, #888888):
+    "start → ec2.start_instances()"
+    "stop  → ec2.stop_instances()"
 
   Arrow → right toward EC2:
     Style: 2px solid #cc3333, filled arrowhead
@@ -223,3 +233,5 @@ Info box in bottom-right:
 - No gradients, no drop shadows, flat design
 - All brand logos must be recognizable official icons (not generic shapes)
 - Korean labels on captions and badges exactly as written above
+- All captions: BELOW their card name in a vertical stack — never beside or to the right of the icon
+- Text overflow prevention: captions word-wrap within their column; no text extends beyond group box boundary

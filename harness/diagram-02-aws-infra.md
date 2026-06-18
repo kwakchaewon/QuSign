@@ -49,6 +49,18 @@ Rounded rect enclosing related cards:
   Background    : [group tint]
   Label         : top of box, 12px JetBrains Mono ALL CAPS, [group color]
 
+━━━ CAPTION LAYOUT RULE (전체 적용) ━━━━━━━━━━━━
+
+모든 캡션은 해당 카드 name 바로 아래에 수직 배치:
+  Placement  : card name 아래에 세로 스택 — 아이콘 옆(오른쪽)에 절대 배치 금지
+  Alignment  : 카드 열 내 수평 중앙 정렬
+  Max-width  : 가로 나열(side-by-side) 레이아웃 → 110px; 세로 스택 그룹 → 그룹 inner width
+  Word-wrap  : 항상 활성화 — 긴 텍스트는 다음 줄로 줄바꿈, 절대 경계 밖으로 오버플로우 금지
+
+가로 나열(side-by-side) 카드 레이아웃:
+  [카드 + 캡션] 쌍은 각각 독립적인 수직 열(column)을 형성.
+  캡션은 로고 옆이 아닌 name 텍스트 아래에 위치.
+
 ━━━ ROW 0 — INTERNET + ROUTE 53 ━━━━━━━━━━━━━━━
 
 Two floating elements, centered horizontally at top. No group border.
@@ -74,7 +86,8 @@ Two floating elements, centered horizontally at top. No group border.
 
 Group color : #147eba (AWS blue)
 Group tint  : #eef6fc
-Group label : [AWS VPC icon 16px]  "VPC  ·  qusign_vpc  ·  10.0.0.0/16  ·  ap-southeast-1"
+Group label line 1 : [AWS VPC icon 16px]  "VPC  ·  qusign_vpc"  12px JetBrains Mono, #147eba
+Group label line 2 : "10.0.0.0/16  ·  ap-southeast-1"  10px Inter, #888888  (directly below line 1)
 Group width : ~1000px  (dominant, ~70% canvas width)
 
 Inside VPC:
@@ -87,26 +100,35 @@ Inside VPC:
   EC2 GROUP (inside VPC, center):
     Group color : #e8760a (AWS orange)
     Group tint  : #fff8f2
-    Group label : [EC2 icon 16px]  "EC2  ·  qusign_app  ·  t3.small  ·  3.0.193.52 (Elastic IP)"
+    Group label line 1 : [EC2 icon 16px]  "EC2  ·  qusign_app"  12px JetBrains Mono, #e8760a
+    Group label line 2 : "t3.small  ·  3.0.193.52"  10px Inter, #888888  (directly below line 1)
     Group width : ~680px
 
     Cards arranged in TWO rows inside EC2:
 
     Row A — 요청 경로 (좌→우):
       Card: [Nginx green N]                name: "Nginx"
-      Caption: "80 → 443 리다이렉트 · /api 프록시 · SPA 서빙"
+      Caption (BELOW card name, max-width 110px, word-wrap, centered):
+        "80→443 리다이렉트"
+        "/api 프록시 · SPA 서빙"
 
       Arrow →: 2px #e8760a, label "proxy :8080"
 
       Card: [Spring leaf + Kotlin K]       name: "Spring Boot 3"
-      Caption: "Docker container · --network host"
+      Caption (BELOW card name, max-width 110px, word-wrap, centered):
+        "Docker container"
+        "--network host"
 
     Row B — 데이터 레이어 (Spring Boot 아래, 나란히):
       Card: [MariaDB gold logo]            name: "MariaDB 10.11"
-      Caption: "Docker · 127.0.0.1:3306 · /var/lib/qusign-db 볼륨"
+      Caption (BELOW card name, max-width 110px, word-wrap, centered):
+        "Docker · 127.0.0.1:3306"
+        "/var/lib/qusign-db 볼륨"
 
       Card: [Redis red logo]              name: "Redis 7"
-      Caption: "Docker · redis:7-alpine · 포트 6379"
+      Caption (BELOW card name, max-width 110px, word-wrap, centered):
+        "Docker · redis:7-alpine"
+        "포트 6379"
 
       Arrow UP from Spring Boot → MariaDB: 2px #aaaaaa, label "JDBC"
       Arrow UP from Spring Boot → Redis  : 2px #aaaaaa, label "Pub/Sub"
@@ -132,7 +154,7 @@ Inside VPC:
 ━━━ ROW 2 — BOTTOM THREE BOXES ━━━━━━━━━━━━━━━━
 
 Three equal-width group boxes, horizontally centered under VPC group.
-Total width = VPC group width (~1000px). Each ~308px wide. 24px gaps. (308×3 + 24×2 = 972px)
+Total width = VPC group width (~1000px). Each ~316px wide. 24px gaps. (316×3 + 24×2 = 996px)
 
 BOX A — S3 STORAGE
   Group color : #3d8f3d (green)
@@ -201,3 +223,5 @@ Small info box, right side of canvas:
 - No gradients, no drop shadows, flat design
 - All brand logos must be recognizable official icons (not generic shapes)
 - Korean labels on arrows and captions exactly as written above
+- All captions: BELOW their card name in a vertical stack — never beside or to the right of the icon
+- Text overflow prevention: captions word-wrap within their column; no text extends beyond group box boundary

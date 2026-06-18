@@ -48,6 +48,18 @@ Rounded rect enclosing related cards:
   Background    : [group tint]
   Label         : top of box, 12px JetBrains Mono ALL CAPS, [group color]
 
+━━━ CAPTION LAYOUT RULE (전체 적용) ━━━━━━━━━━━━
+
+모든 캡션은 해당 카드 name 바로 아래에 수직 배치:
+  Placement  : card name 아래에 세로 스택 — 아이콘 옆(오른쪽)에 절대 배치 금지
+  Alignment  : 카드 열 내 수평 중앙 정렬
+  Max-width  : 가로 나열(side-by-side) 레이아웃 → 110px; 세로 스택 그룹 → 그룹 inner width
+  Word-wrap  : 항상 활성화 — 긴 텍스트는 다음 줄로 줄바꿈, 절대 경계 밖으로 오버플로우 금지
+
+가로 나열(side-by-side) 카드 레이아웃:
+  [카드 + 캡션] 쌍은 각각 독립적인 수직 열(column)을 형성.
+  캡션은 로고 옆이 아닌 name 텍스트 아래에 위치.
+
 ━━━ GROUP 1 — CLIENT ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Group color : #5aad6e (green)
@@ -81,8 +93,11 @@ Group width : ~220px
 Cards (single):
   Card: [Nginx green N logo]   name: "Nginx"
 
-Caption: "리버스 프록시 · SSL 종료 · SPA 서빙"  11px Inter, #666666
-Caption line 2: "/ → /dist  ·  /api → :8080  ·  /api/sse → buffering off"
+Caption (BELOW card name, centered, word-wrap, max-width 200px):
+  Line 1: "리버스 프록시 · SSL 종료 · SPA 서빙"
+  Line 2: "/ → /dist  ·  /api → :8080"
+  Line 3: "/api/sse → buffering off"
+  Font: 11px Inter, #666666
 
 Arrow → right toward Backend:
   Style : 2px solid #e8760a
@@ -97,11 +112,14 @@ Group width : ~260px  (tallest group — anchors the diagram)
 
 Cards (vertical stack):
   Card A: [Spring leaf + Kotlin K icon]  name: "Spring Boot 3 / Kotlin"
-  Caption: "JWT 인증 · 서명 플로우 · 감사 로그 · 관리자 API"
 
-Feature sub-tags (pill chips below caption, same group tint, darker border):
+  Caption (DIRECTLY BELOW card name, centered, max-width 220px, word-wrap):
+    "JWT 인증 · 서명 플로우 · 감사 로그 · 관리자 API"
+
+Feature sub-tags (flex-wrap row BELOW caption, centered inside group):
   [ JWT ]  [ ML-DSA ]  [ AuditLog ]  [ SSE Emitter ]  [ @Scheduled ]
   Font: 10px JetBrains Mono, color: #6fa8dc
+  Pills wrap to next line if needed — never extend beyond group border
 
 Arrow ↓ downward to DATA group:
   Style : 2px solid #aaaaaa, label "JDBC / Redis"
@@ -118,12 +136,14 @@ Group tint  : #fffaf2
 Group label : "DATA LAYER"
 Group width : ~340px
 
-Cards (horizontal, side by side):
+Cards (horizontal, side by side — each card+caption is an independent vertical column):
   Card A: [MariaDB gold dolphin logo]  name: "MariaDB 10.11"
-  Caption: "서명 기록 · 사용자 · 감사 로그 (append-only)"
+  Caption (BELOW Card A, max-width 130px, word-wrap, centered):
+    "서명 기록 · 사용자 · 감사 로그 (append-only)"
 
   Card B: [Redis red logo]             name: "Redis 7"
-  Caption: "Pub/Sub 알림 채널 · SseEmitter 브로드캐스트"
+  Caption (BELOW Card B, max-width 130px, word-wrap, centered):
+    "Pub/Sub 알림 채널 · SseEmitter 브로드캐스트"
 
 ━━━ GROUP 5 — PQC CRYPTO ━━━━━━━━━━━━━━━━━━━━━━
 
@@ -134,12 +154,16 @@ Group label : "PQC CRYPTO"
 Border style: 1.5px dashed #9b7ee0  (dashed to emphasize special layer)
 Group width : ~340px
 
-Cards (horizontal, side by side):
+Cards (horizontal, side by side — each card+caption is an independent vertical column):
   Card A: [shield / lock icon]          name: "liboqs-java"
-  Caption: "ML-DSA-65 키 생성 · 서명 · 검증 · PBKDF2+AES-256-GCM 키 암호화"
+  Caption (BELOW Card A, max-width 130px, word-wrap, centered):
+    "ML-DSA-65 키 생성 · 서명 · 검증"
+    "PBKDF2 + AES-256-GCM 키 암호화"
 
   Card B: [Apache feather icon]         name: "PDFBox"
-  Caption: "서명값 PDF 메타데이터 삽입 · 추출 · SHA3-256 해시"
+  Caption (BELOW Card B, max-width 130px, word-wrap, centered):
+    "서명값 PDF 메타데이터 삽입 · 추출"
+    "SHA3-256 해시"
 
 ━━━ GROUP 6 — STORAGE ━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -149,15 +173,18 @@ Group tint  : #f2faf2
 Group label : "STORAGE"
 Group width : ~260px
 
-Cards (vertical stack):
-  Card A: [MinIO elephant logo or cube] name: "MinIO"
-  Caption: "로컬 환경 · Docker 컨테이너"
+Cards arranged in a vertical column inside the group:
 
-  Card B: [S3 green bucket icon]        name: "Amazon S3"
-  Caption: "프로덕션 환경 · VPC Endpoint"
+  [Card A] logo: MinIO elephant or cube  name: "MinIO"
+  Caption (DIRECTLY BELOW Card A name, centered, max-width 220px):
+    "로컬 환경 · Docker 컨테이너"
 
-Horizontal divider between Card A and B:
-  "로컬 ↔ 프로덕션" label, 10px Inter, #aaaaaa
+  Horizontal divider: 1px solid #dddddd, full width
+  Divider label (centered on line): "로컬 ↔ 프로덕션"  10px Inter, #aaaaaa
+
+  [Card B] logo: S3 green bucket  name: "Amazon S3"
+  Caption (DIRECTLY BELOW Card B name, centered, max-width 220px):
+    "프로덕션 환경 · VPC Endpoint"
 
 ━━━ ARROWS — BACKEND → BOTTOM GROUPS ━━━━━━━━━━
 
@@ -193,3 +220,5 @@ All downward from Backend group bottom edge:
 - No gradients, no drop shadows, flat design
 - All brand logos must be recognizable official icons (not generic shapes)
 - Korean labels on arrows and captions exactly as written above
+- All captions: BELOW their card name in a vertical stack — never beside or to the right of the icon
+- Text overflow prevention: captions word-wrap within their column; no text extends beyond group box boundary

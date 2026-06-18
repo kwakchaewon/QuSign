@@ -664,7 +664,7 @@
 인터넷
   │
   ▼
-Route53 (qusign.com)
+Route53 (qusign.link)
   │
   ▼
 EC2 t3.small (퍼블릭 서브넷, ap-southeast-1a)  ← 싱가포르 리전
@@ -942,16 +942,16 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   ```nginx
   server {
       listen 80;
-      server_name qusign.com www.qusign.com;
+      server_name qusign.link www.qusign.link;
       return 301 https://$host$request_uri;
   }
 
   server {
       listen 443 ssl;
-      server_name qusign.com www.qusign.com;
+      server_name qusign.link www.qusign.link;
 
-      ssl_certificate /etc/letsencrypt/live/qusign.com/fullchain.pem;
-      ssl_certificate_key /etc/letsencrypt/live/qusign.com/privkey.pem;
+      ssl_certificate /etc/letsencrypt/live/qusign.link/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/qusign.link/privkey.pem;
 
       # Vue 3 정적 파일
       root /var/www/qusign/dist;
@@ -984,7 +984,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] Let's Encrypt SSL 인증서 발급
   ```bash
   sudo dnf install -y certbot python3-certbot-nginx
-  sudo certbot --nginx -d qusign.com -d www.qusign.com
+  sudo certbot --nginx -d qusign.link -d www.qusign.link
   # 자동 갱신 확인
   sudo systemctl status certbot-renew.timer
   ```
@@ -1043,7 +1043,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   | `/qusign/prod/db-password` | (실제 비밀번호) |
   | `/qusign/prod/jwt-secret` | (랜덤 256bit 시크릿) |
   | `/qusign/prod/s3-bucket` | `qusign_documents_prod` |
-  | `/qusign/prod/cors-origins` | `https://qusign.com` |
+  | `/qusign/prod/cors-origins` | `https://qusign.link` |
 
 - [ ] EC2 배포 스크립트에서 SSM 값을 환경변수로 주입하는 방식 사용:
   ```bash
@@ -1182,7 +1182,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 > 콘솔: SES → 리전: ap-southeast-1 (싱가포르)
 
 - [ ] 이메일 주소 자격 증명 (샌드박스 테스트용)
-  - 발신자 이메일 인증: `noreply@qusign.com` (도메인 구매 후) 또는 개인 이메일로 먼저 테스트
+  - 발신자 이메일 인증: `noreply@qusign.link` (도메인 구매 후) 또는 개인 이메일로 먼저 테스트
 - [ ] 도메인 자격 증명
   - SES → 자격 증명 → 도메인 추가 → Route53에 DKIM CNAME 레코드 자동 추가
 - [ ] 샌드박스 제한 확인
@@ -1208,14 +1208,14 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] 도메인 구매
   - Route53에서 직접 구매 시 자동 연동 (추천)
   - 가비아/후이즈에서 구매 시 NS 레코드를 Route53 네임서버로 교체
-- [ ] 호스팅 영역 생성: `qusign.com`
+- [ ] 호스팅 영역 생성: `qusign.link`
 - [ ] A 레코드 등록
   | 레코드 | 타입 | 값 |
   |---|---|---|
-  | `qusign.com` | A | EC2 Elastic IP |
-  | `www.qusign.com` | CNAME | `qusign.com` |
+  | `qusign.link` | A | EC2 Elastic IP |
+  | `www.qusign.link` | CNAME | `qusign.link` |
 - [ ] SES DKIM 레코드 추가 (SES 콘솔에서 자동 생성된 값 사용)
-- [ ] DNS 전파 확인 (`nslookup qusign.com`)
+- [ ] DNS 전파 확인 (`nslookup qusign.link`)
 
 ---
 
@@ -1312,7 +1312,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 6-13. 최종 검증
 
-- [ ] `https://qusign.com` HTTPS 접속 확인
+- [ ] `https://qusign.link` HTTPS 접속 확인
 - [ ] SSL 인증서 만료일 확인 (`Let's Encrypt` 자동 갱신 동작 확인)
 - [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 이메일 수신 → 서명 → 검증 전체 플로우
 - [ ] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
@@ -1444,7 +1444,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 > "연결된다"가 아니라 "PQC로 협상됐다는 증거가 있다" 수준
 
-- [ ] Chrome에서 `https://qusign.com` 접속 → DevTools Security 패널에서 키 교환 알고리즘 확인
+- [ ] Chrome에서 `https://qusign.link` 접속 → DevTools Security 패널에서 키 교환 알고리즘 확인
   - `X25519MLKEM768` 표시 스크린샷 저장
 - [ ] tshark로 TLS 핸드셰이크 패킷 캡처
   ```bash
@@ -1473,7 +1473,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] 폴백 직접 재현
   ```bash
   # PQC 미지원 클라이언트로 접속 → X25519로 폴백되는지 확인
-  openssl s_client -connect qusign.com:443 -groups X25519
+  openssl s_client -connect qusign.link:443 -groups X25519
   ```
 - [ ] Nginx 로그에 협상된 그룹 기록
   ```nginx
@@ -1500,7 +1500,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
   # 서버 인증서 생성 및 CA 서명
   openssl genpkey -algorithm ML-DSA-65 -out server.key
-  openssl req -new -key server.key -out server.csr -subj "/CN=qusign.com"
+  openssl req -new -key server.key -out server.csr -subj "/CN=qusign.link"
   openssl x509 -req -in server.csr -CA root-ca.crt -CAkey root-ca.key -out server.crt -days 365
   ```
 - [ ] 인증서 크기 비교표 작성 (직접 측정)

@@ -821,14 +821,14 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 > 콘솔: VPC → VPC 생성 (리전: ap-southeast-1 싱가포르)
 
-- [ ] VPC 생성
-  - 이름: `qusign_vpc`
+- [x] VPC 생성
+  - 이름: `qusign_vpc` (VPC ID: `vpc-0ad2925f2b2784bd1`)
   - IPv4 CIDR: `10.0.0.0/16`
-- [ ] 서브넷 생성
-  - 퍼블릭: `10.0.1.0/24` (ap-southeast-1a) — EC2 (MariaDB 포함)
-- [ ] 인터넷 게이트웨이 생성 → VPC에 연결
-- [ ] 라우팅 테이블: 퍼블릭 `0.0.0.0/0 → IGW`
-- [ ] S3 VPC 엔드포인트 생성 (Gateway 타입, 무료)
+- [x] 서브넷 생성
+  - 퍼블릭: `qusign_vpc-subnet-public1-ap-southeast-1a` (ap-southeast-1a)
+- [x] 인터넷 게이트웨이 생성 → VPC에 연결 (`qusign_vpc-igw`)
+- [x] 라우팅 테이블: 퍼블릭 `0.0.0.0/0 → IGW` (`qusign_vpc-rtb-public`)
+- [x] S3 VPC 엔드포인트 생성 (Gateway 타입, 무료) (`qusign_vpc-vpce-s3`)
   - EC2→S3 트래픽이 인터넷을 거치지 않아 데이터 전송 비용 0원
 
 #### 보안 그룹

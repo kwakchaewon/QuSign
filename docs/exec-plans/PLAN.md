@@ -833,7 +833,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 #### 보안 그룹
 
-- [ ] `qusign_ec2_sg`
+- [x] `qusign_ec2_sg` (SG ID: `sg-0d6159b3a82a45699`)
   | 방향 | 포트 | 소스 | 용도 |
   |---|---|---|---|
   | 인바운드 | 22 | 내 IP만 | SSH |

@@ -1205,14 +1205,14 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 6-11. Route53 + 도메인 연결
 
-- [ ] 도메인 구매
+- [x] 도메인 구매 ✅ (`qusign.link` — Route53 Registrar)
   - Route53에서 직접 구매 시 자동 연동 (추천)
   - 가비아/후이즈에서 구매 시 NS 레코드를 Route53 네임서버로 교체
-- [ ] 호스팅 영역 생성: `qusign.link`
-- [ ] A 레코드 등록
+- [x] 호스팅 영역 생성: `qusign.link` ✅ (ID: `Z05035142H5MR6F494TUU`)
+- [x] A 레코드 등록 ✅ (2026-06-18)
   | 레코드 | 타입 | 값 |
   |---|---|---|
-  | `qusign.link` | A | EC2 Elastic IP |
+  | `qusign.link` | A | `3.0.193.52` |
   | `www.qusign.link` | CNAME | `qusign.link` |
 - [ ] SES DKIM 레코드 추가 (SES 콘솔에서 자동 생성된 값 사용)
 - [ ] DNS 전파 확인 (`nslookup qusign.link`)

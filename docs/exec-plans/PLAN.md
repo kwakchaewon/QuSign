@@ -881,110 +881,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-5. EC2 MariaDB 설치 (Docker)
-
-> RDS 대신 EC2 내 Docker 컨테이너로 MariaDB 운영.  
-> EC2 정지 시 DB도 함께 정지 → EventBridge 스케줄러가 EC2 하나만 제어하면 됨.
-
-- [ ] MariaDB 컨테이너 초기 실행 (EC2 접속 후 최초 1회)
-  ```bash
-  # 데이터 영속 디렉토리 생성
-  sudo mkdir -p /var/lib/qusign-db
-
-  # SSM에서 비밀번호 로드
-  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
-    --with-decryption --query Parameter.Value --output text)
-
-  # MariaDB 컨테이너 실행
-  docker run -d \
-    --name qusign-db \
-    --restart always \
-    -e MYSQL_DATABASE=qusign \
-    -e MYSQL_USER=qsadmin \
-    -e MYSQL_PASSWORD="$DB_PASS" \
-    -e MYSQL_RANDOM_ROOT_PASSWORD=yes \
-    -p 127.0.0.1:3306:3306 \
-    -v /var/lib/qusign-db:/var/lib/mysql \
-    mariadb:10.11
-  ```
-  > `-p 127.0.0.1:3306:3306`: 루프백만 노출 — 외부에서 3306 직접 접근 불가
-
-- [ ] 초기화 확인
-  ```bash
-  docker exec -it qusign-db mariadb -uqsadmin -p qusign -e "SHOW TABLES;"
-  ```
-
-- [ ] 일별 백업 스크립트 등록 (`/home/ec2-user/backup-db.sh`)
-  ```bash
-  #!/bin/bash
-  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
-    --with-decryption --query Parameter.Value --output text)
-  BUCKET=$(aws ssm get-parameter --name /qusign/prod/s3-bucket \
-    --query Parameter.Value --output text)
-  DATE=$(date +%Y%m%d)
-
-  docker exec qusign-db \
-    mariadb-dump -uqsadmin -p"$DB_PASS" qusign \
-    | gzip > /tmp/qusign-db-$DATE.sql.gz
-
-  aws s3 cp /tmp/qusign-db-$DATE.sql.gz \
-    s3://$BUCKET/backups/db-$DATE.sql.gz
-  rm -f /tmp/qusign-db-$DATE.sql.gz
-  ```
-  ```bash
-  chmod +x /home/ec2-user/backup-db.sh
-  # crontab -e 로 등록 (KST 21:00 = UTC 12:00, 정지 30분 전)
-  (crontab -l 2>/dev/null; echo "0 12 * * * /home/ec2-user/backup-db.sh") | crontab -
-  ```
-
----
-
-### 6-6. SSM Parameter Store (민감값 관리)
-
-> 콘솔: Systems Manager → Parameter Store  
-> `.env` 파일을 서버에 올리지 않고 SSM에서 주입
-
-- [ ] 파라미터 생성 (타입: SecureString, 암호화: AWS managed key)
-  | 파라미터 이름 | 값 |
-  |---|---|
-  | `/qusign/prod/db-url` | `jdbc:mariadb://localhost:3306/qusign` |
-  | `/qusign/prod/db-username` | `qsadmin` |
-  | `/qusign/prod/db-password` | (실제 비밀번호) |
-  | `/qusign/prod/jwt-secret` | (랜덤 256bit 시크릿) |
-  | `/qusign/prod/s3-bucket` | `qusign_documents_prod` |
-  | `/qusign/prod/cors-origins` | `https://qusign.com` |
-
-- [ ] EC2 배포 스크립트에서 SSM 값을 환경변수로 주입하는 방식 사용:
-  ```bash
-  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
-    --with-decryption --query Parameter.Value --output text)
-  ```
-
----
-
-### 6-7. S3 버킷 설정
-
-> 콘솔: S3 → 버킷 만들기
-
-- [ ] 버킷 생성: `qusign_documents_prod_{AccountId}`
-  - 리전: `ap-southeast-1`
-  - 퍼블릭 액세스 차단: **전체 차단** (EC2 IAM 역할로만 접근)
-  - 버전 관리: 비활성화 (비용 절감)
-  - 서버 측 암호화: SSE-S3 (AES-256) 활성화
-- [ ] 버킷 정책: EC2 역할만 허용
-  ```json
-  {
-    "Effect": "Allow",
-    "Principal": { "AWS": "arn:aws:iam::ACCOUNT_ID:role/qusign_ec2_role" },
-    "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-    "Resource": "arn:aws:s3:::qusign_documents_prod_*/*"
-  }
-  ```
-- [ ] 수명 주기 정책: 180일 이상 미접근 객체 Glacier로 이동 (장기 비용 절감)
-
----
-
-### 6-8. EC2 인스턴스 설정
+### 6-5. EC2 인스턴스 설정
 
 > 콘솔: EC2 → 인스턴스 시작
 
@@ -1112,6 +1009,109 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
     -e S3_BUCKET="$S3_BUCKET" \
     -e CORS_ORIGINS="$CORS_ORIGINS" \
     $IMAGE
+  ```
+
+---
+
+### 6-6. SSM Parameter Store (민감값 관리)
+
+> 콘솔: Systems Manager → Parameter Store  
+> `.env` 파일을 서버에 올리지 않고 SSM에서 주입
+
+- [ ] 파라미터 생성 (타입: SecureString, 암호화: AWS managed key)
+  | 파라미터 이름 | 값 |
+  |---|---|
+  | `/qusign/prod/db-url` | `jdbc:mariadb://localhost:3306/qusign` |
+  | `/qusign/prod/db-username` | `qsadmin` |
+  | `/qusign/prod/db-password` | (실제 비밀번호) |
+  | `/qusign/prod/jwt-secret` | (랜덤 256bit 시크릿) |
+  | `/qusign/prod/s3-bucket` | `qusign_documents_prod` |
+  | `/qusign/prod/cors-origins` | `https://qusign.com` |
+
+- [ ] EC2 배포 스크립트에서 SSM 값을 환경변수로 주입하는 방식 사용:
+  ```bash
+  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
+    --with-decryption --query Parameter.Value --output text)
+  ```
+
+---
+
+### 6-7. S3 버킷 설정
+
+> 콘솔: S3 → 버킷 만들기
+
+- [ ] 버킷 생성: `qusign_documents_prod_{AccountId}`
+  - 리전: `ap-southeast-1`
+  - 퍼블릭 액세스 차단: **전체 차단** (EC2 IAM 역할로만 접근)
+  - 버전 관리: 비활성화 (비용 절감)
+  - 서버 측 암호화: SSE-S3 (AES-256) 활성화
+- [ ] 버킷 정책: EC2 역할만 허용
+  ```json
+  {
+    "Effect": "Allow",
+    "Principal": { "AWS": "arn:aws:iam::ACCOUNT_ID:role/qusign_ec2_role" },
+    "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+    "Resource": "arn:aws:s3:::qusign_documents_prod_*/*"
+  }
+  ```
+- [ ] 수명 주기 정책: 180일 이상 미접근 객체 Glacier로 이동 (장기 비용 절감)
+
+---
+
+### 6-8. EC2 MariaDB 설치 (Docker)
+
+> RDS 대신 EC2 내 Docker 컨테이너로 MariaDB 운영.  
+> EC2 정지 시 DB도 함께 정지 → EventBridge 스케줄러가 EC2 하나만 제어하면 됨.
+
+- [ ] MariaDB 컨테이너 초기 실행 (EC2 접속 후 최초 1회)
+  ```bash
+  # 데이터 영속 디렉토리 생성
+  sudo mkdir -p /var/lib/qusign-db
+
+  # SSM에서 비밀번호 로드
+  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
+    --with-decryption --query Parameter.Value --output text)
+
+  # MariaDB 컨테이너 실행
+  docker run -d \
+    --name qusign-db \
+    --restart always \
+    -e MYSQL_DATABASE=qusign \
+    -e MYSQL_USER=qsadmin \
+    -e MYSQL_PASSWORD="$DB_PASS" \
+    -e MYSQL_RANDOM_ROOT_PASSWORD=yes \
+    -p 127.0.0.1:3306:3306 \
+    -v /var/lib/qusign-db:/var/lib/mysql \
+    mariadb:10.11
+  ```
+  > `-p 127.0.0.1:3306:3306`: 루프백만 노출 — 외부에서 3306 직접 접근 불가
+
+- [ ] 초기화 확인
+  ```bash
+  docker exec -it qusign-db mariadb -uqsadmin -p qusign -e "SHOW TABLES;"
+  ```
+
+- [ ] 일별 백업 스크립트 등록 (`/home/ec2-user/backup-db.sh`)
+  ```bash
+  #!/bin/bash
+  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
+    --with-decryption --query Parameter.Value --output text)
+  BUCKET=$(aws ssm get-parameter --name /qusign/prod/s3-bucket \
+    --query Parameter.Value --output text)
+  DATE=$(date +%Y%m%d)
+
+  docker exec qusign-db \
+    mariadb-dump -uqsadmin -p"$DB_PASS" qusign \
+    | gzip > /tmp/qusign-db-$DATE.sql.gz
+
+  aws s3 cp /tmp/qusign-db-$DATE.sql.gz \
+    s3://$BUCKET/backups/db-$DATE.sql.gz
+  rm -f /tmp/qusign-db-$DATE.sql.gz
+  ```
+  ```bash
+  chmod +x /home/ec2-user/backup-db.sh
+  # crontab -e 로 등록 (KST 21:00 = UTC 12:00, 정지 30분 전)
+  (crontab -l 2>/dev/null; echo "0 12 * * * /home/ec2-user/backup-db.sh") | crontab -
   ```
 
 ---

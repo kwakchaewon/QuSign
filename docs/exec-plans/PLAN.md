@@ -847,6 +847,16 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 6-4. ECR (Docker 이미지 레지스트리)
 
+> **배포 아키텍처 결정**
+>
+> | 컴포넌트 | 배포 방식 | 이유 |
+> |---|---|---|
+> | Spring Boot (백엔드) | Docker → ECR → EC2 | 컨테이너 표준화, CI/CD 연동 |
+> | Vue 3 (프론트엔드) | `npm run build` → EC2 Nginx 정적 서빙 | 단일 EC2 구조에서 컨테이너 불필요 |
+>
+> Nginx가 `/` → Vue 정적파일, `/api` → Spring Boot(8080) 프록시 처리.
+> 프론트는 ECR 불필요 — `qusign_backend` 리포지토리는 백엔드 전용.
+
 > 콘솔: ECR → 리포지토리 생성
 
 - [ ] ECR 리포지토리 생성: `qusign_backend`

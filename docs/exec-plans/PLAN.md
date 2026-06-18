@@ -897,10 +897,26 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - 보안 그룹: `qusign_ec2_sg`
   - 퍼블릭 IP: `3.0.102.188` (Elastic IP 연결 전 임시)
 
-- [ ] Elastic IP 할당 및 연결 (EC2 재시작 시 IP 변경 방지)
+- [x] Elastic IP 할당 및 연결 (EC2 재시작 시 IP 변경 방지)
+  - **고정 IP: `3.0.193.52`** (할당 ID: `eipalloc-0d6803d4ca4534aaa`)
+  - 이름: `qusign_app_elasticip`, 연결 인스턴스: `i-0447a621521e4fc2d`
   > ⚠️ EC2가 **실행 중일 때만 Elastic IP 무료**. 정지 시에도 EC2에 연결되어 있으면 요금 발생.  
   > → EventBridge로 정지하는 동안 Elastic IP 요금 발생 (월 ~$0.005/hr × 11.5h × 30일 = ~$1.7)  
   > → 수용 가능한 비용이므로 연결 유지
+
+- [x] SSH 접속 정보 ✅ 접속 확인 완료 (2026-06-18)
+  | 항목 | 값 |
+  |---|---|
+  | **Host** | `3.0.193.52` (Elastic IP) |
+  | **Port** | `22` |
+  | **Login as** | `ec2-user` |
+  | **키 페어** | `qusign-keypair.pem` / `qusign-keypair.ppk` |
+
+  ```bash
+  # OpenSSH (PowerShell / Terminal)
+  ssh -i "C:\Users\eden240213\Desktop\qusign_secrets\qusign-keypair.pem" ec2-user@3.0.193.52
+  ```
+  > PuTTY: PuTTYgen으로 `.pem` → `.ppk` 변환 후 Connection → SSH → Auth → Credentials에서 `.ppk` 지정
 
 - [ ] EC2 접속 후 초기 설정
   ```bash

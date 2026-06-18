@@ -806,7 +806,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
       }
       ```
   - Access Key → GitHub Secrets 등록 완료 (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
-  - ⚠️ EC2 인스턴스 생성 후 인라인 정책 Resource를 특정 인스턴스 ID로 교체 필요
+  - ⚠️ 인라인 정책 Resource를 아래 ARN으로 교체 필요 (리전 ap-northeast-2 → ap-southeast-1 수정 포함):
+    `arn:aws:ec2:ap-southeast-1:285868221698:instance/i-0447a621521e4fc2d`
 
 #### EventBridge + Lambda용 역할
 - [x] IAM 역할 생성: `qusign_lambda_eventbridge_role`
@@ -885,16 +886,16 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 > 콘솔: EC2 → 인스턴스 시작
 
-- [ ] 인스턴스 생성
+- [x] 인스턴스 생성
+  - **인스턴스 이름**: `qusign_app` → **인스턴스 ID: `i-0447a621521e4fc2d`**
   - AMI: Amazon Linux 2023
   - 인스턴스 유형: `t3.small` (vCPU 2, RAM 2GB — Spring Boot + Docker 최소 사양)
-  - 키 페어: 새로 생성 → `.pem` 파일 안전하게 보관
-  - VPC: `qusign_vpc` / 서브넷: 퍼블릭
+  - 키 페어: `qusign-keypair` 생성 완료
+  - VPC: `qusign_vpc` / 서브넷: public1-ap-southeast-1a
   - 퍼블릭 IP 자동 할당: 활성화
-  - IAM 인스턴스 프로필: `qusign_ec2_role`
+  - IAM 인스턴스 프로필: `qusign_ec2_role` ✅
   - 보안 그룹: `qusign_ec2_sg`
-  - 스토리지: gp3 20GB
-  - 태그: `Name=qusign-app, Env=prod`
+  - 퍼블릭 IP: `3.0.102.188` (Elastic IP 연결 전 임시)
 
 - [ ] Elastic IP 할당 및 연결 (EC2 재시작 시 IP 변경 방지)
   > ⚠️ EC2가 **실행 중일 때만 Elastic IP 무료**. 정지 시에도 EC2에 연결되어 있으면 요금 발생.  
@@ -1133,7 +1134,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
     ec2 = boto3.client('ec2', region_name='ap-southeast-1')
 
-    EC2_ID = 'i-XXXXXXXXXXXX'   # 실제 인스턴스 ID로 교체
+    EC2_ID = 'i-0447a621521e4fc2d'
 
     def lambda_handler(event, context):
         action = event.get('action')  # 'start' or 'stop'

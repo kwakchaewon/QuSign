@@ -92,7 +92,7 @@ jobs:
 
       - name: Build Vue frontend
         working-directory: frontend
-        run: npm ci && npm run build
+        run: npm ci && npm run build-only
 
       - name: Setup SSH
         run: |

@@ -14,7 +14,7 @@
 | 3단계 | 프론트엔드 구현 | ✅ 완료 |
 | 4단계 | 기능 고도화 & 품질 강화 | 🔄 진행 중 (다음 단계) |
 | 5단계 | 보안 취약점 개선 (OWASP Top 10) | ✅ 완료 |
-| 6단계 | AWS 배포 + SES + GitHub Actions | ⬜ 진행 전 |
+| 6단계 | AWS 배포 + SES + GitHub Actions | 🔄 진행 중 |
 | 7단계 | Terraform + 수익화 | ⬜ 진행 전 |
 | 8단계 | Loki + Grafana + 이직 준비 | ⬜ 진행 전 |
 
@@ -1247,10 +1247,18 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   | `/qusign/prod/cors-origins` | String |
 - [x] GitHub Actions workflow 파일 작성 ✅ (2026-06-19) — `.github/workflows/deploy.yml`
   - `deploy-backend` / `deploy-frontend` 병렬 잡
-  - 백엔드: JAR 빌드 → ECR push → EC2 SSH → docker compose up
+  - 백엔드: JAR 빌드 → ECR push → EC2 SSH → docker-compose up
   - 프론트엔드: Vue 빌드 → SCP → `/var/www/qusign/dist`
-- [ ] EC2 IAM 역할 권한 확인 (`AmazonEC2ContainerRegistryReadOnly` + `AmazonSSMReadOnlyAccess`)
-- [ ] main 브랜치에 push 후 Actions 탭에서 파이프라인 동작 확인
+- [x] EC2 보안 그룹 SSH 포트 `0.0.0.0/0` 변경 ✅ (2026-06-19) — GitHub Actions 접근 허용
+- [x] EC2 IAM 역할 권한 확인 ✅ — `AmazonEC2ContainerRegistryReadOnly` + `AmazonSSMReadOnlyAccess` 정상
+- [x] `deploy-frontend` 첫 배포 성공 ✅ (2026-06-19) — Vue 빌드 → SCP → EC2 `/var/www/qusign/dist`
+- [x] `docker compose` → `docker-compose` 명령어 교체 ✅ (2026-06-19) — EC2 v5.1.4 standalone 호환
+- [x] CI/CD 경로 기반 분리 ✅ (2026-06-19) — `dorny/paths-filter@v3` 적용
+  - `backend/**` 변경 시 `deploy-backend`만 실행
+  - `frontend/**` 변경 시 `deploy-frontend`만 실행
+  - `workflow_dispatch` 수동 실행 시 항상 둘 다 실행
+  - `docker-compose.prod.yml` 변경 시 백엔드 파이프라인 트리거
+- [ ] `deploy-backend` 파이프라인 성공 확인 (docker-compose 교체 후 재실행 중)
 
 ---
 

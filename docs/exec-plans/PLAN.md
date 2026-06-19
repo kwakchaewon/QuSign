@@ -1226,90 +1226,31 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 > `.github/workflows/deploy.yml`
 
-- [ ] Dockerfile 작성 (백엔드용)
-  ```dockerfile
-  FROM amazoncorretto:21-alpine
-  WORKDIR /app
-  COPY build/libs/*.jar app.jar
-  # liboqs 네이티브 라이브러리 포함 확인
-  EXPOSE 8080
-  ENTRYPOINT ["java", "-jar", "app.jar"]
-  ```
-
-- [ ] GitHub Secrets 등록 (Settings → Secrets and variables → Actions)
+- [x] Dockerfile 작성 (백엔드용) ✅ — `backend/Dockerfile` (multi-stage, liboqs 포함)
+- [x] 프로덕션 Docker Compose 작성 ✅ (2026-06-19) — `docker-compose.prod.yml`
+  - MariaDB 10.11, Redis 7, Spring Boot 백엔드 3개 컨테이너
+  - healthcheck 기반 시작 순서 제어, `.env` 파일로 비밀값 주입
+- [x] GitHub Secrets 등록 ✅ (2026-06-19)
   | Secret 이름 | 값 |
   |---|---|
   | `AWS_ACCESS_KEY_ID` | github-actions-deployer Access Key |
   | `AWS_SECRET_ACCESS_KEY` | github-actions-deployer Secret Key |
-  | `EC2_HOST` | EC2 Elastic IP |
+  | `EC2_HOST` | `3.0.193.52` |
   | `EC2_SSH_KEY` | EC2 .pem 파일 내용 전체 |
-  | `ECR_REGISTRY` | ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com |
-
-- [ ] GitHub Actions workflow 파일 작성
-  ```yaml
-  name: Deploy to AWS
-
-  on:
-    push:
-      branches: [ main ]
-
-  jobs:
-    deploy:
-      runs-on: ubuntu-latest
-
-      steps:
-        - uses: actions/checkout@v4
-
-        - name: Set up JDK 21
-          uses: actions/setup-java@v4
-          with:
-            java-version: '21'
-            distribution: 'corretto'
-
-        - name: Build with Gradle
-          run: ./gradlew build -x test
-
-        - name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v4
-          with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: ap-southeast-1
-
-        - name: Login to Amazon ECR
-          uses: aws-actions/amazon-ecr-login@v2
-
-        - name: Build and push Docker image
-          run: |
-            docker build -t ${{ secrets.ECR_REGISTRY }}/qusign_backend:latest .
-            docker push ${{ secrets.ECR_REGISTRY }}/qusign_backend:latest
-
-        - name: Deploy to EC2 via SSH
-          uses: appleboy/ssh-action@v1
-          with:
-            host: ${{ secrets.EC2_HOST }}
-            username: ec2-user
-            key: ${{ secrets.EC2_SSH_KEY }}
-            script: bash /home/ec2-user/deploy.sh
-
-        - name: Build Vue frontend
-          run: |
-            cd frontend
-            npm ci
-            npm run build
-
-        - name: Copy frontend to EC2
-          uses: appleboy/scp-action@v0.1.7
-          with:
-            host: ${{ secrets.EC2_HOST }}
-            username: ec2-user
-            key: ${{ secrets.EC2_SSH_KEY }}
-            source: "frontend/dist/*"
-            target: "/var/www/qusign/"
-            strip_components: 2
-  ```
-
-- [ ] Push 후 Actions 탭에서 파이프라인 동작 확인
+  | `ECR_REGISTRY` | `285868221698.dkr.ecr.ap-southeast-1.amazonaws.com` |
+- [x] SSM 파라미터 등록 ✅ (2026-06-19)
+  | 파라미터 | 유형 |
+  |---|---|
+  | `/qusign/prod/db-password` | SecureString |
+  | `/qusign/prod/jwt-secret` | SecureString |
+  | `/qusign/prod/s3-bucket` | String |
+  | `/qusign/prod/cors-origins` | String |
+- [x] GitHub Actions workflow 파일 작성 ✅ (2026-06-19) — `.github/workflows/deploy.yml`
+  - `deploy-backend` / `deploy-frontend` 병렬 잡
+  - 백엔드: JAR 빌드 → ECR push → EC2 SSH → docker compose up
+  - 프론트엔드: Vue 빌드 → SCP → `/var/www/qusign/dist`
+- [ ] EC2 IAM 역할 권한 확인 (`AmazonEC2ContainerRegistryReadOnly` + `AmazonSSMReadOnlyAccess`)
+- [ ] main 브랜치에 push 후 Actions 탭에서 파이프라인 동작 확인
 
 ---
 

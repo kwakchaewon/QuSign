@@ -981,7 +981,10 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   }
   ```
 
-- [ ] Let's Encrypt SSL 인증서 발급
+- [x] Let's Encrypt SSL 인증서 발급 ✅ (2026-06-18)
+  - 인증서 경로: `/etc/letsencrypt/live/qusign.link/fullchain.pem`
+  - 만료일: 2026-09-17 (자동 갱신 타이머 설정됨)
+  - Nginx 설정 자동 반영 완료
   ```bash
   sudo dnf install -y certbot python3-certbot-nginx
   sudo certbot --nginx -d qusign.link -d www.qusign.link
@@ -1215,7 +1218,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   | `qusign.link` | A | `3.0.193.52` |
   | `www.qusign.link` | CNAME | `qusign.link` |
 - [ ] SES DKIM 레코드 추가 (SES 콘솔에서 자동 생성된 값 사용)
-- [ ] DNS 전파 확인 (`nslookup qusign.link`)
+- [x] DNS 전파 확인 ✅ (2026-06-18) — `nslookup qusign.link 8.8.8.8` → `3.0.193.52` 정상 응답
 
 ---
 
@@ -1312,8 +1315,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 6-13. 최종 검증
 
-- [ ] `https://qusign.link` HTTPS 접속 확인
-- [ ] SSL 인증서 만료일 확인 (`Let's Encrypt` 자동 갱신 동작 확인)
+- [x] `https://qusign.link` HTTPS 접속 확인 ✅ (2026-06-18) — SSL 정상, 프론트엔드 미배포로 403 (다음 단계)
+- [x] SSL 인증서 만료일 확인 ✅ — 2026-09-17, 자동 갱신 타이머 설정됨
 - [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 이메일 수신 → 서명 → 검증 전체 플로우
 - [ ] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
 - [ ] GitHub Actions push → 자동 배포 확인

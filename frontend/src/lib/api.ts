@@ -4,7 +4,7 @@ import { useToast } from '@/composables/useToast'
 const { showError } = useToast()
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: '',
   timeout: 15000,
 })
 

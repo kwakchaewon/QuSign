@@ -1045,32 +1045,14 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 > RDS 대신 EC2 내 Docker 컨테이너로 MariaDB 운영.  
 > EC2 정지 시 DB도 함께 정지 → EventBridge 스케줄러가 EC2 하나만 제어하면 됨.
 
-- [ ] MariaDB 컨테이너 초기 실행 (EC2 접속 후 최초 1회)
-  ```bash
-  # 데이터 영속 디렉토리 생성
-  sudo mkdir -p /var/lib/qusign-db
-
-  # SSM에서 비밀번호 로드
-  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
-    --with-decryption --query Parameter.Value --output text)
-
-  # MariaDB 컨테이너 실행
-  docker run -d \
-    --name qusign-db \
-    --restart always \
-    -e MYSQL_DATABASE=qusign \
-    -e MYSQL_USER=qsadmin \
-    -e MYSQL_PASSWORD="$DB_PASS" \
-    -e MYSQL_RANDOM_ROOT_PASSWORD=yes \
-    -p 127.0.0.1:3306:3306 \
-    -v /var/lib/qusign-db:/var/lib/mysql \
-    mariadb:10.11
-  ```
-  > `-p 127.0.0.1:3306:3306`: 루프백만 노출 — 외부에서 3306 직접 접근 불가
+- [x] ~~MariaDB 컨테이너 초기 실행 (EC2 접속 후 최초 1회)~~ → **§6-12 docker-compose로 대체** ✅ (2026-06-19)
+  > 단독 `docker run` 대신 `docker-compose.prod.yml`의 `mariadb` 서비스로 운영 중.
+  > 컨테이너명 `qusign-mariadb`, 계정 `qusign`(`qsadmin` 아님), 볼륨은 named volume `mariadb_data`.
+  > `docker ps` 확인 결과 healthy 상태로 정상 기동 중 (2026-06-19 기준 2일째 가동).
 
 - [ ] 초기화 확인
   ```bash
-  docker exec -it qusign-db mariadb -uqsadmin -p qusign -e "SHOW TABLES;"
+  docker exec -it qusign-mariadb mariadb -uqusign -p qusign -e "SHOW TABLES;"
   ```
 
 - [ ] 일별 백업 스크립트 등록 (`/home/ec2-user/backup-db.sh`)
@@ -1082,8 +1064,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
     --query Parameter.Value --output text)
   DATE=$(date +%Y%m%d)
 
-  docker exec qusign-db \
-    mariadb-dump -uqsadmin -p"$DB_PASS" qusign \
+  docker exec qusign-mariadb \
+    mariadb-dump -uqusign -p"$DB_PASS" qusign \
     | gzip > /tmp/qusign-db-$DATE.sql.gz
 
   aws s3 cp /tmp/qusign-db-$DATE.sql.gz \

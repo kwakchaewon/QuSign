@@ -1258,7 +1258,9 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - `frontend/**` 변경 시 `deploy-frontend`만 실행
   - `workflow_dispatch` 수동 실행 시 항상 둘 다 실행
   - `docker-compose.prod.yml` 변경 시 백엔드 파이프라인 트리거
-- [ ] `deploy-backend` 파이프라인 성공 확인 (docker-compose 교체 후 재실행 중)
+- [x] 프론트엔드 API baseURL 빈 문자열로 변경 + Vite 개발 프록시 추가 ✅ (2026-06-19) — `frontend/src/lib/api.ts`, `frontend/vite.config.ts`
+- [x] CORS 환경변수명 `CORS_ALLOWED_ORIGINS` → `CORS_ORIGINS` 통일 ✅ (2026-06-19) — `application.yml`과 SSM 파라미터명 불일치 수정
+- [x] `deploy-backend` 파이프라인 성공 확인 ✅ (2026-06-19) — CORS 수정 커밋에서 7m22s 성공 (Run #27815548754)
 
 ---
 
@@ -1266,9 +1268,9 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 - [x] `https://qusign.link` HTTPS 접속 확인 ✅ (2026-06-18) — SSL 정상, 프론트엔드 미배포로 403 (다음 단계)
 - [x] SSL 인증서 만료일 확인 ✅ — 2026-09-17, 자동 갱신 타이머 설정됨
+- [x] GitHub Actions push → 자동 배포 확인 ✅ (2026-06-19) — `deploy-backend` 성공 (Run #27815548754, 7m22s)
 - [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 이메일 수신 → 서명 → 검증 전체 플로우
 - [ ] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
-- [ ] GitHub Actions push → 자동 배포 확인
 - [ ] CloudWatch Logs에서 Lambda 실행 로그 확인
 
 ---

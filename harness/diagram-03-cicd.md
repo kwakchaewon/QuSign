@@ -91,7 +91,8 @@ ELEMENT B — GITHUB
 GROUP C — GITHUB ACTIONS
   Group color : #2088ff (Actions blue)
   Group tint  : #f0f6ff
-  Group label : [GitHub Actions icon 16px]  "GITHUB ACTIONS"
+  Group label line 1 : [GitHub Actions icon 16px]  "GITHUB ACTIONS"
+  Group label line 2 : "deploy-backend ∥ deploy-frontend · path-filter 게이트(병렬 job)"  10px Inter, #888888
   Group width : ~600px  (widest group in Lane 1)
 
   Inside: vertical pipeline of step cards (NOT component cards — smaller):
@@ -104,12 +105,12 @@ GROUP C — GITHUB ACTIONS
     Right: tool badge pill
 
   Steps (top → bottom):
-    ① Build Backend    │ ./gradlew build -x test          │ [ Gradle / Java 21 ]
-    ② Build Frontend   │ cd frontend && npm run build     │ [ Node / Vite ]
-    ③ Docker Build     │ docker build -t qusign_backend   │ [ Docker ]
-    ④ ECR Push         │ docker push ECR:latest           │ [ ECR ]
-    ⑤ SSH Deploy BE    │ bash /home/ec2-user/deploy.sh    │ [ SSH ]
-    ⑥ SCP Deploy FE    │ frontend/dist → /var/www/qusign  │ [ SCP ]
+    ① Build Backend    │ ./gradlew bootJar                          │ [ Gradle / Java 21 ]
+    ② Build Frontend   │ cd frontend && npm run build-only          │ [ Node / Vite ]
+    ③ Docker Build     │ docker build -t qusign_backend             │ [ Docker ]
+    ④ ECR Push         │ docker push ECR:latest                     │ [ ECR ]
+    ⑤ SSH Deploy BE    │ SSM 조회 → ECR 로그인 → docker-compose pull/up │ [ SSH ]
+    ⑥ SCP Deploy FE    │ frontend/dist → /var/www/qusign/dist       │ [ SCP ]
 
   Vertical arrows between steps: thin 1px #2088ff dashed, no label
 
@@ -156,14 +157,14 @@ GROUP F — EVENTBRIDGE SCHEDULER
       Icon: clock icon (32px, #cc3333)
       Line 1: "KST 09:00"  13px Inter 700, #cc3333
       Line 2: "EC2 시작"   11px Inter, #666666
-      Line 3: "cron(0 0 * * ? *)"  10px JetBrains Mono, #888888
+      Line 3: "cron(0 9 * * ? *)  Asia/Seoul"  10px JetBrains Mono, #888888
 
     Card B (mini):
       Background: #fff5f5, border: 1px solid #cc3333, radius: 8px, width: ~140px, height: ~80px
       Icon: moon icon (32px, #cc3333)
       Line 1: "KST 21:30"  13px Inter 700, #cc3333
       Line 2: "EC2 정지"   11px Inter, #666666
-      Line 3: "cron(30 12 * * ? *)"  10px JetBrains Mono, #888888
+      Line 3: "cron(30 21 * * ? *)  Asia/Seoul"  10px JetBrains Mono, #888888
 
   Arrow → right:
     Style: 2px solid #cc3333, filled arrowhead
@@ -177,7 +178,7 @@ GROUP G — LAMBDA
 
   Card: [AWS Lambda orange λ icon]  name: "Lambda"
   Sub (BELOW card name, centered, max-width 280px):
-    "qusign_start_instances · Python 3.12"  11px Inter, #666666
+    "qusign_start_instances · Python 3.14"  11px Inter, #666666
   Caption (BELOW Sub, max-width 280px, word-wrap, centered, 10px JetBrains Mono, #888888):
     "start → ec2.start_instances()"
     "stop  → ec2.stop_instances()"

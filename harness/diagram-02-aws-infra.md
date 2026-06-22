@@ -116,19 +116,19 @@ Inside VPC:
 
       Card: [Spring leaf + Kotlin K]       name: "Spring Boot 3"
       Caption (BELOW card name, max-width 110px, word-wrap, centered):
-        "Docker container"
-        "--network host"
+        "Docker container (compose)"
+        "127.0.0.1:8080 포트 매핑"
 
     Row B — 데이터 레이어 (Spring Boot 아래, 나란히):
       Card: [MariaDB gold logo]            name: "MariaDB 10.11"
       Caption (BELOW card name, max-width 110px, word-wrap, centered):
-        "Docker · 127.0.0.1:3306"
-        "/var/lib/qusign-db 볼륨"
+        "Docker · 내부 네트워크 전용"
+        "named volume: mariadb_data"
 
       Card: [Redis red logo]              name: "Redis 7"
       Caption (BELOW card name, max-width 110px, word-wrap, centered):
         "Docker · redis:7-alpine"
-        "포트 6379"
+        "내부 네트워크 전용 (포트 미노출)"
 
       Arrow UP from Spring Boot → MariaDB: 2px #aaaaaa, label "JDBC"
       Arrow UP from Spring Boot → Redis  : 2px #aaaaaa, label "Pub/Sub"
@@ -139,7 +139,7 @@ Inside VPC:
 
   Security Group badge (overlapping EC2 group border, bottom-left):
     Pill shape, background: #fff0f0, border: 1px solid #cc3333
-    Text: "SG: 22(내IP) · 80 · 443"  10px JetBrains Mono, #cc3333
+    Text: "SG: 22(0.0.0.0/0 · GitHub Actions) · 80 · 443"  10px JetBrains Mono, #cc3333
 
   S3 VPC Endpoint (inside VPC, right side, outside EC2 group):
     Small floating element:
@@ -178,7 +178,7 @@ BOX C — SSM PARAMETER STORE
   Label       : "SECRETS"
   Card: [AWS Systems Manager icon]  name: "SSM Param Store"
   Caption: "SecureString · KMS 암호화"  11px Inter, #666666
-  Caption line 2: "DB 비밀번호 · JWT 시크릿 · S3 버킷명"
+  Caption line 2: "DB 비밀번호 · JWT 시크릿 · S3 버킷명 · CORS Origin"
 
 ━━━ ARROWS — EC2 → BOTTOM BOXES ━━━━━━━━━━━━━━━
 

@@ -155,9 +155,9 @@ Border style: 1.5px dashed #9b7ee0  (dashed to emphasize special layer)
 Group width : ~340px
 
 Cards (horizontal, side by side — each card+caption is an independent vertical column):
-  Card A: [shield / lock icon]          name: "liboqs-java"
+  Card A: [Bouncy Castle official logo]  name: "Bouncy Castle 1.84"
   Caption (BELOW Card A, max-width 130px, word-wrap, centered):
-    "ML-DSA-65 키 생성 · 서명 · 검증"
+    "ML-DSA-65 (BC Provider) 키 생성 · 서명 · 검증"
     "PBKDF2 + AES-256-GCM 키 암호화"
 
   Card B: [Apache feather icon]         name: "PDFBox"

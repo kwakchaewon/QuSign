@@ -992,44 +992,11 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   sudo systemctl status certbot-renew.timer
   ```
 
-- [ ] 배포 스크립트 생성 (`/home/ec2-user/deploy.sh`)
-  ```bash
-  #!/bin/bash
-  set -e
-
-  ECR_URL="ACCOUNT_ID.dkr.ecr.ap-southeast-1.amazonaws.com"
-  IMAGE="$ECR_URL/qusign_backend:latest"
-
-  # SSM에서 환경변수 로드
-  DB_URL=$(aws ssm get-parameter --name /qusign/prod/db-url --with-decryption --query Parameter.Value --output text)
-  DB_USER=$(aws ssm get-parameter --name /qusign/prod/db-username --with-decryption --query Parameter.Value --output text)
-  DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password --with-decryption --query Parameter.Value --output text)
-  JWT_SECRET=$(aws ssm get-parameter --name /qusign/prod/jwt-secret --with-decryption --query Parameter.Value --output text)
-  S3_BUCKET=$(aws ssm get-parameter --name /qusign/prod/s3-bucket --query Parameter.Value --output text)
-  CORS_ORIGINS=$(aws ssm get-parameter --name /qusign/prod/cors-origins --query Parameter.Value --output text)
-
-  # ECR 로그인
-  aws ecr get-login-password --region ap-southeast-1 | \
-    docker login --username AWS --password-stdin $ECR_URL
-
-  # 기존 컨테이너 중지 및 새 이미지로 시작
-  docker pull $IMAGE
-  docker stop qusign-app 2>/dev/null || true
-  docker rm qusign-app 2>/dev/null || true
-
-  docker run -d \
-    --name qusign-app \
-    --restart unless-stopped \
-    --network host \
-    -e SPRING_PROFILES_ACTIVE=prod \
-    -e DB_URL="$DB_URL" \
-    -e DB_USER="$DB_USER" \
-    -e DB_PASS="$DB_PASS" \
-    -e JWT_SECRET="$JWT_SECRET" \
-    -e S3_BUCKET="$S3_BUCKET" \
-    -e CORS_ORIGINS="$CORS_ORIGINS" \
-    $IMAGE
-  ```
+- [x] ~~배포 스크립트 생성 (`/home/ec2-user/deploy.sh`)~~ → **불필요로 판명, §6-12로 대체** ✅ (2026-06-19)
+  > 초기 설계는 `docker run` 단일 컨테이너 + EC2에 별도 MariaDB 설치 구조였으나,
+  > 실제로는 `docker-compose.prod.yml`(백엔드+MariaDB+Redis)로 전환됨.
+  > 별도 스크립트 파일 없이 `.github/workflows/deploy.yml`의 SSH step이
+  > SSM 조회 → ECR 로그인 → `docker-compose pull/up`을 인라인으로 직접 실행 (§6-12 참조).
 
 ---
 

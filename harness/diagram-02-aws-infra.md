@@ -217,6 +217,15 @@ All downward from EC2 group bottom edge (passing through VPC border):
   → SES         : 2px solid #c47a1e,  label "서명 링크 · 완료 알림 이메일"
   → SSM         : 2px dashed #9b7ee0, label "EC2 시작 시 SecureString 조회"
 
+━━━ REGION COST BADGE (floating, bottom-left corner) ━━
+
+Small info box, bottom-left corner of canvas (below Row 2, left-aligned with VPC group):
+  Background: #f0f6ff, border: 1px solid #147eba, radius: 12px
+  Width: ~300px
+  Title: "리전 선택 근거"  11px JetBrains Mono ALL CAPS, #147eba
+  Line 1: "ap-southeast-1 (싱가포르)  ·  EC2 t3.small $0.023/h"  10px Inter, #444444
+  Line 2: "ap-northeast-2 (서울) 대비 약 18% 저렴 → 월 ~$12 달성"  10px Inter, #444444
+
 ━━━ IAM ROLE BADGE (floating, right margin) ━━━━━
 
 Small info box, right side of canvas:

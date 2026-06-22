@@ -26,7 +26,7 @@
         ↓
 [ PqcSignatureService / PdfSignatureService / StorageService (Domain Infrastructure) ]
         ↓
-[ liboqs-java / PDFBox / MinIO Client / MariaDB (External) ]
+[ Bouncy Castle (JCA) / PDFBox / MinIO Client / MariaDB (External) ]
 ```
 
 의존성 방향: 위→아래만 허용. Controller가 liboqs 직접 접근 금지.
@@ -45,7 +45,7 @@
 
 | 시스템 | 용도 | 장애 시 영향 |
 |---|---|---|
-| liboqs-java (JNI) | ML-DSA 암호 연산 | 서비스 전면 중단 |
+| Bouncy Castle 1.84 (JCA) | ML-DSA 암호 연산 | 서비스 전면 중단 |
 | PDFBox | PDF 서명값 삽입/추출 | 서명 기능 불가 |
 | MariaDB 10.11 | 사용자, 문서, 서명 메타데이터 | 서비스 전면 중단 |
 | MinIO / AWS S3 | PDF 파일 원본 저장 | 업로드/다운로드 불가 |

@@ -14,7 +14,7 @@ Size       : 1440 × 810px  (16:9)
 Background : #ffffff
 Title      : "CI/CD & Automation Pipeline"
              top-left, 36px Inter weight 700, #000000
-Subtitle   : "GitHub Actions 자동 배포 · EventBridge 야간 절전 스케줄러"
+Subtitle   : "GitHub Actions 자동 배포 · EventBridge 야간 절전 스케줄러 · Loki + Grafana 모니터링"
              below title, 14px Inter 400, #888888
 Divider    : 1px solid #e6e6e6, full width below subtitle
 
@@ -196,6 +196,29 @@ ELEMENT H — CLOUDWATCH LOGS (below Lambda)
   Card: [CloudWatch eye icon]  name: "CloudWatch Logs"
   Caption: "Lambda 실행 이력 확인"  11px Inter, #666666
 
+GROUP I — APP MONITORING (오른쪽, EC2 카드 아래)
+  Group color : #e56717 (Grafana orange)
+  Group tint  : #fff8f4
+  Group label : "MONITORING"
+  Group width : ~280px
+
+  Cards (horizontal, side by side — each card+caption is an independent vertical column):
+    Card: [Grafana Loki icon]  name: "Loki"
+    Caption (BELOW card name, max-width 120px, word-wrap, centered):
+      "앱 로그 집계"
+      "Promtail 에이전트"
+
+    Card: [Grafana orange G icon]  name: "Grafana"
+    Caption (BELOW card name, max-width 120px, word-wrap, centered):
+      "대시보드 · 이상 알림"
+      "서명 건수 · 응답 시간"
+
+  Arrow from EC2 → Loki:
+    Style: 2px solid #e56717, filled arrowhead
+    Label: "앱 로그 (Promtail)"  11px JetBrains Mono, #e56717
+
+Lane separator note: CloudWatch = Lambda 실행 로그 (AWS managed) / Loki+Grafana = Spring Boot 앱 로그 (self-hosted)
+
 ━━━ COST SAVING BADGE (bottom-right corner) ━━━━
 
 Info box in bottom-right:
@@ -226,7 +249,7 @@ Info box in bottom-right:
 
 ━━━ CONSTRAINTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Total elements on canvas: ~8 cards + 6 step rows + 2 schedule mini-cards — keep readable
+- Total elements on canvas: ~10 cards + 6 step rows + 2 schedule mini-cards — Group I adds Loki + Grafana
 - GitHub Actions group is the dominant element in Lane 1 (~40% canvas width)
 - EC2 card is shared between Lane 1 and Lane 2 (rightmost column, spans both lanes)
 - 48px white margin on all 4 edges

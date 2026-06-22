@@ -163,6 +163,19 @@ Inside VPC:
       Arrow UP from Spring Boot → MariaDB: 2px #aaaaaa, label "JDBC"
       Arrow UP from Spring Boot → Redis  : 2px #aaaaaa, label "Pub/Sub"
 
+    Row C — 모니터링 레이어 (Row B 아래, 나란히):
+      Card: [Grafana Loki icon]           name: "Grafana Loki"
+      Caption (BELOW card name, max-width 110px, word-wrap, centered):
+        "Docker · Promtail 에이전트 포함"
+        "Spring Boot 로그 수집"
+
+      Card: [Grafana orange G icon]       name: "Grafana"
+      Caption (BELOW card name, max-width 110px, word-wrap, centered):
+        "Docker · :3000 (관리자 접근)"
+        "대시보드 · 이상 접근 알림"
+
+      Arrow from Spring Boot → Loki: 2px solid #e56717, label "Promtail 로그 수집"
+
   Elastic IP badge (floating, overlapping EC2 group top-right corner):
     Pill shape, background: #fff8f2, border: 2px solid #e8760a
     Text: "Elastic IP  3.0.193.52"  11px JetBrains Mono, #e8760a
@@ -217,6 +230,13 @@ All downward from EC2 group bottom edge (passing through VPC border):
   → SES         : 2px solid #c47a1e,  label "서명 링크 · 완료 알림 이메일"
   → SSM         : 2px dashed #9b7ee0, label "EC2 시작 시 SecureString 조회"
 
+━━━ MONITORING STACK NOTE ━━━━━━━━━━━━━━━━━━━━━
+
+Row C (Loki + Grafana)는 EC2 내부 Docker 컨테이너로 운영:
+  - Spring Boot → Promtail(사이드카) → Loki 로그 수집
+  - Grafana가 Loki를 데이터소스로 연결하여 대시보드 표시
+  - 외부 접근: Nginx에서 /grafana 경로 프록시 또는 :3000 직접 접근 (관리자 전용)
+
 ━━━ REGION COST BADGE (floating, bottom-left corner) ━━
 
 Small info box, bottom-left corner of canvas (below Row 2, left-aligned with VPC group):
@@ -254,7 +274,7 @@ Small info box, right side of canvas:
 
 ━━━ CONSTRAINTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Total elements on canvas: ~12 cards, ~9 arrows — keep it this count, no more
+- Total elements on canvas: ~14 cards, ~11 arrows — Row C adds Loki + Grafana inside EC2
 - VPC group is the dominant visual (~70% canvas width, ~50% canvas height)
 - EC2 group inside VPC is the compute anchor
 - 48px white margin on all 4 edges

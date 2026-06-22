@@ -186,12 +186,40 @@ Cards arranged in a vertical column inside the group:
   Caption (DIRECTLY BELOW Card B name, centered, max-width 220px):
     "프로덕션 환경 · VPC Endpoint"
 
+━━━ GROUP 7 — MONITORING ━━━━━━━━━━━━━━━━━━━━━━
+
+Position: right side of canvas — vertical strip to the right of the 3 bottom groups
+Group color : #e56717 (Grafana orange)
+Group tint  : #fff8f4
+Group label : "MONITORING"
+Border style: 1.5px dashed #e56717  (dashed to emphasize observability layer)
+Group width : ~200px
+
+Cards (vertical stack):
+  Card A: [Promtail icon]  name: "Promtail"
+  Caption (BELOW card name, centered, max-width 170px):
+    "Logback 로그 수집 에이전트"
+
+  Card B: [Grafana Loki icon]  name: "Grafana Loki"
+  Caption (BELOW card name, centered, max-width 170px):
+    "로그 집계 · LogQL 쿼리"
+
+  Card C: [Grafana orange G icon]  name: "Grafana"
+  Caption (BELOW card name, centered, max-width 170px):
+    "서명 건수 · API 응답 시간"
+    "이상 접근 탐지 · 알림"
+
+Arrow from Backend group → MONITORING group:
+  Style: 2px solid #e56717, filled arrowhead, direction right
+  Label: "Logback / Promtail"  11px JetBrains Mono, #e56717
+
 ━━━ ARROWS — BACKEND → BOTTOM GROUPS ━━━━━━━━━━
 
 All downward from Backend group bottom edge:
   → Data Layer  : 2px solid #c47a1e,  label "JDBC / Redis Pub·Sub"
   → PQC Crypto  : 2px dashed #9b7ee0, label "JCA (BC Provider)"
   → Storage     : 2px solid #3d8f3d,  label "presigned URL / 스트림"
+  → Monitoring  : 2px solid #e56717,  label "Logback / Promtail"  (direction: right)
 
 ━━━ ARROW LABEL STYLE ━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -213,7 +241,7 @@ All downward from Backend group bottom edge:
 
 ━━━ CONSTRAINTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Total elements on canvas: ~10 cards, ~7 arrows — keep it this count, no more
+- Total elements on canvas: ~13 cards, ~9 arrows — Monitoring group adds 3 cards (Promtail / Loki / Grafana)
 - Backend group is the visual anchor (tallest element)
 - 48px white margin on all 4 edges
 - 32px gap between all group boxes

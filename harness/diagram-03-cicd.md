@@ -178,7 +178,7 @@ GROUP G — LAMBDA
 
   Card: [AWS Lambda orange λ icon]  name: "Lambda"
   Sub (BELOW card name, centered, max-width 280px):
-    "qusign_start_instances · Python 3.14"  11px Inter, #666666
+    "qusign_start_instances · Python 3.13"  11px Inter, #666666
   Caption (BELOW Sub, max-width 280px, word-wrap, centered, 10px JetBrains Mono, #888888):
     "start → ec2.start_instances()"
     "stop  → ec2.stop_instances()"

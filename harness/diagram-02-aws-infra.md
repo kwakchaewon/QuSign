@@ -23,6 +23,9 @@ Divider    : 1px solid #e6e6e6, full width below subtitle
 Row 0 (top, centered):
   [INTERNET]  ──→  [ROUTE 53]
 
+Row 0.5 (top-right corner, outside VPC):
+  [EVENTBRIDGE SCHEDULER GROUP]  ──start/stop──→  (into EC2 GROUP, Row 1)
+
 Row 1 (center, dominant):
   Large VPC group box containing:
     - EC2 GROUP (main compute, left-center inside VPC)
@@ -81,6 +84,33 @@ Two floating elements, centered horizontally at top. No group border.
   Arrow ↓ downward to VPC group:
     Style: 2px solid #9b7ee0, filled arrowhead pointing down
     Label: "A 레코드 / CNAME"  11px JetBrains Mono, #9b7ee0
+
+━━━ ROW 0.5 — EC2 운영시간 스케줄러 (EVENTBRIDGE) ━━━
+
+Floating group, top-right corner of canvas, outside the VPC border
+(EventBridge/Lambda are regional services, not inside the VPC).
+
+GROUP — SCHEDULER
+  Group color : #cc3333 (red)
+  Group tint  : #fff5f5
+  Group label line 1 : [clock icon 16px]  "EC2 운영시간 스케줄러"
+  Group label line 2 : "KST 09:00 시작 · 21:30 정지 (Asia/Seoul)"  10px Inter, #888888
+  Group width : ~240px
+
+  Cards (horizontal, side by side — each card+caption is an independent vertical column):
+    Card: [Amazon EventBridge icon]  name: "EventBridge Scheduler"
+    Caption (BELOW card name, max-width 110px, word-wrap, centered):
+      "cron(0 9 * * ? *)"
+      "cron(30 21 * * ? *)"
+
+    Card: [AWS Lambda orange λ icon]  name: "Lambda"
+    Caption (BELOW card name, max-width 110px, word-wrap, centered):
+      "qusign_start_instances"
+      "ec2.start/stop_instances()"
+
+  Arrow ↓ down-left into EC2 group (top edge, passing through VPC border):
+    Style: 2px dashed #cc3333, filled arrowhead
+    Label: "start / stop (EC2 제어)"  11px JetBrains Mono, #cc3333
 
 ━━━ ROW 1 — VPC GROUP ━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -215,7 +245,7 @@ Small info box, right side of canvas:
 
 ━━━ CONSTRAINTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Total elements on canvas: ~10 cards, ~8 arrows — keep it this count, no more
+- Total elements on canvas: ~12 cards, ~9 arrows — keep it this count, no more
 - VPC group is the dominant visual (~70% canvas width, ~50% canvas height)
 - EC2 group inside VPC is the compute anchor
 - 48px white margin on all 4 edges

@@ -111,4 +111,9 @@ GitHub Actions 자동 배포 · EventBridge 야간 절전 스케줄러 · Loki +
 
 ![CI/CD & Automation Pipeline](docs/diagrams/qusign_cicd_pipeline.png)
 
-<sup>소스 프롬프트: [`harness/diagram-01-application.md`](harness/diagram-01-application.md) · [`harness/diagram-03-cicd.md`](harness/diagram-03-cicd.md)</sup>
+### AWS Cloud Infrastructure
+ap-southeast-1 (싱가포르) · EC2 단일 구성 · 월 ~$12
+
+![AWS Cloud Infrastructure](docs/diagrams/qusign_aws_infrastructure.png)
+
+<sup>소스 프롬프트: [`harness/diagram-01-application.md`](harness/diagram-01-application.md) · [`harness/diagram-02-aws-infra.md`](harness/diagram-02-aws-infra.md) · [`harness/diagram-03-cicd.md`](harness/diagram-03-cicd.md)</sup>

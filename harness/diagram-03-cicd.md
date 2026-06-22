@@ -125,7 +125,7 @@ ELEMENT D — ECR (below/right of Actions group)
 
   Arrow → right to EC2:
     Style: 2px dashed #e8760a
-    Label: "docker pull (deploy.sh)"  11px JetBrains Mono, #e8760a
+    Label: "docker-compose pull (EC2 에서 실행)"  11px JetBrains Mono, #e8760a
 
 ELEMENT E — EC2 (rightmost, shared with Lane 2)
   Large card (shared target for both lanes):

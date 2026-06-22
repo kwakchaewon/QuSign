@@ -122,9 +122,9 @@ Feature sub-tags (flex-wrap row BELOW caption, centered inside group):
   Pills wrap to next line if needed — never extend beyond group border
 
 Arrow ↓ downward to DATA group:
-  Style : 2px solid #aaaaaa, label "JDBC / Redis"
+  Style : 2px solid #aaaaaa, label "JDBC / Redis Pub·Sub"
 Arrow ↓ downward to PQC group:
-  Style : 2px dashed #9b7ee0, label "JNI"
+  Style : 2px dashed #9b7ee0, label "JCA (BC Provider)"
 Arrow ↓ downward to STORAGE group:
   Style : 2px solid #3d8f3d, label "SDK"
 
@@ -190,7 +190,7 @@ Cards arranged in a vertical column inside the group:
 
 All downward from Backend group bottom edge:
   → Data Layer  : 2px solid #c47a1e,  label "JDBC / Redis Pub·Sub"
-  → PQC Crypto  : 2px dashed #9b7ee0, label "JNI (liboqs native)"
+  → PQC Crypto  : 2px dashed #9b7ee0, label "JCA (BC Provider)"
   → Storage     : 2px solid #3d8f3d,  label "presigned URL / 스트림"
 
 ━━━ ARROW LABEL STYLE ━━━━━━━━━━━━━━━━━━━━━━━━━

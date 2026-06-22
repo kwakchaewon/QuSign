@@ -101,9 +101,14 @@ cd backend
 
 ## 아키텍처 다이어그램
 
-| 다이어그램 | 설명 |
-|---|---|
-| [Application Layer Architecture](docs/diagrams/qusign_Application%20Layer.pdf) | 내부 요청 흐름 · 데이터 레이어 · PQC 암호 · 실시간 알림 · 관측성 |
-| [CI/CD & Automation Pipeline](docs/diagrams/qusign_CICD_Pipeline.pdf) | GitHub Actions 자동 배포 · EventBridge 야간 절전 스케줄러 · Loki + Grafana 모니터링 |
+### Application Layer Architecture
+내부 요청 흐름 · 데이터 레이어 · PQC 암호 · 실시간 알림 · 관측성
 
-다이어그램 소스 프롬프트: [`harness/diagram-01-application.md`](harness/diagram-01-application.md) · [`harness/diagram-03-cicd.md`](harness/diagram-03-cicd.md)
+![Application Layer Architecture](docs/diagrams/qusign_application_layer.png)
+
+### CI/CD & Automation Pipeline
+GitHub Actions 자동 배포 · EventBridge 야간 절전 스케줄러 · Loki + Grafana 모니터링
+
+![CI/CD & Automation Pipeline](docs/diagrams/qusign_cicd_pipeline.png)
+
+<sup>소스 프롬프트: [`harness/diagram-01-application.md`](harness/diagram-01-application.md) · [`harness/diagram-03-cicd.md`](harness/diagram-03-cicd.md)</sup>

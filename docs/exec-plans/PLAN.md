@@ -1090,9 +1090,9 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 #### Lambda 함수 생성 (EC2만 제어)
 
-- [ ] Lambda 함수 생성: `qusign_start_instances`
-  - 런타임: Python 3.12
-  - 실행 역할: `qusign_scheduler_role`
+- [x] Lambda 함수 생성: `qusign_start_instances` ✅ (2026-06-22)
+  - 런타임: Python 3.14 (계획 당시 3.12였으나 단순 boto3 호출이라 버전 무관)
+  - 실행 역할: `qusign_lambda_eventbridge_role` (§6-2에서 기존 생성된 역할 재사용, `qusign_scheduler_role`이라는 새 역할은 만들지 않음)
   - 코드:
     ```python
     import boto3
@@ -1114,15 +1114,18 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
     ```
   > MariaDB가 EC2 내부에 있으므로 EC2 정지 시 DB도 함께 정지됨 — RDS 별도 제어 불필요
 
-- [ ] EventBridge Scheduler 규칙 2개 생성
-  | 이름 | Cron 표현식 | payload | 설명 |
+- [x] EventBridge Scheduler 규칙 2개 생성 ✅ (2026-06-22, 시간대 `Asia/Seoul` 적용 — UTC 환산 대신 KST 값 직접 입력)
+  | 이름 | Cron 표현식 (Asia/Seoul) | payload | 설명 |
   |---|---|---|---|
-  | `qusign_nightly_stop` | `cron(30 12 * * ? *)` | `{"action": "stop"}` | KST 21:30 정지 |
-  | `qusign_morning_start` | `cron(0 0 * * ? *)` | `{"action": "start"}` | KST 09:00 시작 |
+  | `qusign_nightly_stop` | `cron(30 21 * * ? *)` | `{"action": "stop"}` | KST 21:30 정지 |
+  | `qusign_morning_start` | `cron(0 9 * * ? *)` | `{"action": "start"}` | KST 09:00 시작 |
+  - 실행 역할: `qusign_eventbridge_scheduler_role` (두 규칙이 공유)
+  > ⚠️ 시간대를 `Asia/Seoul`로 선택했기 때문에 Cron 값도 KST 기준으로 직접 입력해야 함.
+  > UTC 기준 cron(`30 12`, `0 0`)을 그대로 쓰면 시간대 이중 적용으로 낮 12:30/밤 0:00에 실행되는 버그 발생 — 콘솔에서 발견하고 수정함.
 
-- [ ] Lambda 테스트 (콘솔에서 `{"action": "stop"}` 으로 직접 실행)
-- [ ] CloudWatch Logs에서 실행 확인
-- [ ] EventBridge Scheduler에 Lambda 연결 확인
+- [x] Lambda 테스트 ✅ (2026-06-22) — 콘솔 Test 탭에서 `{"action": "stop"}` → `{"status": "stopped"}`, `{"action": "start"}` → `{"status": "started"}` 양방향 확인
+- [x] EventBridge Scheduler에 Lambda 연결 확인 ✅ (2026-06-22) — 일정 목록에서 두 규칙 모두 대상 `qusign_start_instances`(LAMBDA_Invoke), 상태 "활성" 확인
+- [ ] CloudWatch Logs에서 실제 스케줄 실행 확인 (다음 KST 21:30/09:00 정기 실행 후 확인 필요, §6-13과 동일 항목)
 
 ---
 

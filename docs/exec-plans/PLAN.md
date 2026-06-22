@@ -1050,7 +1050,9 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   > 컨테이너명 `qusign-mariadb`, 계정 `qusign`(`qsadmin` 아님), 볼륨은 named volume `mariadb_data`.
   > `docker ps` 확인 결과 healthy 상태로 정상 기동 중 (2026-06-19 기준 2일째 가동).
 
-- [ ] 초기화 확인
+- [x] 초기화 확인 ✅ (2026-06-19) — Flyway 마이그레이션으로 전체 테이블 정상 생성 확인
+  (`audit_logs`, `documents`, `document_bundles`, `document_bundle_items`, `notifications`,
+  `signature_requests`, `signatures`, `timestamp_tokens`, `users`, `flyway_schema_history`)
   ```bash
   docker exec -it qusign-mariadb mariadb -uqusign -p qusign -e "SHOW TABLES;"
   ```

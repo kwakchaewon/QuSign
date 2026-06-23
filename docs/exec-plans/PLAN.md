@@ -1188,7 +1188,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 - [x] Lambda 테스트 ✅ (2026-06-22) — 콘솔 Test 탭에서 `{"action": "stop"}` → `{"status": "stopped"}`, `{"action": "start"}` → `{"status": "started"}` 양방향 확인
 - [x] EventBridge Scheduler에 Lambda 연결 확인 ✅ (2026-06-22) — 일정 목록에서 두 규칙 모두 대상 `qusign_start_instances`(LAMBDA_Invoke), 상태 "활성" 확인
-- [ ] CloudWatch Logs에서 실제 스케줄 실행 확인 (다음 KST 21:30/09:00 정기 실행 후 확인 필요, §6-13과 동일 항목)
+- [x] CloudWatch Logs에서 실제 스케줄 실행 확인 ✅ (2026-06-23) — AWSLambdaBasicExecutionRole 추가 후 로그 그룹 `/aws/lambda/qusign_start_instances` 생성 확인, START→END→REPORT 정상 완료
 
 ---
 
@@ -1285,7 +1285,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [x] Swagger UI 정상 렌더링 확인 ✅ (2026-06-23) — `https://qusign.link/swagger-ui/index.html` (springdoc 2.8.0, Spring Boot 3.5 호환)
 - [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 이메일 수신 → 서명 → 검증 전체 플로우
 - [ ] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
-- [ ] CloudWatch Logs에서 Lambda 실행 로그 확인
+- [x] CloudWatch Logs에서 Lambda 실행 로그 확인 ✅ (2026-06-23)
 
 ---
 
@@ -1309,8 +1309,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [x] 실제 도메인으로 HTTPS 접속 가능 ✅ (2026-06-18)
 - [x] GitHub Actions push 시 자동 배포 ✅ (2026-06-19)
 - [ ] 이메일로 서명 링크 수신 후 서명까지 전체 플로우 동작 (SES 미연동)
-- [ ] EventBridge로 KST 21:30-09:00 자동 정지/시작 동작 확인
-- [ ] CloudWatch에서 Lambda 스케줄러 실행 로그 확인
+- [x] EventBridge로 KST 21:30-09:00 자동 정지/시작 동작 확인
+- [x] CloudWatch에서 Lambda 스케줄러 실행 로그 확인 ✅ (2026-06-23)
 
 ---
 

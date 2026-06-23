@@ -9,7 +9,6 @@
 ## 📋 목차
 
 - [기술 스택](#기술-스택)
-- [로컬 실행](#로컬-실행)
 - [테스트](#테스트)
 - [API 문서](#api-문서)
 - [진행 현황](#진행-현황)
@@ -28,34 +27,6 @@
 | **메시지** | Redis 7 (Pub/Sub + 실시간 알림) |
 | **프론트엔드** | Vue 3 + Vite + Pinia + Vue Router + TypeScript |
 | **인프라** | Docker Compose → AWS EC2/RDS → Terraform |
-
----
-
-## 로컬 실행
-
-**사전 준비**
-- JDK 21
-- MariaDB 10.11 (root/root, database: qusign)
-- Docker (MinIO + Redis 실행용)
-- Node.js 20+
-
-```bash
-# 1. MinIO + Redis 기동
-docker compose up -d
-
-# 2. 백엔드 실행 (local 프로파일)
-cd backend
-./gradlew bootRun --args='--spring.profiles.active=local'
-
-# 3. 프론트엔드 실행
-cd frontend
-npm install && npm run dev
-```
-
-**엔드포인트**
-- 프론트엔드: http://localhost:5173
-- API: http://localhost:8080
-- MinIO 콘솔: http://localhost:9001 (minioadmin / minioadmin)
 
 ---
 

@@ -58,6 +58,7 @@ class SecurityConfig(
                     .requestMatchers("/api/health", "/actuator/health", "/api/auth/**", "/api/verify").permitAll()
                     .requestMatchers("/api/verify/file").permitAll()
                     .requestMatchers("/api/notifications/stream").permitAll()
+                    .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
             }

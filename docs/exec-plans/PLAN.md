@@ -1043,7 +1043,18 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 > 콘솔: S3 → 버킷 만들기
 
-- [ ] 버킷 생성: `qusign_documents_prod_{AccountId}`
+> **사전 점검 결과 — 코드 버그 3건 발견 (Step 2에서 수정)**
+>
+> | # | 파일 | 문제 |
+> |---|---|---|
+> | 1 | `application-prod.yml` | `storage:` 섹션 없음 → prod에서도 MinIO 주소로 연결 시도 |
+> | 2 | `docker-compose.prod.yml` | `S3_BUCKET` 전달하지만 `application.yml`은 `STORAGE_BUCKET` 읽음 → 버킷명 미전달 |
+> | 3 | `StorageConfig.kt` | 항상 `StaticCredentialsProvider` 사용 → EC2 IAM 역할 인증 불가 |
+
+#### Step 1. AWS 콘솔 (수동)
+
+- [ ] 버킷 생성: **`qusign-documents-prod-285868221698`**
+  > ⚠️ S3 버킷명은 하이픈만 허용 (언더스코어 불가)
   - 리전: `ap-southeast-1`
   - 퍼블릭 액세스 차단: **전체 차단** (EC2 IAM 역할로만 접근)
   - 버전 관리: 비활성화 (비용 절감)
@@ -1051,13 +1062,40 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] 버킷 정책: EC2 역할만 허용
   ```json
   {
-    "Effect": "Allow",
-    "Principal": { "AWS": "arn:aws:iam::ACCOUNT_ID:role/qusign_ec2_role" },
-    "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-    "Resource": "arn:aws:s3:::qusign_documents_prod_*/*"
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::285868221698:role/qusign_ec2_role" },
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::qusign-documents-prod-285868221698/*"
+    }]
   }
   ```
 - [ ] 수명 주기 정책: 180일 이상 미접근 객체 Glacier로 이동 (장기 비용 절감)
+- [ ] SSM 파라미터 값 업데이트
+  - `/qusign/prod/s3-bucket` → `qusign-documents-prod-285868221698`
+
+#### Step 2. 코드 수정 (버그 3건)
+
+> **분리 원칙**: `StorageConfig.kt` 1개로 로컬(MinIO)·프로덕션(AWS S3) 모두 처리.
+> `endpoint`가 비어있으면 AWS 네이티브 모드(IAM 역할 자동 인증), 값이 있으면 MinIO 모드(StaticCredentials).
+
+- [ ] `StorageConfig.kt` — `endpoint` 비어있을 때 IAM 역할 자동 인증 분기 추가, `region` 파라미터 추가
+- [ ] `application.yml` — `storage.region: ${STORAGE_REGION:us-east-1}` 항목 추가
+- [ ] `application-prod.yml` — `storage:` 섹션 추가 (endpoint 없음, region `ap-southeast-1`, bucket `${S3_BUCKET}`)
+- [ ] `docker-compose.prod.yml` — `STORAGE_BUCKET: ${S3_BUCKET}`, `STORAGE_REGION: ap-southeast-1` 추가
+- [ ] `./gradlew test` 통과
+
+#### Step 3. 배포 후 검증
+
+- [ ] GitHub Actions 배포 후 EC2 컨테이너 로그에서 `버킷 생성 완료` or 버킷 정상 인식 확인
+  ```bash
+  docker logs qusign-backend 2>&1 | grep -i bucket
+  ```
+- [ ] PDF 업로드 → S3 콘솔에서 객체 생성 확인
+- [ ] PDF 다운로드 정상 동작 확인
+
+**완료 기준:** 프로덕션에서 PDF 업로드·다운로드 정상 동작 + S3 콘솔 객체 확인
 
 ---
 

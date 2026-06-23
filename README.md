@@ -110,9 +110,9 @@ cd backend
 <table>
 <thead>
 <tr>
-<th width="15%">단계</th>
-<th width="65%">내용</th>
-<th width="20%">상태</th>
+<th width="20%">단계</th>
+<th width="55%">내용</th>
+<th width="25%">상태</th>
 </tr>
 </thead>
 <tbody>

@@ -938,7 +938,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   sudo systemctl enable nginx
   ```
 
-- [ ] Nginx 설정 (`/etc/nginx/conf.d/qusign.conf`)
+- [x] Nginx 설정 (`/etc/nginx/conf.d/qusign.conf`) ✅ (2026-06-23)
   ```nginx
   server {
       listen 80;
@@ -957,14 +957,25 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
       root /var/www/qusign/dist;
       index index.html;
 
-      # Vue Router history mode 지원
-      location / {
-          try_files $uri $uri/ /index.html;
+      # Swagger UI (springdoc) — Vue catch-all보다 먼저 선언
+      location /v3/api-docs {
+          proxy_pass         http://127.0.0.1:8080;
+          proxy_set_header   Host              $host;
+          proxy_set_header   X-Real-IP         $remote_addr;
+          proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+          proxy_set_header   X-Forwarded-Proto $scheme;
+      }
+      location /swagger-ui/ {
+          proxy_pass         http://127.0.0.1:8080;
+          proxy_set_header   Host              $host;
+          proxy_set_header   X-Real-IP         $remote_addr;
+          proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+          proxy_set_header   X-Forwarded-Proto $scheme;
       }
 
       # Spring Boot API 프록시
       location /api/ {
-          proxy_pass http://localhost:8080;
+          proxy_pass http://127.0.0.1:8080;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -972,11 +983,20 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
       }
 
       # SSE 엔드포인트 (긴 커넥션)
-      location /api/sse {
-          proxy_pass http://localhost:8080;
-          proxy_buffering off;
-          proxy_cache off;
+      location /api/notifications/stream {
+          proxy_pass         http://127.0.0.1:8080;
+          proxy_buffering    off;
+          proxy_cache        off;
           proxy_read_timeout 3600s;
+          proxy_set_header   Host              $host;
+          proxy_set_header   X-Real-IP         $remote_addr;
+          proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+          proxy_set_header   X-Forwarded-Proto $scheme;
+      }
+
+      # Vue Router history mode 지원
+      location / {
+          try_files $uri $uri/ /index.html;
       }
   }
   ```
@@ -1195,6 +1215,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   | `/qusign/prod/jwt-secret` | SecureString |
   | `/qusign/prod/s3-bucket` | String |
   | `/qusign/prod/cors-origins` | String |
+  | `/qusign/prod/server-url` | String (`https://qusign.link`) — Swagger 서버 URL용 ✅ (2026-06-23) |
 - [x] GitHub Actions workflow 파일 작성 ✅ (2026-06-19) — `.github/workflows/deploy.yml`
   - `deploy-backend` / `deploy-frontend` 병렬 잡
   - 백엔드: JAR 빌드 → ECR push → EC2 SSH → docker-compose up
@@ -1219,6 +1240,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [x] `https://qusign.link` HTTPS 접속 확인 ✅ (2026-06-18) — SSL 정상, 프론트엔드 미배포로 403 (다음 단계)
 - [x] SSL 인증서 만료일 확인 ✅ — 2026-09-17, 자동 갱신 타이머 설정됨
 - [x] GitHub Actions push → 자동 배포 확인 ✅ (2026-06-19) — `deploy-backend` 성공 (Run #27815548754, 7m22s)
+- [x] Swagger UI 정상 렌더링 확인 ✅ (2026-06-23) — `https://qusign.link/swagger-ui/index.html` (springdoc 2.8.0, Spring Boot 3.5 호환)
 - [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 이메일 수신 → 서명 → 검증 전체 플로우
 - [ ] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
 - [ ] CloudWatch Logs에서 Lambda 실행 로그 확인
@@ -1242,9 +1264,9 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 ---
 
 **6단계 완료 기준**
-- [ ] 실제 도메인으로 HTTPS 접속 가능
-- [ ] 이메일로 서명 링크 수신 후 서명까지 전체 플로우 동작
-- [ ] GitHub Actions push 시 자동 배포
+- [x] 실제 도메인으로 HTTPS 접속 가능 ✅ (2026-06-18)
+- [x] GitHub Actions push 시 자동 배포 ✅ (2026-06-19)
+- [ ] 이메일로 서명 링크 수신 후 서명까지 전체 플로우 동작 (SES 미연동)
 - [ ] EventBridge로 KST 21:30-09:00 자동 정지/시작 동작 확인
 - [ ] CloudWatch에서 Lambda 스케줄러 실행 로그 확인
 

@@ -85,7 +85,7 @@ cd backend
 | 3단계 | 프론트엔드 구현 | ✅ 완료 |
 | 4단계 | 기능 고도화 & 품질 강화 | 🔄 진행 중 |
 | 5단계 | 보안 취약점 개선 (OWASP Top 10) | ✅ 완료 |
-| 6단계 | AWS 배포 + SES + GitHub Actions | ⬜ 진행 전 |
+| 6단계 | AWS 배포 + SES + GitHub Actions | 🔄 진행 중 |
 | 7단계 | Terraform + 수익화 | ⬜ 진행 전 |
 | 8단계 | Loki + Grafana + 이직 준비 | ⬜ 진행 전 |
 

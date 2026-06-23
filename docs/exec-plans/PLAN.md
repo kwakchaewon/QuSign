@@ -729,7 +729,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-0. AWS 계정 사용 기준
+### 참고 — AWS 계정 사용 기준
 
 | 작업 | 사용 계정 | 이유 |
 |------|-----------|------|
@@ -1032,7 +1032,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   | `/qusign/prod/jwt-secret` | SecureString |
   | `/qusign/prod/s3-bucket` | String |
   | `/qusign/prod/cors-origins` | String |
-  | `/qusign/prod/server-url` | String (`https://qusign.link`) — Swagger 서버 URL용 |
+  | `/qusign/prod/server-url` | String (`https://qusign.link`) — Swagger 서버 URL용 ✅ (2026-06-23) |
   > `db-url`/`db-username`은 SSM 파라미터로 분리하지 않음 — `docker-compose.prod.yml`에서
   > MariaDB가 컴포즈 내부 서비스(`mariadb:3306`, 계정 `qusign`)로 고정되어 있어 불필요.
 - [x] GitHub Actions `deploy.yml`의 SSH step에서 SSM 값을 `.env`로 주입 후 `docker-compose`에 전달 ✅ (§6-12 참조)
@@ -1250,14 +1250,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   | `EC2_HOST` | `3.0.193.52` |
   | `EC2_SSH_KEY` | EC2 .pem 파일 내용 전체 |
   | `ECR_REGISTRY` | `285868221698.dkr.ecr.ap-southeast-1.amazonaws.com` |
-- [x] SSM 파라미터 등록 ✅ (2026-06-19)
-  | 파라미터 | 유형 |
-  |---|---|
-  | `/qusign/prod/db-password` | SecureString |
-  | `/qusign/prod/jwt-secret` | SecureString |
-  | `/qusign/prod/s3-bucket` | String |
-  | `/qusign/prod/cors-origins` | String |
-  | `/qusign/prod/server-url` | String (`https://qusign.link`) — Swagger 서버 URL용 ✅ (2026-06-23) |
+- [x] SSM 파라미터 등록 ✅ (2026-06-19) — 목록은 §6-6 참조
 - [x] GitHub Actions workflow 파일 작성 ✅ (2026-06-19) — `.github/workflows/deploy.yml`
   - `deploy-backend` / `deploy-frontend` 병렬 잡
   - 백엔드: JAR 빌드 → ECR push → EC2 SSH → docker-compose up

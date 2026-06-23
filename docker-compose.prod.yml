@@ -45,6 +45,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       S3_BUCKET: ${S3_BUCKET}
+      STORAGE_BUCKET: ${S3_BUCKET}
+      STORAGE_REGION: ap-southeast-1
       CORS_ORIGINS: ${CORS_ORIGINS}
       REDIS_HOST: redis
       REDIS_PORT: 6379

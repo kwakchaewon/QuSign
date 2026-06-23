@@ -1053,13 +1053,13 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 #### Step 1. AWS 콘솔 (수동)
 
-- [ ] 버킷 생성: **`qusign-documents-prod-285868221698`**
+- [x] 버킷 생성: **`qusign-documents-prod-285868221698`** ✅ (2026-06-23)
   > ⚠️ S3 버킷명은 하이픈만 허용 (언더스코어 불가)
   - 리전: `ap-southeast-1`
   - 퍼블릭 액세스 차단: **전체 차단** (EC2 IAM 역할로만 접근)
   - 버전 관리: 비활성화 (비용 절감)
   - 서버 측 암호화: SSE-S3 (AES-256) 활성화
-- [ ] 버킷 정책: EC2 역할만 허용
+- [x] 버킷 정책: EC2 역할만 허용 ✅ (2026-06-23)
   ```json
   {
     "Version": "2012-10-17",
@@ -1071,8 +1071,11 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
     }]
   }
   ```
-- [ ] 수명 주기 정책: 180일 이상 미접근 객체 Glacier로 이동 (장기 비용 절감)
-- [ ] SSM 파라미터 값 업데이트
+- [~] ~~수명 주기 정책: 180일 이상 미접근 객체 Glacier로 이동~~ → **현 단계 스킵** (2026-06-23)
+  > Glacier 이동 후 사용자가 웹에서 즉시 다운로드 불가 (복원 요청 후 수 시간 대기 필요).
+  > 서명 완료 문서는 언제든 다운로드 가능해야 하므로 현재 요건과 충돌.
+  > 재검토 시점: 스토리지 비용이 실제 문제가 될 때 → 복원 요청 UI와 함께 설계.
+- [x] SSM 파라미터 값 업데이트 ✅ (2026-06-23)
   - `/qusign/prod/s3-bucket` → `qusign-documents-prod-285868221698`
 
 #### Step 2. 코드 수정 (버그 3건)
@@ -1080,11 +1083,12 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 > **분리 원칙**: `StorageConfig.kt` 1개로 로컬(MinIO)·프로덕션(AWS S3) 모두 처리.
 > `endpoint`가 비어있으면 AWS 네이티브 모드(IAM 역할 자동 인증), 값이 있으면 MinIO 모드(StaticCredentials).
 
-- [ ] `StorageConfig.kt` — `endpoint` 비어있을 때 IAM 역할 자동 인증 분기 추가, `region` 파라미터 추가
-- [ ] `application.yml` — `storage.region: ${STORAGE_REGION:us-east-1}` 항목 추가
-- [ ] `application-prod.yml` — `storage:` 섹션 추가 (endpoint 없음, region `ap-southeast-1`, bucket `${S3_BUCKET}`)
-- [ ] `docker-compose.prod.yml` — `STORAGE_BUCKET: ${S3_BUCKET}`, `STORAGE_REGION: ap-southeast-1` 추가
-- [ ] `./gradlew test` 통과
+- [x] `StorageConfig.kt` — `endpoint` 비어있을 때 IAM 역할 자동 인증 분기 추가, `region` 파라미터 추가 ✅ (2026-06-23)
+  > `storage.region` 누락 시 앱 시작 실패하도록 `@Value("\${storage.region}")` 기본값 제거 (명시적 실패 정책)
+- [x] `application.yml` — `storage.region: ${STORAGE_REGION:us-east-1}` 항목 추가 ✅ (2026-06-23)
+- [x] `application-prod.yml` — `storage:` 섹션 추가 (endpoint 빈값, region `ap-southeast-1`, bucket `${STORAGE_BUCKET}`) ✅ (2026-06-23)
+- [x] `docker-compose.prod.yml` — `STORAGE_BUCKET: ${S3_BUCKET}`, `STORAGE_REGION: ap-southeast-1` 추가 ✅ (2026-06-23)
+- [x] `./gradlew test` 통과 ✅ (2026-06-23)
 
 #### Step 3. 배포 후 검증
 
@@ -1184,7 +1188,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 - [x] Lambda 테스트 ✅ (2026-06-22) — 콘솔 Test 탭에서 `{"action": "stop"}` → `{"status": "stopped"}`, `{"action": "start"}` → `{"status": "started"}` 양방향 확인
 - [x] EventBridge Scheduler에 Lambda 연결 확인 ✅ (2026-06-22) — 일정 목록에서 두 규칙 모두 대상 `qusign_start_instances`(LAMBDA_Invoke), 상태 "활성" 확인
-- [ ] CloudWatch Logs에서 실제 스케줄 실행 확인 (다음 KST 21:30/09:00 정기 실행 후 확인 필요, §6-13과 동일 항목)
+- [x] CloudWatch Logs에서 실제 스케줄 실행 확인 ✅ (2026-06-23) — AWSLambdaBasicExecutionRole 추가 후 로그 그룹 `/aws/lambda/qusign_start_instances` 생성 확인, START→END→REPORT 정상 완료
 
 ---
 
@@ -1280,8 +1284,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [x] GitHub Actions push → 자동 배포 확인 ✅ (2026-06-19) — `deploy-backend` 성공 (Run #27815548754, 7m22s)
 - [x] Swagger UI 정상 렌더링 확인 ✅ (2026-06-23) — `https://qusign.link/swagger-ui/index.html` (springdoc 2.8.0, Spring Boot 3.5 호환)
 - [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 이메일 수신 → 서명 → 검증 전체 플로우
-- [ ] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
-- [ ] CloudWatch Logs에서 Lambda 실행 로그 확인
+- [x] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
+- [x] CloudWatch Logs에서 Lambda 실행 로그 확인 ✅ (2026-06-23)
 
 ---
 
@@ -1305,8 +1309,8 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [x] 실제 도메인으로 HTTPS 접속 가능 ✅ (2026-06-18)
 - [x] GitHub Actions push 시 자동 배포 ✅ (2026-06-19)
 - [ ] 이메일로 서명 링크 수신 후 서명까지 전체 플로우 동작 (SES 미연동)
-- [ ] EventBridge로 KST 21:30-09:00 자동 정지/시작 동작 확인
-- [ ] CloudWatch에서 Lambda 스케줄러 실행 로그 확인
+- [x] EventBridge로 KST 21:30-09:00 자동 정지/시작 동작 확인
+- [x] CloudWatch에서 Lambda 스케줄러 실행 로그 확인 ✅ (2026-06-23)
 
 ---
 

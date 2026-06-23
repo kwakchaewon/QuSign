@@ -1083,11 +1083,12 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 > **분리 원칙**: `StorageConfig.kt` 1개로 로컬(MinIO)·프로덕션(AWS S3) 모두 처리.
 > `endpoint`가 비어있으면 AWS 네이티브 모드(IAM 역할 자동 인증), 값이 있으면 MinIO 모드(StaticCredentials).
 
-- [ ] `StorageConfig.kt` — `endpoint` 비어있을 때 IAM 역할 자동 인증 분기 추가, `region` 파라미터 추가
-- [ ] `application.yml` — `storage.region: ${STORAGE_REGION:us-east-1}` 항목 추가
-- [ ] `application-prod.yml` — `storage:` 섹션 추가 (endpoint 없음, region `ap-southeast-1`, bucket `${S3_BUCKET}`)
-- [ ] `docker-compose.prod.yml` — `STORAGE_BUCKET: ${S3_BUCKET}`, `STORAGE_REGION: ap-southeast-1` 추가
-- [ ] `./gradlew test` 통과
+- [x] `StorageConfig.kt` — `endpoint` 비어있을 때 IAM 역할 자동 인증 분기 추가, `region` 파라미터 추가 ✅ (2026-06-23)
+  > `storage.region` 누락 시 앱 시작 실패하도록 `@Value("\${storage.region}")` 기본값 제거 (명시적 실패 정책)
+- [x] `application.yml` — `storage.region: ${STORAGE_REGION:us-east-1}` 항목 추가 ✅ (2026-06-23)
+- [x] `application-prod.yml` — `storage:` 섹션 추가 (endpoint 빈값, region `ap-southeast-1`, bucket `${STORAGE_BUCKET}`) ✅ (2026-06-23)
+- [x] `docker-compose.prod.yml` — `STORAGE_BUCKET: ${S3_BUCKET}`, `STORAGE_REGION: ap-southeast-1` 추가 ✅ (2026-06-23)
+- [x] `./gradlew test` 통과 ✅ (2026-06-23)
 
 #### Step 3. 배포 후 검증
 

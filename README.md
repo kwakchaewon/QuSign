@@ -22,8 +22,8 @@
 <table>
 <thead>
 <tr>
-<th style="width: 25%">레이어</th>
-<th style="width: 75%">기술</th>
+<th width="25%">레이어</th>
+<th width="75%">기술</th>
 </tr>
 </thead>
 <tbody>
@@ -110,9 +110,9 @@ cd backend
 <table>
 <thead>
 <tr>
-<th style="width: 15%">단계</th>
-<th style="width: 65%">내용</th>
-<th style="width: 20%">상태</th>
+<th width="15%">단계</th>
+<th width="65%">내용</th>
+<th width="20%">상태</th>
 </tr>
 </thead>
 <tbody>
@@ -171,8 +171,8 @@ cd backend
 <table>
 <thead>
 <tr>
-<th style="width: 25%">구성</th>
-<th style="width: 75%">설명</th>
+<th width="25%">구성</th>
+<th width="75%">설명</th>
 </tr>
 </thead>
 <tbody>
@@ -214,8 +214,8 @@ cd backend
 <table>
 <thead>
 <tr>
-<th style="width: 25%">단계 / 구성</th>
-<th style="width: 75%">설명</th>
+<th width="25%">단계 / 구성</th>
+<th width="75%">설명</th>
 </tr>
 </thead>
 <tbody>
@@ -253,8 +253,8 @@ cd backend
 <table>
 <thead>
 <tr>
-<th style="width: 25%">구성</th>
-<th style="width: 75%">설명</th>
+<th width="25%">구성</th>
+<th width="75%">설명</th>
 </tr>
 </thead>
 <tbody>

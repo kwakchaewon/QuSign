@@ -19,7 +19,7 @@
 
 ## 기술 스택
 
-<table>
+<table width="100%">
 <thead>
 <tr>
 <th width="25%">레이어</th>
@@ -107,7 +107,7 @@ cd backend
 
 ## 진행 현황
 
-<table>
+<table width="100%">
 <thead>
 <tr>
 <th width="20%">단계</th>
@@ -168,7 +168,7 @@ cd backend
 
 ![Application Layer Architecture](docs/diagrams/qusign_application_layer.png)
 
-<table>
+<table width="100%">
 <thead>
 <tr>
 <th width="25%">구성</th>
@@ -211,7 +211,7 @@ cd backend
 
 ![CI/CD & Automation Pipeline](docs/diagrams/qusign_cicd_pipeline.png)
 
-<table>
+<table width="100%">
 <thead>
 <tr>
 <th width="25%">단계 / 구성</th>
@@ -250,7 +250,7 @@ cd backend
 
 ![AWS Cloud Infrastructure](docs/diagrams/qusign_aws_infrastructure.png)
 
-<table>
+<table width="100%">
 <thead>
 <tr>
 <th width="25%">구성</th>

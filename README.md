@@ -137,6 +137,7 @@ cd backend
 </tbody>
 </table>
 
+---
 
 ![CI/CD & Automation Pipeline](docs/diagrams/qusign_cicd_pipeline.png)
 
@@ -175,6 +176,7 @@ cd backend
 </tbody>
 </table>
 
+---
 
 ![AWS Cloud Infrastructure](docs/diagrams/qusign_aws_infrastructure.png)
 

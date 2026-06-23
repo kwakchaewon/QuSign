@@ -9,8 +9,8 @@
 ## 📋 목차
 
 - [기술 스택](#기술-스택)
-- [진행 현황](#진행-현황)
 - [아키텍처](#아키텍처)
+- [진행 현황](#진행-현황)
 - [문서](#문서)
 
 ---
@@ -26,23 +26,6 @@
 | **메시지** | Redis 7 (Pub/Sub + 실시간 알림) |
 | **프론트엔드** | Vue 3 + Vite + Pinia + Vue Router + TypeScript |
 | **인프라** | Docker Compose → AWS EC2/RDS → Terraform |
-
----
-
-## 진행 현황
-
-| 단계 | 내용 | 상태 |
-|------|------|------|
-| **1단계** | 환경 세팅 + PQC 핵심 검증 | ✅ 완료 |
-| **2단계** | 백엔드 핵심 구현 | ✅ 완료 |
-| **3단계** | 프론트엔드 구현 | ✅ 완료 |
-| **4단계** | 기능 고도화 & 품질 강화 | 🔄 진행 중 |
-| **5단계** | 보안 취약점 개선 (OWASP Top 10) | ✅ 완료 |
-| **6단계** | AWS 배포 + SES + GitHub Actions | 🔄 진행 중 |
-| **7단계** | Terraform + 수익화 | ⬜ 진행 전 |
-| **8단계** | Loki + Grafana + 이직 준비 | ⬜ 진행 전 |
-
-세부 계획 → [docs/exec-plans/PLAN.md](docs/exec-plans/PLAN.md)
 
 ---
 
@@ -178,8 +161,25 @@
 
 ---
 
+## 진행 현황
+
+| 단계 | 내용 | 상태 |
+|------|------|------|
+| **1단계** | 환경 세팅 + PQC 핵심 검증 | ✅ 완료 |
+| **2단계** | 백엔드 핵심 구현 | ✅ 완료 |
+| **3단계** | 프론트엔드 구현 | ✅ 완료 |
+| **4단계** | 기능 고도화 & 품질 강화 | 🔄 진행 중 |
+| **5단계** | 보안 취약점 개선 (OWASP Top 10) | ✅ 완료 |
+| **6단계** | AWS 배포 + SES + GitHub Actions | 🔄 진행 중 |
+| **7단계** | Terraform + 수익화 | ⬜ 진행 전 |
+| **8단계** | Loki + Grafana | ⬜ 진행 전 |
+
+세부 계획 → [docs/exec-plans/PLAN.md](docs/exec-plans/PLAN.md)
+
+---
+
 ## 문서
 
-**[Swagger UI → https://qusign.link/swagger-ui/index.html](https://qusign.link/swagger-ui/index.html)**
+**[Swagger](https://qusign.link/swagger-ui/index.html)**
 
 전체 엔드포인트 명세·요청·응답 스키마·Try it out 기능 제공.

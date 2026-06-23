@@ -13,6 +13,7 @@ import com.qusign.document.exception.InvalidFileTypeException
 import com.qusign.document.exception.StorageException
 import com.qusign.signature.exception.DuplicateSignatureRequestException
 import com.qusign.signature.exception.*
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -23,6 +24,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+
+    private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     @ExceptionHandler(EmailAlreadyExistsException::class)
     @ResponseStatus(HttpStatus.CONFLICT)
@@ -120,5 +123,8 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    fun handleUnexpected(e: Exception) = ApiResponse.error("서버 오류가 발생했습니다")
+    fun handleUnexpected(e: Exception): ApiResponse<Unit> {
+        log.error("Unhandled exception", e)
+        return ApiResponse.error("서버 오류가 발생했습니다")
+    }
 }

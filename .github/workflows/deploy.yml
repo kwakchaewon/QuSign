@@ -87,6 +87,8 @@ jobs:
               --query Parameter.Value --output text)
             CORS_ORIGINS=$(aws ssm get-parameter --name /qusign/prod/cors-origins \
               --query Parameter.Value --output text)
+            SERVER_URL=$(aws ssm get-parameter --name /qusign/prod/server-url \
+              --query Parameter.Value --output text)
 
             cat > /home/ec2-user/.env << ENVEOF
             ECR_REGISTRY=$ECR_REGISTRY
@@ -94,6 +96,7 @@ jobs:
             JWT_SECRET=$JWT_SECRET
             S3_BUCKET=$S3_BUCKET
             CORS_ORIGINS=$CORS_ORIGINS
+            SERVER_URL=$SERVER_URL
             ENVEOF
 
             aws ecr get-login-password --region ap-southeast-1 | \

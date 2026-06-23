@@ -1,3 +1,8 @@
+storage:
+  endpoint: ""
+  region: ap-southeast-1
+  bucket: ${STORAGE_BUCKET}
+
 spring:
   datasource:
     url: ${DB_URL}

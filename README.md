@@ -19,44 +19,15 @@
 
 ## 기술 스택
 
-<table width="100%">
-<thead>
-<tr>
-<th width="25%">레이어</th>
-<th width="75%">기술</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>백엔드</strong></td>
-<td>Kotlin + Spring Boot 3.5, Gradle Kotlin DSL</td>
-</tr>
-<tr>
-<td><strong>암호화</strong></td>
-<td>Bouncy Castle 1.84 (ML-DSA-65), PDFBox 3.x</td>
-</tr>
-<tr>
-<td><strong>DB</strong></td>
-<td>MariaDB 10.11 + Flyway</td>
-</tr>
-<tr>
-<td><strong>스토리지</strong></td>
-<td>MinIO (로컬) → AWS S3 (운영)</td>
-</tr>
-<tr>
-<td><strong>메시지</strong></td>
-<td>Redis 7 (Pub/Sub + 실시간 알림)</td>
-</tr>
-<tr>
-<td><strong>프론트엔드</strong></td>
-<td>Vue 3 + Vite + Pinia + Vue Router + TypeScript</td>
-</tr>
-<tr>
-<td><strong>인프라</strong></td>
-<td>Docker Compose → AWS EC2/RDS → Terraform</td>
-</tr>
-</tbody>
-</table>
+| 레이어 | 기술 |
+|--------|------|
+| **백엔드** | Kotlin + Spring Boot 3.5, Gradle Kotlin DSL |
+| **암호화** | Bouncy Castle 1.84 (ML-DSA-65), PDFBox 3.x |
+| **DB** | MariaDB 10.11 + Flyway |
+| **스토리지** | MinIO (로컬) → AWS S3 (운영) |
+| **메시지** | Redis 7 (Pub/Sub + 실시간 알림) |
+| **프론트엔드** | Vue 3 + Vite + Pinia + Vue Router + TypeScript |
+| **인프라** | Docker Compose → AWS EC2/RDS → Terraform |
 
 ---
 
@@ -107,57 +78,16 @@ cd backend
 
 ## 진행 현황
 
-<table width="100%">
-<thead>
-<tr>
-<th width="20%">단계</th>
-<th width="55%">내용</th>
-<th width="25%">상태</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>1단계</strong></td>
-<td>환경 세팅 + PQC 핵심 검증</td>
-<td>✅ 완료</td>
-</tr>
-<tr>
-<td><strong>2단계</strong></td>
-<td>백엔드 핵심 구현</td>
-<td>✅ 완료</td>
-</tr>
-<tr>
-<td><strong>3단계</strong></td>
-<td>프론트엔드 구현</td>
-<td>✅ 완료</td>
-</tr>
-<tr>
-<td><strong>4단계</strong></td>
-<td>기능 고도화 & 품질 강화</td>
-<td>🔄 진행 중</td>
-</tr>
-<tr>
-<td><strong>5단계</strong></td>
-<td>보안 취약점 개선 (OWASP Top 10)</td>
-<td>✅ 완료</td>
-</tr>
-<tr>
-<td><strong>6단계</strong></td>
-<td>AWS 배포 + SES + GitHub Actions</td>
-<td>🔄 진행 중</td>
-</tr>
-<tr>
-<td><strong>7단계</strong></td>
-<td>Terraform + 수익화</td>
-<td>⬜ 진행 전</td>
-</tr>
-<tr>
-<td><strong>8단계</strong></td>
-<td>Loki + Grafana + 이직 준비</td>
-<td>⬜ 진행 전</td>
-</tr>
-</tbody>
-</table>
+| 단계 | 내용 | 상태 |
+|------|------|------|
+| **1단계** | 환경 세팅 + PQC 핵심 검증 | ✅ 완료 |
+| **2단계** | 백엔드 핵심 구현 | ✅ 완료 |
+| **3단계** | 프론트엔드 구현 | ✅ 완료 |
+| **4단계** | 기능 고도화 & 품질 강화 | 🔄 진행 중 |
+| **5단계** | 보안 취약점 개선 (OWASP Top 10) | ✅ 완료 |
+| **6단계** | AWS 배포 + SES + GitHub Actions | 🔄 진행 중 |
+| **7단계** | Terraform + 수익화 | ⬜ 진행 전 |
+| **8단계** | Loki + Grafana + 이직 준비 | ⬜ 진행 전 |
 
 세부 계획 → [docs/exec-plans/PLAN.md](docs/exec-plans/PLAN.md)
 

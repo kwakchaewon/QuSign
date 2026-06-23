@@ -181,5 +181,3 @@
 ## 문서
 
 **[Swagger](https://qusign.link/swagger-ui/index.html)**
-
-전체 엔드포인트 명세·요청·응답 스키마·Try it out 기능 제공.

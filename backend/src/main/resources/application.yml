@@ -74,6 +74,16 @@ timestamp:
 cors:
   allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
 
+app:
+  server-url: ${SERVER_URL:http://localhost:8080}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  api-docs:
+    enabled: true
+
 logging:
   level:
     com.qusign: INFO

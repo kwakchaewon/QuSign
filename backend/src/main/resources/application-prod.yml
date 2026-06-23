@@ -12,6 +12,15 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
+app:
+  server-url: ${SERVER_URL}
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
+
 logging:
   level:
     com.qusign: INFO

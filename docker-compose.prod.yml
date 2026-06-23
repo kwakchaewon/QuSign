@@ -48,6 +48,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      SERVER_URL: ${SERVER_URL}
     ports:
       - "127.0.0.1:8080:8080"
 

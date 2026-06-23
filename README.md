@@ -2,11 +2,12 @@
 
 > NIST PQC 표준 ML-DSA 기반 전자서명 SaaS
 
-양자 컴퓨터 시대에 안전한 전자서명 서비스. 기존 RSA/ECDSA 대신 NIST 표준 ML-DSA(CRYSTALS-Dilithium)를 적용한다.
+양자 컴퓨터 시대에도 안전한 전자서명 서비스.  
+기존 RSA/ECDSA 대신 NIST 표준 ML-DSA(CRYSTALS-Dilithium) 적용
 
 ---
 
-## 📋 목차
+## 목차
 
 - [기술 스택](#기술-스택)
 - [아키텍처](#아키텍처)

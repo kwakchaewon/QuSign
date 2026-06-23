@@ -1284,7 +1284,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [x] GitHub Actions push → 자동 배포 확인 ✅ (2026-06-19) — `deploy-backend` 성공 (Run #27815548754, 7m22s)
 - [x] Swagger UI 정상 렌더링 확인 ✅ (2026-06-23) — `https://qusign.link/swagger-ui/index.html` (springdoc 2.8.0, Spring Boot 3.5 호환)
 - [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 이메일 수신 → 서명 → 검증 전체 플로우
-- [ ] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
+- [x] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
 - [x] CloudWatch Logs에서 Lambda 실행 로그 확인 ✅ (2026-06-23)
 
 ---

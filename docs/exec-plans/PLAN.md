@@ -747,7 +747,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 ### 6-1. 사전 준비 (로컬)
 
 - [x] AWS CLI v2 설치 (`winget install Amazon.AWSCLI`)
-- [ ] `aws configure` — Access Key, Secret Key, 리전 `ap-southeast-1` (싱가포르) 설정
+- [x] `aws configure` — Access Key, Secret Key, 리전 `ap-southeast-1` (싱가포르) 설정
   - [x] IAM 콘솔 → 사용자 → 보안 자격증명 → 액세스 키 발급
     - AWS 계정 ID: `285868221698`
     - IAM 사용자: `qusign_cwkwak` (그룹: `qusign_developers`)
@@ -764,7 +764,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   - [x] 구매 완료 시 호스팅 영역(Hosted Zone) 자동 생성 확인
     - Route53 → 호스팅 영역 → `qusign.link` 존재 여부 확인
   - [x] ⚠️ **이메일 인증 필수** — ksh03003@naver.com 수신 메일 링크 클릭 (15일 내 미인증 시 도메인 일시 중지)
-  - [ ] 이후 EC2 연결 시 A 레코드 추가 예정 (§6-3에서 처리)
+  - [x] 이후 EC2 연결 시 A 레코드 추가 예정 (§6-3에서 처리)
 - [x] Spring Boot `application-prod.yml` 환경변수 기반 설정 확인
   - DB URL / 유저 / 패스워드 → `${DB_URL}`, `${DB_USERNAME}`, `${DB_PASSWORD}` 환경변수로 읽는지 확인
   - S3 버킷명, 리전 → 환경변수로 읽는지 확인

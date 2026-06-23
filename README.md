@@ -57,28 +57,11 @@ cd backend
 
 ---
 
-## 구현된 기능
+## API 문서
 
-| 기능 | 엔드포인트 | 비고 |
-|------|-----------|------|
-| 회원가입 / 로그인 | `POST /api/auth/signup` `POST /api/auth/login` | JWT 인증, ML-DSA 키쌍 자동 생성 |
-| PDF 업로드 | `POST /api/documents` | SHA3-256 해시, MinIO 저장, 서명 완료 문서 재업로드 차단 |
-| 문서 목록 / 다운로드 | `GET /api/documents` `GET /api/documents/{id}/download` | |
-| 서명 요청 생성 | `POST /api/signature-requests` | 1회용 토큰, 72시간 만료, 요청 메시지 포함 |
-| 번들 서명 요청 | `POST /api/signature-requests/bundle` | 복수 PDF(최대 5개)를 하나의 번들로 묶어 서명자별 링크 1개 발급 |
-| 서명 실행 | `POST /api/signature-requests/{token}/sign` | ML-DSA-65 서명, PDF 메타데이터 삽입 |
-| 서명된 PDF 다운로드 | `GET /api/signature-requests/{token}/signed-document` | `파일명_qusigned.pdf` 형식 |
-| 서명 요청 상세 조회 | `GET /api/signature-requests/{id}` | 요청자 본인만 조회, 서명자별 상태 포함 |
-| 서명 요청 취소 | `POST /api/signature-requests/{id}/signers/{email}/cancel` | PENDING 상태만 허용 |
-| 받은 서명 요청 목록 / 상세 | `GET /api/signature-requests/received` | 서명자 시점, 통합 대시보드에서 보낸·받은 전환 |
-| 무결성 검증 (토큰) | `POST /api/verify` | 인증 불필요, 공개 API |
-| 무결성 검증 (파일) | `POST /api/verify/file` | 서명된 PDF 업로드로 직접 검증 |
-| 실시간 인앱 알림 | `GET /api/notifications/stream` (SSE) | Redis Pub/Sub 기반, 서명 완료·요청·취소·만료 이벤트 |
-| 알림 목록 / 읽음 처리 | `GET /api/notifications` `PUT /api/notifications/{id}/read` `PUT /api/notifications/read-all` | 최근 50건, 전체 읽음 |
-| 감사 로그 (Audit Trail) | `GET /api/documents/{id}/audit` `GET /api/bundles/{id}/audit` `GET /api/documents/{id}/audit/export` | IP·일시 포함, append-only, JSON 내보내기 (전자서명법 10년 보관) |
-| 관리자 패널 | `GET /api/admin/stats` `GET /api/admin/users` `GET /api/admin/audit` | ROLE_ADMIN 전용, 사용자 비활성화·전체 감사 로그 조회·내보내기 |
-| 계정 설정 | `GET /api/users/me` `PUT /api/users/password` `PUT /api/users/notification-settings` `DELETE /api/users/me` | 비밀번호 변경(개인키 재암호화), 알림 수신 설정, 계정 탈퇴 |
-| 대시보드 통계 | `GET /api/dashboard` `GET /api/dashboard/summary` `GET /api/dashboard/actions` | 문서 수·상태별 카운트·최근 요청·할 일 섹션 |
+**[Swagger UI → https://qusign.link/swagger-ui/index.html](https://qusign.link/swagger-ui/index.html)**
+
+전체 엔드포인트 명세·요청·응답 스키마·Try it out 기능 제공.
 
 ---
 

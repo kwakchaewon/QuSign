@@ -136,7 +136,10 @@
                 </span>
               </div>
               <div class="qs-recent-main">
-                <div class="qs-recent-name">{{ item.docName }}</div>
+                <div class="qs-recent-name">
+                  {{ item.docName }}
+                  <span v-if="item.extraCount && item.extraCount > 0" class="qs-extra-count">외 {{ item.extraCount }}건</span>
+                </div>
                 <div class="qs-recent-sub">
                   <span v-if="item.direction === 'RECEIVED'">{{ item.counterpart }} 요청</span>
                   <span v-else>{{ item.counterpart }} 서명 대기</span>
@@ -276,6 +279,7 @@ interface ActionItem {
   token?: string
   bundleToken?: string
   bundleId?: number
+  extraCount?: number
 }
 
 const router = useRouter()

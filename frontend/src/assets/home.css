@@ -123,6 +123,16 @@
   color: var(--text-primary);
   letter-spacing: -0.01em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+.qs-extra-count {
+  flex-shrink: 0;
+  font-size: 11px; font-weight: 500;
+  color: var(--badge-error-text, #dc2626);
+  background: var(--badge-error-bg, #fef2f2);
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
 }
 .qs-recent-sub {
   font-family: var(--font-mono);

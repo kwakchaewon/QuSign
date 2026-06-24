@@ -181,3 +181,5 @@
 ## 문서
 
 **[Swagger](https://qusign.link/swagger-ui/index.html)**
+
+**[디렉토리 구조](docs/DIRECTORY_STRUCTURE.md)**

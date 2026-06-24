@@ -183,18 +183,6 @@ function handleFileChange(e: Event) {
   if (file) selectedFile.value = file
 }
 
-async function startVerify() {
-  if (!token.value.trim()) return
-  status.value = 'loading'
-  try {
-    const res = await api.post<{ data: VerifyResult }>('/api/verify', { token: token.value.trim() })
-    handleResult(res.data.data, '토큰을 확인해 주세요.')
-  } catch (err: any) {
-    failReason.value = err.response?.data?.message ?? '검증에 실패했어요. 토큰을 확인해 주세요.'
-    status.value = 'fail'
-  }
-}
-
 async function startVerifyFile() {
   if (!selectedFile.value) return
   status.value = 'loading'
@@ -223,7 +211,6 @@ function handleResult(result: VerifyResult, fallbackMsg: string) {
 
 function reset() {
   status.value = 'idle'
-  token.value = ''
   selectedFile.value = null
   isDragging.value = false
   detailsOpen.value = false

@@ -186,14 +186,14 @@ button { font: inherit; }
   width: 6px; height: 6px;
   border-radius: 50%;
   background: var(--color-success);
-  box-shadow: 0 0 0 0 rgba(26, 191, 124, 0.6);
+  box-shadow: 0 0 0 0 var(--color-success-glow);
   animation: qs-pulse 1.8s ease-out infinite;
   flex-shrink: 0;
 }
 @keyframes qs-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(26, 191, 124, 0.55); }
-  70% { box-shadow: 0 0 0 6px rgba(26, 191, 124, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(26, 191, 124, 0); }
+  0%   { box-shadow: 0 0 0 0   var(--color-success-glow);      }
+  70%  { box-shadow: 0 0 0 6px var(--color-success-glow-fade); }
+  100% { box-shadow: 0 0 0 0   var(--color-success-glow-fade); }
 }
 
 .qs-pqc-mono {
@@ -353,7 +353,7 @@ button { font: inherit; }
 .qs-check input:checked + .qs-check-box {
   background: var(--color-primary-500);
   border-color: var(--color-primary-500);
-  color: #fff;
+  color: var(--text-on-vivid);
 }
 .qs-check:hover .qs-check-box { border-color: var(--color-primary-500); }
 
@@ -499,7 +499,7 @@ button { font: inherit; }
   width: 26px; height: 26px;
   border-radius: 50%;
   background: var(--color-success);
-  color: #fff;
+  color: var(--text-on-vivid);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }

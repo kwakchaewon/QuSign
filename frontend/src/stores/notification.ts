@@ -49,7 +49,7 @@ export const useNotificationStore = defineStore('notification', () => {
     try {
       const res = await api.post<{ data: { sseToken: string } }>('/api/notifications/sse-token')
       const sseToken = res.data.data.sseToken
-      const url = `http://localhost:8080/api/notifications/stream?token=${encodeURIComponent(sseToken)}`
+      const url = `/api/notifications/stream?token=${encodeURIComponent(sseToken)}`
       eventSource = new EventSource(url)
 
       eventSource.addEventListener('notification', (e) => {

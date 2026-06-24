@@ -10,9 +10,9 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes qs-pulse {
-  0%   { box-shadow: 0 0 0 0   rgba(26, 191, 124, 0.55); }
-  70%  { box-shadow: 0 0 0 6px rgba(26, 191, 124, 0);    }
-  100% { box-shadow: 0 0 0 0   rgba(26, 191, 124, 0);    }
+  0%   { box-shadow: 0 0 0 0   var(--color-success-glow);      }
+  70%  { box-shadow: 0 0 0 6px var(--color-success-glow-fade); }
+  100% { box-shadow: 0 0 0 0   var(--color-success-glow-fade); }
 }
 @keyframes qs-tick-draw   { from { stroke-dashoffset: 48; }  to { stroke-dashoffset: 0; } }
 @keyframes qs-circle-draw { from { stroke-dashoffset: 200; } to { stroke-dashoffset: 0; } }
@@ -271,7 +271,7 @@
   color: var(--color-primary-700);
 }
 [data-theme="dark"] .qs-otp-input.has-value {
-  background: rgba(77, 143, 247, 0.10);
+  background: var(--color-info-bg-soft);
   border-color: var(--color-primary-500);
   color: var(--color-primary-500);
 }
@@ -403,10 +403,13 @@
   animation: qs-signer-fade-up 0.2s ease-out;
 }
 
+.qs-meta-v--expires {
+  display: flex; flex-direction: column; gap: 4px;
+}
 .qs-meta-warn {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; gap: 5px;
   font-size: 12px; color: var(--color-warning);
-  font-weight: 500; margin-top: 4px;
+  font-weight: 500;
 }
 
 /* =============== PDF Preview =============== */
@@ -464,7 +467,7 @@
   font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
 }
 [data-theme="dark"] .qs-pdf-sig-area {
-  background: rgba(77, 143, 247, 0.10);
+  background: var(--color-info-bg-soft);
   border-color: var(--color-primary-500);
   color: var(--color-primary-500);
 }
@@ -474,15 +477,15 @@
   border-radius: 8px;
   margin-bottom: 10px;
   font-size: 13px; font-weight: 500;
-  background: var(--color-info-bg, rgba(37, 99, 235, 0.07));
-  color: var(--color-info, #2563eb);
-  border: 1px solid var(--color-info-border, rgba(37, 99, 235, 0.2));
+  background: var(--color-info-bg-soft);
+  color: var(--color-info);
+  border: 1px solid var(--color-info-border);
   transition: background 0.25s, color 0.25s, border-color 0.25s;
 }
 .qs-pdf-notice.is-done {
-  background: var(--color-success-bg, rgba(22, 163, 74, 0.07));
-  color: var(--color-success, #16a34a);
-  border-color: var(--color-success-border, rgba(22, 163, 74, 0.25));
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border-color: var(--color-success-border);
 }
 .qs-pdf-notice svg { flex-shrink: 0; }
 .qs-pdf-frame {
@@ -550,7 +553,7 @@
 .qs-consent input:checked + .qs-consent-box {
   background: var(--color-primary-500);
   border-color: var(--color-primary-500);
-  color: #fff;
+  color: var(--text-on-vivid);
 }
 .qs-consent:hover .qs-consent-box { border-color: var(--color-primary-500); }
 .qs-consent-text {
@@ -637,7 +640,7 @@
 }
 .qs-signing-step.is-done .qs-signing-step-dot {
   border-color: var(--color-success);
-  background: var(--color-success); color: #fff;
+  background: var(--color-success); color: var(--text-on-vivid);
 }
 
 /* =============== Step 3: Success =============== */
@@ -781,7 +784,7 @@
 /* =============== 크게 보기 모달 =============== */
 .qs-large-viewer-backdrop {
   position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0, 0, 0, 0.65);
+  background: var(--surface-backdrop);
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
   backdrop-filter: blur(2px);
@@ -795,6 +798,7 @@
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
   overflow: hidden;
 }
+[data-theme="dark"] .qs-large-viewer-card { box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6); }
 .qs-large-viewer-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 20px;
@@ -892,9 +896,9 @@
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 .qs-download-btn:hover:not(:disabled) {
-  background: var(--color-primary-50, rgba(37, 99, 235, 0.07));
+  background: var(--color-primary-50);
   border-color: var(--color-primary-500);
-  color: var(--color-primary-600, #2563eb);
+  color: var(--color-primary-600);
 }
 .qs-download-btn:disabled {
   opacity: 0.5; cursor: default;
@@ -920,7 +924,7 @@
   font-size: 11px; font-weight: 600;
   color: var(--color-success);
   background: var(--color-success-bg);
-  border: 1px solid var(--color-success-border, rgba(22, 163, 74, 0.25));
+  border: 1px solid var(--color-success-border);
   border-radius: 20px;
   padding: 2px 8px;
 }

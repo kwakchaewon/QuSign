@@ -56,6 +56,18 @@
 
   --text-on-vivid: #FFFFFF;
 
+  /* ===== Extended Semantic Tokens ===== */
+  --color-success-glow:      rgba(26, 191, 124, 0.55);
+  --color-success-glow-fade: rgba(26, 191, 124, 0);
+  --color-success-border:    rgba(26, 191, 124, 0.25);
+  --color-info-bg-soft:      rgba(49, 130, 246, 0.07);
+  --color-info-border:       rgba(49, 130, 246, 0.20);
+  --color-error-border:      rgba(240, 68, 82, 0.25);
+  --surface-backdrop:        rgba(0, 0, 0, 0.65);
+  --color-danger-hover:      #D43946;
+  --avatar-signed-gradient:  linear-gradient(135deg, #1ABF7C, #0F8A56);
+  --avatar-pending-gradient: linear-gradient(135deg, #FF9D2C, #E47A0E);
+
   /* ===== Surface (라이트 모드) ===== */
   --surface-bg: #FFFFFF;
   --surface-elevated: #FFFFFF;
@@ -189,6 +201,16 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --color-success-glow:      rgba(26, 191, 124, 0.40);
+  --color-success-border:    rgba(26, 191, 124, 0.30);
+  --color-info-bg-soft:      rgba(77, 143, 247, 0.12);
+  --color-info-border:       rgba(77, 143, 247, 0.28);
+  --color-error-border:      rgba(240, 68, 82, 0.35);
+  --surface-backdrop:        rgba(0, 0, 0, 0.80);
+  --color-danger-hover:      #C02B37;
+  --avatar-signed-gradient:  linear-gradient(135deg, #22D68D, #1ABF7C);
+  --avatar-pending-gradient: linear-gradient(135deg, #FFB347, #FF9D2C);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -227,6 +249,16 @@
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    --color-success-glow:      rgba(26, 191, 124, 0.40);
+    --color-success-border:    rgba(26, 191, 124, 0.30);
+    --color-info-bg-soft:      rgba(77, 143, 247, 0.12);
+    --color-info-border:       rgba(77, 143, 247, 0.28);
+    --color-error-border:      rgba(240, 68, 82, 0.35);
+    --surface-backdrop:        rgba(0, 0, 0, 0.80);
+    --color-danger-hover:      #C02B37;
+    --avatar-signed-gradient:  linear-gradient(135deg, #22D68D, #1ABF7C);
+    --avatar-pending-gradient: linear-gradient(135deg, #FFB347, #FF9D2C);
   }
 }
 

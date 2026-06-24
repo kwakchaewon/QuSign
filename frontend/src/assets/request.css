@@ -46,14 +46,14 @@
 .qs-step.is-active .qs-step-bullet {
   background: var(--color-primary-500);
   border-color: var(--color-primary-500);
-  color: #fff;
+  color: var(--text-on-vivid);
   box-shadow: 0 0 0 4px var(--input-focus-ring);
 }
 .qs-step.is-done { color: var(--text-secondary); }
 .qs-step.is-done .qs-step-bullet {
   background: var(--color-success);
   border-color: var(--color-success);
-  color: #fff;
+  color: var(--text-on-vivid);
 }
 .qs-step-line {
   flex: 1;

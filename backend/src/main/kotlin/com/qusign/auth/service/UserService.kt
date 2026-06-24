@@ -5,6 +5,7 @@ import com.qusign.auth.dto.NotificationSettingsResponse
 import com.qusign.auth.dto.UpdateNotificationSettingsRequest
 import com.qusign.auth.dto.UserProfileResponse
 import com.qusign.auth.exception.AccountDeletedException
+import com.qusign.auth.exception.AccountDeletionNotAllowedException
 import com.qusign.auth.exception.InvalidCurrentPasswordException
 import com.qusign.auth.exception.PasswordChangeNotAllowedException
 import com.qusign.auth.repository.UserRepository
@@ -82,6 +83,7 @@ class UserService(
 
     @Transactional
     fun deleteAccount(email: String) {
+        if (email in PROTECTED_EMAILS) throw AccountDeletionNotAllowedException()
         val user = userRepository.findByEmail(email) ?: throw NoSuchElementException("사용자를 찾을 수 없습니다")
         if (user.deletedAt != null) throw AccountDeletedException()
         user.deletedAt = LocalDateTime.now()

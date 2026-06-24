@@ -42,10 +42,11 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
-// nginx이 .mjs를 application/octet-stream으로 서빙하면 모듈 스크립트 로드 실패.
-// Blob URL로 감싸면 MIME 타입 검사를 우회한다.
+// blob: 스킴은 계층적이지 않아 /assets/... 같은 루트 상대 경로를 해석할 수 없다.
+// new URL()로 완전한 절대 URL로 변환 후 blob에 삽입해야 MIME 우회가 정상 동작한다.
+const absoluteWorkerUrl = new URL(pdfjsWorkerUrl, window.location.href).href
 const workerBlob = new Blob(
-  [`import '${pdfjsWorkerUrl}'`],
+  [`import '${absoluteWorkerUrl}'`],
   { type: 'application/javascript' },
 )
 pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(workerBlob)

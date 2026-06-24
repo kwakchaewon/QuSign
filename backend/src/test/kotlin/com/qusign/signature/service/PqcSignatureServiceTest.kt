@@ -1,6 +1,6 @@
 package com.qusign.signature.service
 
-import com.qusign.common.email.EmailService
+// [SES보류] import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 class PqcSignatureServiceTest {
 
     @MockitoBean lateinit var storageService: StorageService
-    @MockitoBean lateinit var emailService: EmailService
+    // [SES보류] @MockitoBean lateinit var emailService: EmailService
 
     @Autowired
     lateinit var pqcSignatureService: PqcSignatureService

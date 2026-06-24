@@ -460,10 +460,10 @@ onMounted(async () => {
 })
 
 const notifyToggles = [
-  { key: 'notifyReq',       value: notifyReq,       title: '서명 요청 알림',      desc: '다른 사람이 나에게 서명을 요청하면 이메일로 알려드려요.',  api: saveNotifySettings },
-  { key: 'notifyDone',      value: notifyDone,      title: '서명 완료 알림',      desc: '요청한 서명이 완료되면 이메일로 알려드려요.',              api: saveNotifySettings },
-  { key: 'notifyWeekly',    value: notifyWeekly,    title: '주간 활동 요약',      desc: '매주 월요일 아침, 한 주의 서명 활동을 정리해 보내드려요.', api: saveNotifySettings },
-  { key: 'notifyMarketing', value: notifyMarketing, title: '신제품 소식 · 팁',    desc: '새 기능과 활용 팁을 보내드려요.',                          api: saveNotifySettings },
+  { key: 'notifyReq',       value: notifyReq,       title: '서명 요청 알림',      desc: '다른 사람이 나에게 서명을 요청하면 인앱 알림으로 알려드려요.',  api: saveNotifySettings },
+  { key: 'notifyDone',      value: notifyDone,      title: '서명 완료 알림',      desc: '요청한 서명이 완료되면 인앱 알림으로 알려드려요.',              api: saveNotifySettings },
+  { key: 'notifyWeekly',    value: notifyWeekly,    title: '주간 활동 요약',      desc: '매주 월요일 아침, 한 주의 서명 활동 요약을 보내드려요. (이메일 연동 후 제공)', api: saveNotifySettings },
+  { key: 'notifyMarketing', value: notifyMarketing, title: '신제품 소식 · 팁',    desc: '새 기능과 활용 팁을 보내드려요. (이메일 연동 후 제공)',          api: saveNotifySettings },
 ]
 
 // Password form

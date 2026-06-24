@@ -8,7 +8,7 @@ import com.qusign.auth.repository.UserRepository
 import com.qusign.auth.service.EncryptedKey
 import com.qusign.auth.service.KeyEncryptionService
 import com.qusign.common.audit.AuditContext
-import com.qusign.common.email.EmailService
+// [SES보류] import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import com.qusign.document.entity.DocumentBundle
 import com.qusign.document.entity.DocumentBundleItem
@@ -49,7 +49,7 @@ class SignatureFlowService(
     private val pdfSignatureService: PdfSignatureService,
     private val keyEncryptionService: KeyEncryptionService,
     private val objectMapper: ObjectMapper,
-    private val emailService: EmailService,
+    // [SES보류] private val emailService: EmailService,
     private val notificationService: NotificationService,
     private val auditLogService: AuditLogService,
     private val rfcTimestampService: RfcTimestampService,
@@ -90,13 +90,13 @@ class SignatureFlowService(
             )
         )
 
-        emailService.sendSignatureRequest(
-            to = req.signerEmail,
-            token = req.token,
-            documentName = document.originalFilename,
-            requesterEmail = requester.email,
-            expiresAt = req.expiresAt.toString(),
-        )
+        // [SES보류] emailService.sendSignatureRequest(
+        //     to = req.signerEmail,
+        //     token = req.token,
+        //     documentName = document.originalFilename,
+        //     requesterEmail = requester.email,
+        //     expiresAt = req.expiresAt.toString(),
+        // )
 
         val signer = userRepository.findByEmail(req.signerEmail)
         if (signer != null) {
@@ -162,13 +162,13 @@ class SignatureFlowService(
                 "${primaryDocName} 외 ${documents.size - 1}건"
             else primaryDocName
 
-            emailService.sendSignatureRequest(
-                to = signerEmail,
-                token = bundleToken,
-                documentName = displayName,
-                requesterEmail = requester.email,
-                expiresAt = expiresAt.toString(),
-            )
+            // [SES보류] emailService.sendSignatureRequest(
+            //     to = signerEmail,
+            //     token = bundleToken,
+            //     documentName = displayName,
+            //     requesterEmail = requester.email,
+            //     expiresAt = expiresAt.toString(),
+            // )
 
             val signer = userRepository.findByEmail(signerEmail)
             if (signer != null) {

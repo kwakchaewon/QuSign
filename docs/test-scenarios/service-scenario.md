@@ -141,12 +141,12 @@
 
 **목적:** 법적 증거 수준 감사 이벤트 기록·조회 확인 (4-8)
 
-- [ ] **1** [A] 서명 요청 생성 → 문서 상세 페이지 하단 **감사 로그 타임라인** 확인
+- [V] **1** [A] 서명 요청 생성 → 문서 상세 페이지 하단 **감사 로그 타임라인** 확인
   - `SIGN_REQUEST_CREATED` 이벤트, 요청자 이메일, 타임스탬프 표시
-- [ ] **2** [B] 서명 완료 후 타임라인 새로고침 → `SIGNED` 이벤트 추가 확인
-- [ ] **3** [A] 서명된 PDF 다운로드 → 타임라인에 `SIGNED_DOCUMENT_DOWNLOADED` 기록 확인
-- [ ] **4** [A] 상세 페이지 → "감사 로그 내보내기" 버튼 클릭 → JSON 파일 다운로드 → 이벤트 배열 포함 확인
-- [ ] **5** 번들 서명 완료 후 `/bundles/{id}` 상세 페이지 감사 로그 타임라인 → `BUNDLE_REQUEST_CREATED`, `BUNDLE_SIGNED` 확인
+- [V] **2** [B] 서명 완료 후 타임라인 새로고침 → `SIGNED` 이벤트 추가 확인
+- [V] **3** [A] 서명된 PDF 다운로드 → 타임라인에 `SIGNED_DOCUMENT_DOWNLOADED` 기록 확인
+- [V] **4** [A] 상세 페이지 → "감사 로그 내보내기" 버튼 클릭 → JSON 파일 다운로드 → 이벤트 배열 포함 확인
+- [V] **5** 번들 서명 완료 후 `/bundles/{id}` 상세 페이지 감사 로그 타임라인 → `BUNDLE_REQUEST_CREATED`, `BUNDLE_SIGNED` 확인
 - [ ] **6** API 직접 호출: `GET /api/documents/{id}/audit` → `userAgent` 필드 미포함 확인 (내부 기록 전용)
 - [ ] **7** 감사 로그 DB 직접 확인: `DELETE FROM audit_logs` 실행 시 권한 오류 또는 서비스 단에서 삭제 메서드 미존재 확인 (불변성)
 

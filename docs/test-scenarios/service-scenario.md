@@ -258,9 +258,9 @@
 
 ### HTTPS 및 인프라
 
-- [ ] **1** `https://qusign.link` 브라우저 접속 → HTTPS 정상, SSL 인증서 유효 (만료일 2026-09-17) 확인
-- [ ] **2** `http://qusign.link` 접속 → `https://qusign.link`로 301 리다이렉트 확인
-- [ ] **3** `https://qusign.link/swagger-ui/index.html` 접속 → Swagger UI 렌더링 확인
+- [V] **1** `https://qusign.link` 브라우저 접속 → HTTPS 정상, SSL 인증서 유효 (만료일 2026-09-17) 확인
+- [V] **2** `http://qusign.link` 접속 → `https://qusign.link`로 301 리다이렉트 확인
+- [V] **3** `https://qusign.link/swagger-ui/index.html` 접속 → Swagger UI 렌더링 확인
 
 ### 전체 서명 플로우 (프로덕션)
 

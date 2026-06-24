@@ -176,7 +176,7 @@
 }
 .qs-quick-card.is-primary .qs-quick-icon {
   background: var(--color-primary-500);
-  color: #fff;
+  color: var(--text-on-vivid);
 }
 .qs-quick-icon.is-success { background: var(--color-success-bg); color: var(--color-success); }
 .qs-quick-icon.is-neutral { background: var(--surface-muted); color: var(--text-secondary); }

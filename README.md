@@ -180,6 +180,7 @@
 
 ## 문서
 
-**[Swagger](https://qusign.link/swagger-ui/index.html)**
-
-**[디렉토리 구조](docs/DIRECTORY_STRUCTURE.md)**
+| 문서 | 설명 |
+|------|------|
+| [Swagger](https://qusign.link/swagger-ui/index.html) | REST API 명세 |
+| [디렉토리 구조](docs/DIRECTORY_STRUCTURE.md) | 프로젝트 폴더 구조 안내 |

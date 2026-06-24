@@ -59,6 +59,10 @@
                 <h2 class="qs-card-title">비밀번호 변경</h2>
                 <p class="qs-card-desc">8자 이상, 대소문자 · 숫자 · 특수문자를 조합하면 더 안전해요.</p>
               </div>
+              <div v-if="isTestAccount" class="qs-alert" style="margin-bottom:16px">
+                <span class="qs-alert-dot"></span>
+                테스트 계정은 비밀번호 변경이 불가능합니다.
+              </div>
               <form class="qs-form" @submit.prevent="handlePasswordChange">
                 <!-- 현재 비밀번호 -->
                 <div class="qs-field">
@@ -375,6 +379,10 @@ const auth = useAuthStore()
 const userEmail = computed(() => auth.email ?? '')
 const userInitial = computed(() => auth.email?.charAt(0).toUpperCase() ?? '?')
 
+const TEST_ACCOUNTS = ['signer@test.com', 'requestor@test.com']
+const isTestAccount = computed(() => TEST_ACCOUNTS.includes(userEmail.value))
+const isPasswordChangeLocked = computed(() => isTestAccount.value || auth.isAdmin)
+
 // Scroll-spy
 const activeSection = ref('profile')
 function jumpTo(id: string) {
@@ -496,6 +504,7 @@ const pwMismatch = computed(() => pwConfirm.value.length > 0 && pwConfirm.value 
 const pwTooShort = computed(() => pwNew.value.length > 0 && pwNew.value.length < 8)
 const pwSameAsCurrent = computed(() => pwNew.value.length > 0 && pwCurrent.value.length > 0 && pwNew.value === pwCurrent.value)
 const canSubmitPw = computed(() =>
+  !isPasswordChangeLocked.value &&
   pwCurrent.value.length >= 1 &&
   pwNew.value.length >= 8 &&
   pwConfirm.value === pwNew.value &&

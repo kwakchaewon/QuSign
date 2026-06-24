@@ -4,7 +4,7 @@ import com.qusign.auth.dto.UpdateNotificationSettingsRequest
 import com.qusign.auth.exception.AccountDeletedException
 import com.qusign.auth.exception.InvalidCurrentPasswordException
 import com.qusign.auth.repository.UserRepository
-import com.qusign.common.email.EmailService
+// [SES보류] import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -22,7 +22,7 @@ import kotlin.test.assertNull
 class UserServiceTest {
 
     @MockitoBean lateinit var storageService: StorageService
-    @MockitoBean lateinit var emailService: EmailService
+    // [SES보류] @MockitoBean lateinit var emailService: EmailService
     @MockitoBean lateinit var redisMessageListenerContainer: RedisMessageListenerContainer
 
     @Autowired lateinit var authService: AuthService

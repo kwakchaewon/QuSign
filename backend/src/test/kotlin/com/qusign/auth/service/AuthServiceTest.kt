@@ -3,7 +3,7 @@ package com.qusign.auth.service
 import com.qusign.auth.exception.EmailAlreadyExistsException
 import com.qusign.auth.exception.InvalidCredentialsException
 import com.qusign.auth.repository.UserRepository
-import com.qusign.common.email.EmailService
+// [SES보류] import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 class AuthServiceTest {
 
     @MockitoBean lateinit var storageService: StorageService
-    @MockitoBean lateinit var emailService: EmailService
+    // [SES보류] @MockitoBean lateinit var emailService: EmailService
     @MockitoBean lateinit var redisMessageListenerContainer: RedisMessageListenerContainer
 
     @Autowired lateinit var authService: AuthService

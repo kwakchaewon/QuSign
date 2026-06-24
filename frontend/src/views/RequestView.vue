@@ -254,15 +254,15 @@
                 style="animation:qs-draw 0.5s 0.2s ease forwards"/>
             </svg>
           </div>
-          <h2 class="qs-done-title">서명 요청이 전송되었습니다</h2>
+          <h2 class="qs-done-title">서명 링크가 생성되었습니다</h2>
           <p class="qs-done-desc">
             <template v-if="bundleResult">
               {{ files.length }}개 파일 묶음 · {{ signerPills.length }}명 서명자에게<br>
-              서명자 1인당 하나의 링크로 전체 서명 요청이 발송되었습니다.
+              서명자 1인당 하나의 서명 링크가 생성되었습니다. 아래 링크를 서명자에게 직접 공유해주세요.
             </template>
             <template v-else>
               {{ fileResults.length }}개 파일 · {{ signerPills.length }}명 서명자에게<br>
-              서명 요청 이메일이 발송되었습니다.
+              서명 링크가 생성되었습니다. 아래 링크를 서명자에게 직접 공유해주세요.
             </template>
           </p>
 

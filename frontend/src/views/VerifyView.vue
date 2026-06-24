@@ -14,54 +14,7 @@
         </div>
 
         <div class="vf-card-body">
-          <!-- Mode tabs -->
-          <div class="vf-tabs">
-            <button class="vf-tab" :class="{ 'is-active': mode === 'file' }" @click="mode = 'file'">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-              </svg>
-              파일 업로드
-            </button>
-            <button class="vf-tab" :class="{ 'is-active': mode === 'token' }" @click="mode = 'token'">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-              토큰 입력
-            </button>
-          </div>
-
-          <!-- Token mode -->
-          <div v-if="mode === 'token'" class="vf-token-section">
-            <div class="vf-field">
-              <label class="vf-label" for="vf-token">서명 토큰</label>
-              <div class="vf-input">
-                <span class="vf-input-icon">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2"
-                      stroke-linecap="round"/>
-                  </svg>
-                </span>
-                <input id="vf-token" v-model="token" type="text"
-                  placeholder="서명 토큰 입력"
-                  @keydown.enter="startVerify">
-              </div>
-            </div>
-            <button class="vf-btn vf-btn-primary"
-              :disabled="!token.trim()"
-              @click="startVerify">
-              검증하기
-            </button>
-          </div>
-
-          <!-- File mode -->
-          <div v-else>
-            <div class="vf-drop"
+          <div class="vf-drop"
               :class="{ 'is-drag': isDragging }"
               @click="fileInput?.click()"
               @dragover.prevent="isDragging = true"
@@ -98,7 +51,6 @@
               @click="startVerifyFile">
               검증하기
             </button>
-          </div>
         </div>
       </div>
 
@@ -204,7 +156,6 @@ import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 
 type Status = 'idle' | 'loading' | 'success' | 'fail'
-type Mode = 'token' | 'file'
 
 interface VerifyResult {
   valid: boolean
@@ -214,8 +165,6 @@ interface VerifyResult {
 }
 
 const status = ref<Status>('idle')
-const mode = ref<Mode>('file')
-const token = ref('')
 const selectedFile = ref<File | null>(null)
 const isDragging = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)

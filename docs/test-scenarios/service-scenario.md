@@ -48,9 +48,9 @@
 - [V] **9** [A] 헤더 벨 아이콘 → 🔔 미읽음 1 "서명 완료" 알림 확인
 - [V] **10** [A] 알림 클릭 → 문서 상세 페이지 → 서명자 상태 `SIGNED` + 서명 일시 표시
 - [V] **11** [A] 서명된 PDF 다운로드 → `파일명_qusigned.pdf` 다운로드 확인
-- [ ] **12** [A] `/verify` → 토큰 입력 → ✅ 유효한 서명 + 서명자 이메일 표시
-- [ ] **13** [A] `/verify` → 서명된 PDF 파일 업로드 → 동일한 검증 결과
-- [ ] **14** [A] 문서 상세 페이지 하단 감사 로그 타임라인 → `SIGN_REQUEST_CREATED` → `SIGNED` → `SIGNED_DOCUMENT_DOWNLOADED` 이벤트 순서 확인
+- [V] **12** [A] `/verify` → 토큰 입력 → ✅ 유효한 서명 + 서명자 이메일 표시
+- [V] **13** [A] `/verify` → 서명된 PDF 파일 업로드 → 동일한 검증 결과
+- [V] **14** [A] 문서 상세 페이지 하단 감사 로그 타임라인 → `SIGN_REQUEST_CREATED` → `SIGNED` → `SIGNED_DOCUMENT_DOWNLOADED` 이벤트 순서 확인
 
 ---
 

@@ -6,7 +6,9 @@ import com.qusign.auth.dto.UpdateNotificationSettingsRequest
 import com.qusign.auth.dto.UserProfileResponse
 import com.qusign.auth.exception.AccountDeletedException
 import com.qusign.auth.exception.InvalidCurrentPasswordException
+import com.qusign.auth.exception.PasswordChangeNotAllowedException
 import com.qusign.auth.repository.UserRepository
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -18,7 +20,11 @@ class UserService(
     private val keyEncryptionService: KeyEncryptionService,
     private val passwordEncoder: PasswordEncoder,
     private val objectMapper: ObjectMapper,
+    @Value("\${admin.email:}") private val adminEmail: String,
 ) {
+    companion object {
+        private val PROTECTED_EMAILS = setOf("signer@test.com", "requestor@test.com")
+    }
 
     fun getProfile(email: String): UserProfileResponse {
         val user = userRepository.findByEmail(email) ?: throw NoSuchElementException("사용자를 찾을 수 없습니다")
@@ -34,6 +40,9 @@ class UserService(
 
     @Transactional
     fun changePassword(email: String, currentPassword: String, newPassword: String) {
+        if (email in PROTECTED_EMAILS || (adminEmail.isNotBlank() && email == adminEmail)) {
+            throw PasswordChangeNotAllowedException()
+        }
         val user = userRepository.findByEmail(email) ?: throw NoSuchElementException("사용자를 찾을 수 없습니다")
         if (user.deletedAt != null) throw AccountDeletedException()
         if (!passwordEncoder.matches(currentPassword, user.password)) throw InvalidCurrentPasswordException()

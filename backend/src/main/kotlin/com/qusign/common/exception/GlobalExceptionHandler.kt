@@ -5,6 +5,7 @@ import com.qusign.auth.exception.AccountDisabledException
 import com.qusign.auth.exception.EmailAlreadyExistsException
 import com.qusign.auth.exception.InvalidCredentialsException
 import com.qusign.auth.exception.InvalidCurrentPasswordException
+import com.qusign.auth.exception.PasswordChangeNotAllowedException
 import com.qusign.common.response.ApiResponse
 import com.qusign.document.exception.AlreadySignedDocumentException
 import com.qusign.document.exception.BatchTooManyFilesException
@@ -42,6 +43,10 @@ class GlobalExceptionHandler {
     @ExceptionHandler(AccountDeletedException::class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     fun handleAccountDeleted(e: AccountDeletedException) = ApiResponse.error(e.message!!)
+
+    @ExceptionHandler(PasswordChangeNotAllowedException::class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    fun handlePasswordChangeNotAllowed(e: PasswordChangeNotAllowedException) = ApiResponse.error(e.message!!)
 
     @ExceptionHandler(AccountDisabledException::class)
     @ResponseStatus(HttpStatus.FORBIDDEN)

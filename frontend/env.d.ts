@@ -5,3 +5,8 @@ declare module '*.vue' {
   const component: DefineComponent
   export default component
 }
+
+declare module 'pdfjs-dist/build/pdf.worker.min.mjs?url' {
+  const src: string
+  export default src
+}

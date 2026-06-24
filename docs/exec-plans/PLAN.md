@@ -1012,11 +1012,11 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   sudo systemctl status certbot-renew.timer
   ```
 
-- [x] ~~배포 스크립트 생성 (`/home/ec2-user/deploy.sh`)~~ → **불필요로 판명, §6-12로 대체** ✅ (2026-06-19)
+- [x] ~~배포 스크립트 생성 (`/home/ec2-user/deploy.sh`)~~ → **불필요로 판명, §6-11로 대체** ✅ (2026-06-19)
   > 초기 설계는 `docker run` 단일 컨테이너 + EC2에 별도 MariaDB 설치 구조였으나,
   > 실제로는 `docker-compose.prod.yml`(백엔드+MariaDB+Redis)로 전환됨.
   > 별도 스크립트 파일 없이 `.github/workflows/deploy.yml`의 SSH step이
-  > SSM 조회 → ECR 로그인 → `docker-compose pull/up`을 인라인으로 직접 실행 (§6-12 참조).
+  > SSM 조회 → ECR 로그인 → `docker-compose pull/up`을 인라인으로 직접 실행 (§6-11 참조).
 
 ---
 
@@ -1035,7 +1035,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
   | `/qusign/prod/server-url` | String (`https://qusign.link`) — Swagger 서버 URL용 ✅ (2026-06-23) |
   > `db-url`/`db-username`은 SSM 파라미터로 분리하지 않음 — `docker-compose.prod.yml`에서
   > MariaDB가 컴포즈 내부 서비스(`mariadb:3306`, 계정 `qusign`)로 고정되어 있어 불필요.
-- [x] GitHub Actions `deploy.yml`의 SSH step에서 SSM 값을 `.env`로 주입 후 `docker-compose`에 전달 ✅ (§6-12 참조)
+- [x] GitHub Actions `deploy.yml`의 SSH step에서 SSM 값을 `.env`로 주입 후 `docker-compose`에 전달 ✅ (§6-11 참조)
 
 ---
 
@@ -1192,33 +1192,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-10. AWS SES 이메일 연동
-
-> 콘솔: SES → 리전: ap-southeast-1 (싱가포르)
-
-- [ ] 이메일 주소 자격 증명 (샌드박스 테스트용)
-  - 발신자 이메일 인증: `noreply@qusign.link` (도메인 구매 후) 또는 개인 이메일로 먼저 테스트
-- [ ] 도메인 자격 증명
-  - SES → 자격 증명 → 도메인 추가 → Route53에 DKIM CNAME 레코드 자동 추가
-- [ ] 샌드박스 제한 확인
-  - 샌드박스 상태: 검증된 이메일로만 발송 가능
-  - 베타 단계에서는 샌드박스로 충분 (실서비스 전에 프로덕션 접근 요청)
-- [ ] `SesEmailService` 실제 구현
-  ```kotlin
-  // application-prod.yml 추가
-  cloud:
-    aws:
-      ses:
-        region: ap-southeast-1
-  ```
-  - `SesClient` 빈 등록 (EC2 IAM 역할로 자동 인증, 별도 AccessKey 불필요)
-  - 서명 요청 HTML 템플릿 작성
-  - 서명 완료 HTML 템플릿 작성
-- [ ] 실제 이메일 수신 테스트
-
----
-
-### 6-11. Route53 + 도메인 연결
+### 6-10. Route53 + 도메인 연결
 
 - [x] 도메인 구매 ✅ (`qusign.link` — Route53 Registrar)
   - Route53에서 직접 구매 시 자동 연동 (추천)
@@ -1234,7 +1208,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-12. GitHub Actions CI/CD
+### 6-11. GitHub Actions CI/CD
 
 > `.github/workflows/deploy.yml`
 
@@ -1270,13 +1244,13 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ---
 
-### 6-13. 최종 검증
+### 6-12. 최종 검증
 
 - [x] `https://qusign.link` HTTPS 접속 확인 ✅ (2026-06-18) — SSL 정상, 프론트엔드 미배포로 403 (다음 단계)
 - [x] SSL 인증서 만료일 확인 ✅ — 2026-09-17, 자동 갱신 타이머 설정됨
 - [x] GitHub Actions push → 자동 배포 확인 ✅ (2026-06-19) — `deploy-backend` 성공 (Run #27815548754, 7m22s)
 - [x] Swagger UI 정상 렌더링 확인 ✅ (2026-06-23) — `https://qusign.link/swagger-ui/index.html` (springdoc 2.8.0, Spring Boot 3.5 호환)
-- [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 이메일 수신 → 서명 → 검증 전체 플로우
+- [ ] 회원가입 → 로그인 → PDF 업로드 → 서명 요청 → 서명 → 검증 전체 플로우
 - [x] EventBridge 스케줄러 동작 확인 (KST 21:30에 정지, 09:00에 시작)
 - [x] CloudWatch Logs에서 Lambda 실행 로그 확인 ✅ (2026-06-23)
 
@@ -1301,7 +1275,6 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 **6단계 완료 기준**
 - [x] 실제 도메인으로 HTTPS 접속 가능 ✅ (2026-06-18)
 - [x] GitHub Actions push 시 자동 배포 ✅ (2026-06-19)
-- [ ] 이메일로 서명 링크 수신 후 서명까지 전체 플로우 동작 (SES 미연동)
 - [x] EventBridge로 KST 21:30-09:00 자동 정지/시작 동작 확인
 - [x] CloudWatch에서 Lambda 스케줄러 실행 로그 확인 ✅ (2026-06-23)
 
@@ -1539,7 +1512,7 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 | 5개월 | Vue 3 프론트 구현 완성 | ✅ |
 | 6개월 | 기능 고도화 & 품질 강화 완료 | ⬜ |
 | 6.5개월 | 보안 취약점 개선 완료 (Critical/High 0건) | ⬜ |
-| 8개월 | AWS 배포 완료 + SES 이메일 + GitHub Actions | ⬜ |
+| 8개월 | AWS 배포 완료 + GitHub Actions | ⬜ |
 | 10개월 | Terraform 코드화 완료 + 유료 플랜 출시 | ⬜ |
 | 12개월 | Loki + Grafana 운영 + 이직 지원 시작 | ⬜ |
 
@@ -1587,6 +1560,33 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [ ] **프론트엔드 (서명자)** — SignerView에 "서명 거절" 버튼 + 사유 입력 모달
 - [ ] **프론트엔드 (요청자)** — DocumentDetailView에 `REJECTED` 상태 배지 및 사유 표시
 - [ ] `./gradlew test` 통과
+
+---
+
+### AWS SES 이메일 연동 (6단계에서 이동)
+
+> 콘솔: SES → 리전: ap-southeast-1 (싱가포르)  
+> `feature/ses-email-integration` 브랜치에서 작업 예정
+
+- [ ] 이메일 주소 자격 증명 (샌드박스 테스트용)
+  - 발신자 이메일 인증: `noreply@qusign.link` 또는 개인 이메일로 먼저 테스트
+- [ ] 도메인 자격 증명
+  - SES → 자격 증명 → 도메인 추가 → Route53에 DKIM CNAME 레코드 자동 추가
+- [ ] 샌드박스 제한 확인
+  - 샌드박스 상태: 검증된 이메일로만 발송 가능
+  - 베타 단계에서는 샌드박스로 충분 (실서비스 전에 프로덕션 접근 요청)
+- [ ] `SesEmailService` 실제 구현
+  ```kotlin
+  // application-prod.yml 추가
+  cloud:
+    aws:
+      ses:
+        region: ap-southeast-1
+  ```
+  - `SesClient` 빈 등록 (EC2 IAM 역할로 자동 인증, 별도 AccessKey 불필요)
+  - 서명 요청 HTML 템플릿 작성
+  - 서명 완료 HTML 템플릿 작성
+- [ ] 실제 이메일 수신 테스트
 
 ---
 

@@ -92,7 +92,7 @@
 
 **목적:** 만료된 서명 링크 접근 동작 확인
 
-- [ ] **1** MariaDB에서 `expires_at`을 과거로 직접 수정
+- [V] **1** MariaDB에서 `expires_at`을 과거로 직접 수정
   ```sql
   -- 접속: mariadb -u root -proot qusign
   -- 가장 최근 PENDING 서명 요청 만료 처리
@@ -105,8 +105,8 @@
   -- 확인
   SELECT id, token, signer_email, expires_at, status FROM signature_requests ORDER BY created_at DESC LIMIT 5;
   ```
-- [ ] **2** 만료된 링크로 `/sign/{token}` 접속 → "만료된 요청" 안내 화면
-- [ ] **3** 상세 페이지에서 해당 서명자 상태 → `EXPIRED` 배지 표시
+- [V] **2** 만료된 링크로 `/sign/{token}` 접속 → "만료된 요청" 안내 화면
+- [V] **3** 상세 페이지에서 해당 서명자 상태 → `EXPIRED` 배지 표시
 
 ---
 

@@ -215,18 +215,11 @@
                   <div class="qs-toggle-desc">로그인 시 인증 앱의 6자리 코드를 입력합니다.</div>
                 </div>
                 <div class="qs-toggle-side">
-                  <span v-if="toggleBusy['twoFA']" class="qs-mini-spinner" aria-hidden="true"></span>
-                  <span :class="['qs-saved', { 'is-show': toggleSaved['twoFA'] }]">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    저장됨
-                  </span>
                   <button type="button"
-                    :class="['qs-switch', { 'is-on': secTwoFA }]"
-                    :aria-pressed="secTwoFA"
-                    aria-label="2단계 인증"
-                    @click="updateToggle('twoFA', () => secTwoFA = !secTwoFA)"></button>
+                    class="qs-switch"
+                    disabled
+                    aria-pressed="false"
+                    aria-label="2단계 인증"></button>
                 </div>
               </div>
 
@@ -277,9 +270,10 @@
                   </span>
                   <button type="button"
                     :class="['qs-switch', { 'is-on': t.value.value }]"
+                    :disabled="t.disabled"
                     :aria-pressed="t.value.value"
                     :aria-label="t.title"
-                    @click="updateToggle(t.key, () => t.value.value = !t.value.value, t.api)"></button>
+                    @click="!t.disabled && updateToggle(t.key, () => t.value.value = !t.value.value, t.api)"></button>
                 </div>
               </div>
             </section>
@@ -468,10 +462,10 @@ onMounted(async () => {
 })
 
 const notifyToggles = [
-  { key: 'notifyReq',       value: notifyReq,       title: '서명 요청 알림',      desc: '다른 사람이 나에게 서명을 요청하면 인앱 알림으로 알려드려요.',  api: saveNotifySettings },
-  { key: 'notifyDone',      value: notifyDone,      title: '서명 완료 알림',      desc: '요청한 서명이 완료되면 인앱 알림으로 알려드려요.',              api: saveNotifySettings },
-  { key: 'notifyWeekly',    value: notifyWeekly,    title: '주간 활동 요약',      desc: '매주 월요일 아침, 한 주의 서명 활동 요약을 보내드려요. (이메일 연동 후 제공)', api: saveNotifySettings },
-  { key: 'notifyMarketing', value: notifyMarketing, title: '신제품 소식 · 팁',    desc: '새 기능과 활용 팁을 보내드려요. (이메일 연동 후 제공)',          api: saveNotifySettings },
+  { key: 'notifyReq',       value: notifyReq,       title: '서명 요청 알림',      desc: '다른 사람이 나에게 서명을 요청하면 인앱 알림으로 알려드려요.',               api: saveNotifySettings, disabled: false },
+  { key: 'notifyDone',      value: notifyDone,      title: '서명 완료 알림',      desc: '요청한 서명이 완료되면 인앱 알림으로 알려드려요.',                           api: saveNotifySettings, disabled: false },
+  { key: 'notifyWeekly',    value: notifyWeekly,    title: '주간 활동 요약',      desc: '매주 월요일 아침, 한 주의 서명 활동 요약을 보내드려요. (이메일 연동 후 제공)', api: saveNotifySettings, disabled: true },
+  { key: 'notifyMarketing', value: notifyMarketing, title: '신제품 소식 · 팁',    desc: '새 기능과 활용 팁을 보내드려요. (이메일 연동 후 제공)',                      api: saveNotifySettings, disabled: true },
 ]
 
 // Password form

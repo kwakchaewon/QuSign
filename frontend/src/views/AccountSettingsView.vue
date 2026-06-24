@@ -286,12 +286,17 @@
                 <h2 class="qs-card-title">계정 삭제</h2>
                 <p class="qs-card-desc">계정을 삭제하면 다음 데이터가 영구적으로 사라집니다.</p>
               </div>
+              <div v-if="isTestAccount" class="qs-alert" style="margin-bottom:16px">
+                <span class="qs-alert-dot"></span>
+                테스트 계정은 계정 삭제가 불가능합니다.
+              </div>
               <ul class="qs-danger-list">
                 <li>모든 PDF 문서와 양자내성 서명 기록</li>
                 <li>서명 검증에 사용되는 공개키 · 검증 로그</li>
                 <li>발송한 서명 요청 및 받은 요청 내역</li>
               </ul>
               <button type="button" class="qs-btn qs-btn-md qs-btn-danger-outline"
+                :disabled="isTestAccount"
                 @click="openDeleteModal">
                 계정 삭제 요청
               </button>

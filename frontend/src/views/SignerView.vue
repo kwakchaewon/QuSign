@@ -173,16 +173,16 @@
             </div>
             <div class="qs-meta-row">
               <span class="qs-meta-k">서명 만료</span>
-              <span class="qs-meta-v">
+              <div class="qs-meta-v qs-meta-v--expires">
                 <span>{{ docInfo?.expiresAt ?? '—' }}</span>
-                <div v-if="docInfo?.expiresAt" class="qs-meta-warn">
+                <span v-if="docInfo?.expiresAt" class="qs-meta-warn">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/>
                     <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                   </svg>
                   만료 전까지 서명해 주세요
-                </div>
-              </span>
+                </span>
+              </div>
             </div>
             <div v-if="docInfo?.hashSha3256" class="qs-meta-row">
               <span class="qs-meta-k">SHA3-256</span>

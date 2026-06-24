@@ -58,6 +58,8 @@ data class DashboardActionItem(
     val bundleToken: String? = null,
     @Schema(description = "번들 ID (번들 요청)", nullable = true)
     val bundleId: Long? = null,
+    @Schema(description = "동일 번들/요청에 포함된 추가 문서 수 (0이면 단건)", example = "0")
+    val extraCount: Int = 0,
 )
 
 @Schema(description = "액션 아이템 목록 응답")

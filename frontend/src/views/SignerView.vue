@@ -614,11 +614,11 @@
             </span>
             <button
               type="button"
-              class="qs-btn qs-btn-primary"
-              :class="{ 'qs-btn-ghost': !(docInfo?.isBundle && docInfo.documents.length > 1 ? scrolledDocs[largeViewIndex] : scrolled) }"
+              class="qs-btn qs-btn-md"
+              :class="(docInfo?.isBundle && docInfo.documents.length > 1 ? scrolledDocs[largeViewIndex] : scrolled) ? 'qs-btn-primary' : 'qs-btn-secondary'"
               @click="largeViewOpen = false"
             >
-              {{ (docInfo?.isBundle && docInfo.documents.length > 1 ? scrolledDocs[largeViewIndex] : scrolled) ? '확인 완료 · 닫기' : '닫기' }}
+              {{ (docInfo?.isBundle && docInfo.documents.length > 1 ? scrolledDocs[largeViewIndex] : scrolled) ? '확인 완료' : '닫기' }}
             </button>
           </div>
         </div>

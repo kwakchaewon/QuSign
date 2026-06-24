@@ -5,3 +5,5 @@ class InvalidCurrentPasswordException : RuntimeException("현재 비밀번호가
 class AccountDeletedException : RuntimeException("탈퇴한 계정입니다")
 
 class PasswordChangeNotAllowedException : RuntimeException("이 계정은 비밀번호를 변경할 수 없습니다")
+
+class AccountDeletionNotAllowedException : RuntimeException("테스트 계정은 삭제할 수 없습니다")

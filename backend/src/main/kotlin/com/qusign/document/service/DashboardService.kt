@@ -116,6 +116,7 @@ class DashboardService(
             val bt = req.bundleToken
             if (bt != null) {
                 if (seenBundleTokens.add(bt)) {
+                    val bundleDocCount = receivedPending.count { it.bundleToken == bt }
                     items.add(DashboardActionItem(
                         direction = "RECEIVED",
                         docName = req.document.originalFilename,
@@ -123,6 +124,7 @@ class DashboardService(
                         createdAt = (req.createdAt ?: now).toString(),
                         signPath = "/sign/$bt",
                         bundleToken = bt,
+                        extraCount = bundleDocCount - 1,
                     ))
                 }
             } else {

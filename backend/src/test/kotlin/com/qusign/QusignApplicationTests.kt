@@ -1,6 +1,6 @@
 package com.qusign
 
-import com.qusign.common.email.EmailService
+// [SES보류] import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
@@ -11,7 +11,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 class QusignApplicationTests {
 
     @MockitoBean lateinit var storageService: StorageService
-    @MockitoBean lateinit var emailService: EmailService
+    // [SES보류] @MockitoBean lateinit var emailService: EmailService
     @MockitoBean lateinit var redisMessageListenerContainer: RedisMessageListenerContainer
 
     @Test

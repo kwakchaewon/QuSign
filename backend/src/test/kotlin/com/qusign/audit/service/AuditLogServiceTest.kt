@@ -4,7 +4,7 @@ import com.qusign.audit.entity.AuditEventType
 import com.qusign.audit.repository.AuditLogRepository
 import com.qusign.auth.service.AuthService
 import com.qusign.common.audit.AuditContext
-import com.qusign.common.email.EmailService
+// [SES보류] import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import com.qusign.document.service.DocumentService
 import com.qusign.notification.service.NotificationService
@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional
 class AuditLogServiceTest {
 
     @MockitoBean lateinit var storageService: StorageService
-    @MockitoBean lateinit var emailService: EmailService
+    // [SES보류] @MockitoBean lateinit var emailService: EmailService
     @MockitoBean lateinit var notificationService: NotificationService
     @MockitoBean lateinit var redisMessageListenerContainer: RedisMessageListenerContainer
 

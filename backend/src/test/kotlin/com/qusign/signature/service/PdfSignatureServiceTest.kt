@@ -1,6 +1,6 @@
 package com.qusign.signature.service
 
-import com.qusign.common.email.EmailService
+// [SES보류] import com.qusign.common.email.EmailService
 import com.qusign.common.storage.StorageService
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 class PdfSignatureServiceTest {
 
     @MockitoBean lateinit var storageService: StorageService
-    @MockitoBean lateinit var emailService: EmailService
+    // [SES보류] @MockitoBean lateinit var emailService: EmailService
 
     @Autowired lateinit var pdfSignatureService: PdfSignatureService
     @Autowired lateinit var pqcSignatureService: PqcSignatureService

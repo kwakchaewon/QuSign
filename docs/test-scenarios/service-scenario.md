@@ -273,9 +273,9 @@
 
 ### S3 스토리지 검증
 
-- [ ] **10** PDF 업로드 후 S3 콘솔(`qusign-documents-prod-285868221698`) → 원본 객체 생성 확인
-- [ ] **11** 서명 완료 후 S3 콘솔 → 서명된 PDF 객체 생성 확인
-- [ ] **12** 프론트엔드에서 PDF 다운로드 → S3 Pre-signed URL 통해 정상 수신 확인
+- [V] **10** PDF 업로드 후 S3 콘솔(`qusign-documents-prod-285868221698`) → 원본 객체 생성 확인
+- [V] **11** 서명 완료 후 S3 콘솔 → 서명된 PDF 객체 생성 확인
+- [V] **12** 프론트엔드에서 PDF 다운로드 → S3 Pre-signed URL 통해 정상 수신 확인
 
 ### 실시간 알림 (SSE, 프로덕션)
 
@@ -284,9 +284,9 @@
 
 ### EC2 스케줄러
 
-- [ ] **15** KST 21:30 이후 `https://qusign.link` 접속 불가 확인 (EC2 정지 상태)
-- [ ] **16** KST 09:00 이후 `https://qusign.link` 재접속 가능 확인 (EC2 재시작)
-- [ ] **17** AWS CloudWatch 로그 그룹 `/aws/lambda/qusign_start_instances` → START/END/REPORT 정상 완료 확인
+- [V] **15** KST 21:30 이후 `https://qusign.link` 접속 불가 확인 (EC2 정지 상태)
+- [V] **16** KST 09:00 이후 `https://qusign.link` 재접속 가능 확인 (EC2 재시작)
+- [V] **17** AWS CloudWatch 로그 그룹 `/aws/lambda/qusign_start_instances` → START/END/REPORT 정상 완료 확인
 
 ### DB 백업 (6-8)
 

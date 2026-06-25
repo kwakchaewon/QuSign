@@ -184,3 +184,4 @@
 |------|------|
 | [Swagger](https://qusign.link/swagger-ui/index.html) | REST API 명세 |
 | [디렉토리 구조](docs/DIRECTORY_STRUCTURE.md) | 프로젝트 폴더 구조 안내 |
+| [학습 자료](docs/learning-materials/README.md) | 단계별 핵심 개념 정리 (18편) |

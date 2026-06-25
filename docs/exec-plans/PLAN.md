@@ -1092,12 +1092,12 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 #### Step 3. 배포 후 검증
 
-- [ ] GitHub Actions 배포 후 EC2 컨테이너 로그에서 `버킷 생성 완료` or 버킷 정상 인식 확인
+- [x] GitHub Actions 배포 후 EC2 컨테이너 로그에서 `버킷 생성 완료` or 버킷 정상 인식 확인
   ```bash
   docker logs qusign-backend 2>&1 | grep -i bucket
   ```
-- [ ] PDF 업로드 → S3 콘솔에서 객체 생성 확인
-- [ ] PDF 다운로드 정상 동작 확인
+- [x] PDF 업로드 → S3 콘솔에서 객체 생성 확인
+- [x] PDF 다운로드 정상 동작 확인
 
 **완료 기준:** 프로덕션에서 PDF 업로드·다운로드 정상 동작 + S3 콘솔 객체 확인
 

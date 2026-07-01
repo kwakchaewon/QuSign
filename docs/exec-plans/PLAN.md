@@ -1291,12 +1291,14 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 - [x] AWS 콘솔·CLI로 기존 리소스 ID 전량 수집 (Phase 0) ✅ (2026-07-01) — VPC/서브넷/RT/SG/EIP/S3/ECR/IAM/Lambda/EventBridge Scheduler/Route53. 콘솔 조사 중 계획 초안과 실제가 다른 부분 다수 발견(아래 참고)
 - [x] Terraform CLI 설치 (v1.15.7) ✅ (2026-07-01)
 - [x] `infra/` 디렉토리 + 전체 모듈 HCL 작성 (networking/compute/iam/storage/secrets/scheduler/dns) ✅ (2026-07-01)
-- [x] `terraform init` / `validate` 통과 (backend 제외, 로컬 검증) ✅ (2026-07-01)
-- [ ] state 전용 S3 버킷(`qusign-terraform-state`) + DynamoDB 락 테이블(`qusign-terraform-lock`) 생성 — 사용자 승인 대기
+- [x] state 전용 S3 버킷(`qusign-terraform-state`) 생성 ✅ (2026-07-01) — 버저닝/SSE-S3 암호화/퍼블릭 차단 적용
+- [x] `terraform init` (backend 포함) / `validate` 통과 ✅ (2026-07-01)
 - [ ] `terraform import`로 기존 리소스 전량 흡수 (Phase 2)
 - [ ] `terraform plan` diff 0 확인 → 검증 (Phase 4)
 
 ⚠️ 조사 중 발견한 실제 인프라와 계획 초안의 차이(HCL에 반영 완료): EventBridge는 CloudWatch Events Rule이 아니라 **EventBridge Scheduler** 사용 중, GitHub Actions 배포 주체는 IAM Role이 아니라 **IAM User**(정적 액세스 키), S3 VPC 엔드포인트는 public이 아니라 **private 라우팅 테이블**에 연결, VPC에 서브넷/라우팅테이블이 계획보다 많음(public+private 각 1개, RT 3개).
+
+⚠️ **state 잠금 방식 변경**: 초안은 DynamoDB 락 테이블을 썼으나, `terraform init` 경고로 `dynamodb_table`이 Deprecated임을 확인 → Terraform 1.10+의 S3 자체 잠금(`use_lockfile = true`)으로 전환. DynamoDB 리소스·IAM 권한 자체가 불필요해짐.
 
 ---
 

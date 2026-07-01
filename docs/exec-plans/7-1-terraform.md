@@ -105,7 +105,7 @@ Route 53
 
 ## Phase 1: Terraform 환경 세팅 (1일)
 
-### 1-1. state 전용 S3 버킷 + DynamoDB 테이블 생성 (콘솔 1회)
+### 1-1. state 전용 S3 버킷 생성 (콘솔 1회)
 
 ```bash
 # 앱 버킷(qusign-documents-prod)과 별도로 생성
@@ -124,13 +124,12 @@ aws s3api put-bucket-encryption \
   --bucket qusign-terraform-state \
   --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
 
-aws dynamodb create-table \
-  --table-name qusign-terraform-lock \
-  --attribute-definitions AttributeName=LockID,AttributeType=S \
-  --key-schema AttributeName=LockID,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST \
-  --region ap-southeast-1
+aws s3api put-public-access-block \
+  --bucket qusign-terraform-state \
+  --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
 ```
+
+⚠️⚠️ **정정 (2026-07-01)**: 초안은 DynamoDB 락 테이블(`qusign-terraform-lock`)도 함께 만들도록 했으나, `terraform init` 실행 결과 `dynamodb_table` 파라미터가 **Deprecated**임을 확인했다. Terraform 1.10+(S3 backend)는 S3 자체 조건부 쓰기 기반 잠금(`use_lockfile = true`)을 지원해 DynamoDB 없이도 동일한 잠금 효과를 얻을 수 있다. 이 프로젝트는 혼자 운영하는 사이드 프로젝트라 DynamoDB의 실전 검증 이력이 큰 의미가 없고, 관리 리소스와 IAM 권한을 하나 줄일 수 있어 `use_lockfile` 방식으로 전환했다(아래 backend.tf 참고). DynamoDB 테이블을 이미 만들었다면 더 이상 쓰이지 않으니 삭제해도 무방하다.
 
 ### 1-2. 디렉토리 구조 생성
 
@@ -187,11 +186,11 @@ QuSign/
 ```hcl
 terraform {
   backend "s3" {
-    bucket         = "qusign-terraform-state"
-    key            = "prod/terraform.tfstate"
-    region         = "ap-southeast-1"
-    encrypt        = true
-    dynamodb_table = "qusign-terraform-lock"
+    bucket       = "qusign-terraform-state"
+    key          = "prod/terraform.tfstate"
+    region       = "ap-southeast-1"
+    encrypt      = true
+    use_lockfile = true   # S3 조건부 쓰기 기반 잠금 — DynamoDB 불필요
   }
 }
 ```
@@ -692,12 +691,12 @@ terraform plan              # ← 반드시 "No changes. Your infrastructure mat
 
 | 항목 | 기준 | 확인 |
 |---|---|---|
-| `terraform init` | 에러 없음 | [ ] |
-| `terraform validate` | 통과 | [ ] |
-| `terraform plan` | **Changes: 0** | [ ] |
+| `terraform init` | 에러 없음 | [x] ✅ (2026-07-01, backend 포함) |
+| `terraform validate` | 통과 | [x] ✅ (2026-07-01, backend 제외 상태에서 확인) |
+| `terraform plan` | **Changes: 0** | [ ] (Phase 2 import 전이라 아직 리소스 전체가 신규로 잡힘) |
 | state 파일 위치 | S3 `qusign-terraform-state/prod/terraform.tfstate` | [ ] |
-| state 파일 암호화 | SSE 활성화 | [ ] |
-| DynamoDB lock | `qusign-terraform-lock` 테이블 존재 | [ ] |
+| state 파일 암호화 | SSE 활성화 | [x] ✅ (2026-07-01, 버킷 생성 시 적용) |
+| S3 자체 잠금(`use_lockfile`) | 정상 동작 | [ ] (DynamoDB lock에서 정정됨, 실제 import/apply 시 확인) |
 | 운영 서버 | plan 전후 `curl https://qusign.link/actuator/health` 200 | [ ] |
 
 ### 최종 검증 (재현성 테스트)

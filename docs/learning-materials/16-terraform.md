@@ -209,9 +209,12 @@ State가 중요한 이유:
 - State 없이 `apply`하면 이미 있는 리소스를 새로 만들려 해서 충돌이 발생합니다
 - State가 손상되면 Terraform이 인프라를 올바르게 관리하지 못합니다
 
-#### S3 원격 백엔드 + DynamoDB 잠금
+#### S3 원격 백엔드 + 잠금(locking)
+
+state 잠금 방식은 두 가지가 있다. **DynamoDB 잠금**은 오랫동안 업계 표준이었고, **S3 자체 잠금**(`use_lockfile`)은 Terraform 1.10(2024-11)부터 지원되는 최신 방식이다.
 
 ```hcl
+# 방식 1) DynamoDB 잠금 (전통적 방식)
 terraform {
   backend "s3" {
     bucket         = "qusign-terraform-state"
@@ -223,15 +226,30 @@ terraform {
 }
 ```
 
-**DynamoDB 잠금 동작**:
+```hcl
+# 방식 2) S3 자체 잠금 (Terraform 1.10+, QuSign 실제 채택)
+terraform {
+  backend "s3" {
+    bucket       = "qusign-terraform-state"
+    key          = "prod/terraform.tfstate"
+    region       = "ap-southeast-1"
+    encrypt      = true
+    use_lockfile = true   # S3 조건부 쓰기(If-None-Match)로 잠금 — DynamoDB 불필요
+  }
+}
 ```
-개발자 A: terraform apply 시작 → DynamoDB에 lock 항목 생성
-개발자 B: terraform apply 시작 → lock 항목 발견 → "State locked" 에러
-개발자 A: apply 완료 → DynamoDB lock 항목 삭제
+
+**잠금 동작 원리(두 방식 공통)**:
+```
+개발자 A: terraform apply 시작 → 잠금 항목 생성(DynamoDB 아이템 또는 S3 락파일)
+개발자 B: terraform apply 시작 → 잠금 항목 발견 → "State locked" 에러
+개발자 A: apply 완료 → 잠금 항목 삭제
 개발자 B: 재시도 가능
 ```
 
 잠금 해제가 필요하면 `terraform force-unlock <LOCK_ID>` (주의: 신중하게).
+
+**QuSign 실전 판단**: 처음엔 계획서에 DynamoDB 방식으로 적었지만, 실제로 `terraform init`을 돌려보니 `dynamodb_table` 파라미터가 Deprecated라는 경고가 떴다. 자료(블로그·튜토리얼)는 대부분 DynamoDB 방식이라 실전 경험 없이는 이 변화를 몰랐을 것이다. 혼자 운영하는 프로젝트라 동시 apply 충돌 위험이 낮고, 관리할 AWS 리소스와 IAM 권한을 하나 줄일 수 있어 S3 자체 잠금으로 바꿨다. 팀 협업 환경이거나 오래된 Terraform 버전(1.10 미만)을 써야 한다면 DynamoDB 방식이 여전히 더 안전한 선택이다.
 
 ---
 
@@ -422,7 +440,7 @@ resource "aws_instance" "app" {
 
 **Q3. S3 백엔드를 쓰지 않고 로컬 `terraform.tfstate`를 팀원과 공유하면 어떤 문제가 생기나?**
 
-> 두 사람이 동시에 `terraform apply`를 실행하면 state가 충돌해 인프라와 state가 불일치 상태가 됩니다. 파일을 Git에 올리면 민감 정보(DB 비밀번호 등)가 노출됩니다. S3 + DynamoDB 조합을 사용하면 state를 중앙 암호화 저장하고 DynamoDB 잠금으로 동시 적용을 방지합니다.
+> 두 사람이 동시에 `terraform apply`를 실행하면 state가 충돌해 인프라와 state가 불일치 상태가 됩니다. 파일을 Git에 올리면 민감 정보(DB 비밀번호 등)가 노출됩니다. S3 백엔드를 사용하면 state를 중앙 암호화 저장할 수 있고, 동시 적용 방지를 위한 잠금은 DynamoDB(전통적 방식) 또는 Terraform 1.10+의 S3 자체 잠금(`use_lockfile`, QuSign이 실제 채택한 방식) 중 하나로 구성합니다.
 
 **Q4. 6단계에서 콘솔로 만든 기존 인프라를 Terraform으로 가져올 수 있는가?**
 

@@ -180,8 +180,8 @@ QuSign/
 *.tfstate
 *.tfstate.backup
 *.tfvars
-.terraform.lock.hcl
 ```
+※ `.terraform.lock.hcl`은 provider 버전 고정을 위해 커밋하는 게 Terraform 표준 관행 — 초안의 gitignore 대상 지정은 정정함
 
 **infra/backend.tf**
 ```hcl
@@ -214,8 +214,7 @@ provider "aws" {
 
 module "networking" {
   source = "./modules/networking"
-  vpc_cidr       = var.vpc_cidr
-  my_ip_cidr     = var.my_ip_cidr
+  vpc_cidr = var.vpc_cidr
 }
 
 module "compute" {
@@ -242,8 +241,9 @@ module "secrets" {
 
 module "scheduler" {
   source = "./modules/scheduler"
-  ec2_instance_id    = module.compute.instance_id
-  scheduler_role_arn = module.secrets.scheduler_role_arn  # qusign_eventbridge_scheduler_role — 어느 모듈에 둘지 Phase 1에서 재검토
+  ec2_instance_id = module.compute.instance_id
+  # qusign_lambda_eventbridge_role / qusign_eventbridge_scheduler_role은 기존에 콘솔로 만들어진
+  # 별도 관리 리소스라 이 Phase에서 import하지 않고, scheduler 모듈 내부에서 data source로 조회한다.
 }
 
 module "dns" {
@@ -256,16 +256,15 @@ module "dns" {
 ```hcl
 variable "aws_region"    { default = "ap-southeast-1" }
 variable "vpc_cidr"      { default = "10.0.0.0/16" }
-variable "my_ip_cidr"    { description = "SSH 허용 IP (본인 IP/32)" }
 variable "ami_id"        { description = "EC2 AMI ID (콘솔 확인)" }
 variable "key_pair_name" { description = "EC2 Key Pair 이름" }
 ```
+※ `my_ip_cidr`는 초안에 있었으나 실제 SG는 SSH(22)를 `0.0.0.0/0`으로 하드코딩하고 있어 미사용 — 제거함 (추후 IP 제한 시 재도입)
 
 **infra/terraform.tfvars** (gitignore됨 — 실제 값 기입)
 ```hcl
-my_ip_cidr     = "X.X.X.X/32"       # 본인 IP
-ami_id         = "ami-XXXXXXXXXX"    # 콘솔에서 확인
-key_pair_name  = "qusign-key"        # 콘솔에서 확인
+ami_id         = "ami-0dfb1c86c34509daf"  # 콘솔 확인값
+key_pair_name  = "qusign-keypair"         # 콘솔 확인값 (초안의 "qusign-key"는 오타)
 ```
 
 ---
@@ -593,11 +592,21 @@ resource "aws_ssm_parameter" "admin_email" {
 ### modules/scheduler/main.tf
 
 ```hcl
+# qusign_lambda_eventbridge_role / qusign_eventbridge_scheduler_role은 기존에 콘솔로
+# 생성된 리소스 — 이 모듈에서 import/생성하지 않고 이름으로 조회만 한다.
+data "aws_iam_role" "lambda_exec" {
+  name = "qusign_lambda_eventbridge_role"
+}
+
+data "aws_iam_role" "scheduler_exec" {
+  name = "qusign_eventbridge_scheduler_role"
+}
+
 resource "aws_lambda_function" "ec2_scheduler" {
   function_name = "qusign_start_instances"
   runtime       = "python3.13"
   handler       = "lambda_function.lambda_handler"
-  role          = var.lambda_role_arn
+  role          = data.aws_iam_role.lambda_exec.arn
 
   # 코드는 콘솔/배포 파이프라인 관리 — Terraform은 메타데이터만 관리
   filename         = "${path.module}/lambda_placeholder.zip"
@@ -627,7 +636,7 @@ resource "aws_scheduler_schedule" "morning_start" {
 
   target {
     arn      = aws_lambda_function.ec2_scheduler.arn
-    role_arn = var.scheduler_role_arn          # qusign_eventbridge_scheduler_role
+    role_arn = data.aws_iam_role.scheduler_exec.arn
   }
 }
 
@@ -639,7 +648,7 @@ resource "aws_scheduler_schedule" "nightly_stop" {
 
   target {
     arn      = aws_lambda_function.ec2_scheduler.arn
-    role_arn = var.scheduler_role_arn
+    role_arn = data.aws_iam_role.scheduler_exec.arn
   }
 }
 ```

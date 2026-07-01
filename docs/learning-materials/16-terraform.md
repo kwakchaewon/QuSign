@@ -218,7 +218,7 @@ terraform {
     key            = "prod/terraform.tfstate"
     region         = "ap-southeast-1"
     encrypt        = true                      # SSE-S3 암호화
-    dynamodb_table = "qusign-terraform-locks"  # 동시 apply 방지
+    dynamodb_table = "qusign-terraform-lock"   # 동시 apply 방지
   }
 }
 ```
@@ -314,6 +314,21 @@ locals {
 
 ## QuSign 인프라 Terraform 코드화 계획
 
+> **진행 현황 (2026-07-01)**: 아래는 최초 학습 시점의 예시 코드다. 실제로는 `docs/exec-plans/7-1-terraform.md`(Phase 0~4 실행 계획)와 `infra/` 디렉토리에 전체 모듈 HCL을 작성 완료했고, `terraform init`/`validate`까지 통과시켰다. state 백엔드용 S3/DynamoDB 생성과 `terraform import`는 아직 진행 전이다.
+
+### 콘솔 조사에서 계획과 실제가 달랐던 사례
+
+이론만으로는 놓치기 쉬운, "직접 콘솔/CLI로 확인해야만 알 수 있는" 것들이다.
+
+| 가정(계획 초안) | 실제 확인된 것 | 왜 중요한가 |
+|---|---|---|
+| EC2 정지/시작을 CloudWatch Events Rule로 스케줄링 | 실제로는 **EventBridge Scheduler**(`aws_scheduler_schedule`)로 되어 있었음 — 콘솔 "규칙" 탭엔 아무것도 없고 "Scheduler > 일정"에 있었음 | 두 리소스 타입은 완전히 다른 Terraform 리소스(`aws_cloudwatch_event_rule` vs `aws_scheduler_schedule`). import 대상 자체가 틀리면 `plan`에서 계속 diff가 남는다 |
+| GitHub Actions 배포는 IAM Role(OIDC) | 실제로는 IAM **User** + 정적 액세스 키(`aws-actions/configure-aws-credentials` + Secrets) | `aws_iam_role`로 import를 시도하면 애초에 리소스가 없어 실패한다. `aws iam list-roles`에 없으면 `aws iam list-users`도 확인해야 함 |
+| S3 게이트웨이 엔드포인트는 public 라우팅 테이블에 연결 | 실제로는 **private 라우팅 테이블**에 연결 | `aws_vpc_endpoint`의 `route_table_ids`를 잘못 넣으면 `plan`에서 계속 변경사항이 뜬다 |
+| VPC에 퍼블릭 서브넷 1개만 존재 | 실제로는 public+private 서브넷 각 1개, 라우팅 테이블 3개(public/private/미사용 main) | 콘솔에서 "리소스 맵" 탭으로 서브넷·RT·IGW 연결 관계를 한눈에 봐야 놓치지 않는다 |
+
+**교훈**: `terraform import`를 시작하기 전에 콘솔(또는 `aws ec2 describe-*` 같은 read-only CLI)로 리소스 구조를 먼저 전수조사해야 한다. 계획 문서나 기억에 의존하면 import 대상 리소스 타입 자체가 틀릴 수 있다.
+
 ```hcl
 # vpc.tf
 resource "aws_vpc" "main" {
@@ -343,7 +358,7 @@ resource "aws_route_table" "public" {
 
 # s3.tf
 resource "aws_s3_bucket" "documents" {
-  bucket = "qusign-documents-prod-285868221698"
+  bucket = "qusign-documents-prod"  # 실제 버킷명 (계정ID 접미사 없음)
 }
 
 resource "aws_s3_bucket_public_access_block" "documents" {
@@ -420,3 +435,7 @@ resource "aws_instance" "app" {
 **Q6. `terraform destroy`는 언제 사용하는가?**
 
 > 더 이상 필요 없는 개발/스테이징 환경을 삭제할 때 사용합니다. 운영 환경에서는 실수로 실행하지 않도록 별도 AWS 계정 분리와 IAM 정책 제한이 필요합니다. 특정 리소스만 삭제하려면 `terraform destroy -target=aws_instance.app` 처럼 타겟을 지정합니다. QuSign에서는 포트폴리오 제출 후 비용 절감을 위해 비핵심 리소스에만 사용합니다.
+
+**Q7. `import` 대상 리소스 타입을 콘솔에서 확인하지 않고 계획 문서만 믿고 진행하면 어떻게 되는가?**
+
+> QuSign 실제 사례로 답할 수 있다: 계획 초안은 EC2 정지/시작 스케줄이 `aws_cloudwatch_event_rule`이라고 가정했지만, 콘솔을 열어보니 실제로는 `aws_scheduler_schedule`(EventBridge Scheduler)이었다. 존재하지 않는 타입으로 `terraform import`를 시도하면 AWS API가 "그런 리소스 없음" 에러를 내거나, 최악의 경우 이름이 우연히 겹쳐 엉뚱한 리소스를 잘못 흡수할 수 있다. 같은 이유로 GitHub Actions 배포 주체도 IAM Role이 아니라 IAM User였다. 그래서 Phase 2(import) 전에 반드시 Phase 0(콘솔·CLI 조사)로 리소스 타입까지 확정해야 하며, `aws iam list-roles`에 없다고 포기하지 말고 `list-users`처럼 인접한 리소스 종류도 함께 확인해야 한다.

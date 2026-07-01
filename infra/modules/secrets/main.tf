@@ -2,16 +2,18 @@
 # import 후 ignore_changes = [value]로 콘솔 값을 그대로 보존한다.
 
 resource "aws_ssm_parameter" "db_password" {
-  name  = "/qusign/prod/db-password"
-  type  = "SecureString"
-  value = "PLACEHOLDER"
+  name        = "/qusign/prod/db-password"
+  description = "QuSign 프로덕션 MariaDB 비밀번호"
+  type        = "SecureString"
+  value       = "PLACEHOLDER"
   lifecycle { ignore_changes = [value] }
 }
 
 resource "aws_ssm_parameter" "jwt_secret" {
-  name  = "/qusign/prod/jwt-secret"
-  type  = "SecureString"
-  value = "PLACEHOLDER"
+  name        = "/qusign/prod/jwt-secret"
+  description = "QuSign JWT 액세스 토큰 서명 시크릿"
+  type        = "SecureString"
+  value       = "PLACEHOLDER"
   lifecycle { ignore_changes = [value] }
 }
 
@@ -23,15 +25,17 @@ resource "aws_ssm_parameter" "admin_password" {
 }
 
 resource "aws_ssm_parameter" "s3_bucket" {
-  name  = "/qusign/prod/s3-bucket"
-  type  = "String"
-  value = "qusign-documents-prod"
+  name        = "/qusign/prod/s3-bucket"
+  description = "S3 버킷명"
+  type        = "String"
+  value       = "qusign-documents-prod"
 }
 
 resource "aws_ssm_parameter" "cors_origins" {
-  name  = "/qusign/prod/cors-origins"
-  type  = "String"
-  value = "https://qusign.link"
+  name        = "/qusign/prod/cors-origins"
+  description = "CORS 허용 출처"
+  type        = "String"
+  value       = "https://qusign.link"
 }
 
 resource "aws_ssm_parameter" "server_url" {

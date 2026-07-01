@@ -1,6 +1,14 @@
 # GitHub Actions 배포용 — 콘솔 확인 결과 Role이 아니라 User (OIDC 미설정, 정적 액세스 키 방식)
 resource "aws_iam_user" "github_actions_deployer" {
   name = "qusign_github_actions_deployer"
+
+  tags = {
+    Environment            = "prod"
+    ManagedBy              = "manual"
+    Owner                  = "kwakchaewon"
+    Project                = "qusign"
+    "AKIAUFDYS4UBDLJ5ZVJO" = "GitHub Actions deployer access key for qusign prod deployment"
+  }
 }
 
 # 액세스 키(aws_iam_access_key)는 시크릿 값이 생성 시점에만 노출되고 재조회 불가하므로

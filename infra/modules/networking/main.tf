@@ -5,7 +5,7 @@ resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
-  tags = { Name = "qusign_vpc-vpc" }
+  tags                 = { Name = "qusign_vpc-vpc" }
 }
 
 resource "aws_subnet" "public" {
@@ -13,14 +13,14 @@ resource "aws_subnet" "public" {
   cidr_block              = "10.0.0.0/20"
   availability_zone       = "ap-southeast-1a"
   map_public_ip_on_launch = false
-  tags = { Name = "qusign_vpc-subnet-public1-ap-southeast-1a" }
+  tags                    = { Name = "qusign_vpc-subnet-public1-ap-southeast-1a" }
 }
 
 resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.128.0/20"
   availability_zone = "ap-southeast-1a"
-  tags = { Name = "qusign_vpc-subnet-private1-ap-southeast-1a" }
+  tags              = { Name = "qusign_vpc-subnet-private1-ap-southeast-1a" }
 }
 
 resource "aws_internet_gateway" "main" {
@@ -41,7 +41,7 @@ resource "aws_route_table" "public" {
 # route_table_ids로 이 RT를 지정하는 방식으로 부여된다.
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
-  tags = { Name = "qusign_vpc-rtb-private1-ap-southeast-1a" }
+  tags   = { Name = "qusign_vpc-rtb-private1-ap-southeast-1a" }
 }
 
 resource "aws_route_table_association" "public" {
@@ -55,25 +55,24 @@ resource "aws_route_table_association" "private" {
 }
 
 resource "aws_security_group" "main" {
-  name   = "qusign_ec2_sg"
-  vpc_id = aws_vpc.main.id
+  name        = "qusign_ec2_sg"
+  description = "EC2 security group for QuSign" # 콘솔 실제 값 — description 변경은 SG 강제 재생성을 유발하므로 반드시 일치시켜야 함
+  vpc_id      = aws_vpc.main.id
 
+  # 실제 콘솔의 인바운드 규칙에는 description이 설정돼 있지 않음 — 일치시키기 위해 생략
   ingress {
-    description = "HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    description = "HTTP (Nginx redirect)"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"

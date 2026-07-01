@@ -25,7 +25,8 @@ resource "aws_eip_association" "app" {
 }
 
 resource "aws_iam_role" "ec2_role" {
-  name = "qusign_ec2_role"
+  name        = "qusign_ec2_role"
+  description = "EC2 instance role for QuSign app"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -34,6 +35,13 @@ resource "aws_iam_role" "ec2_role" {
       Action    = "sts:AssumeRole"
     }]
   })
+
+  tags = {
+    Environment = "prod"
+    ManagedBy   = "manual"
+    Owner       = "kwakchaewon"
+    Project     = "qusign"
+  }
 }
 
 resource "aws_iam_instance_profile" "ec2" {

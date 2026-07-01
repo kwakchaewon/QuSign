@@ -30,9 +30,9 @@ module "iam" {
 }
 
 module "storage" {
-  source                  = "./modules/storage"
-  vpc_id                  = module.networking.vpc_id
-  private_route_table_id  = module.networking.private_route_table_id
+  source                 = "./modules/storage"
+  vpc_id                 = module.networking.vpc_id
+  private_route_table_id = module.networking.private_route_table_id
 }
 
 module "secrets" {
@@ -40,8 +40,7 @@ module "secrets" {
 }
 
 module "scheduler" {
-  source          = "./modules/scheduler"
-  ec2_instance_id = module.compute.instance_id
+  source = "./modules/scheduler"
 }
 
 module "dns" {

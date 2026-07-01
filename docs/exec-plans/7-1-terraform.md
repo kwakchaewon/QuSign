@@ -14,19 +14,20 @@
 | Region | ap-southeast-1 | 싱가포르 |
 | EC2 | qusign_app / t3.small | |
 | Elastic IP | 3.0.193.52 | Route 53 A 레코드 연결 |
-| VPC | qusign_vpc / 10.0.0.0/16 | |
-| Subnet | Public / ap-southeast-1a | |
-| Security Group | 22(0.0.0.0/0), 80, 443 inbound | |
-| S3 | qusign_documents_prod | SSE-S3, 퍼블릭 차단 |
-| S3 VPC Endpoint | Gateway type | 무료, 인터넷 미경유 |
+| VPC | qusign_vpc-vpc / 10.0.0.0/16 | |
+| Subnet | Public(10.0.0.0/20) + Private(10.0.128.0/20), 둘 다 ap-southeast-1a | ⚠️ 최초 작성 시 Public만 기재됐던 오류 정정 |
+| Route Table | public / private / main(미사용) 총 3개 | |
+| Security Group | qusign_ec2_sg, 22(0.0.0.0/0), 80, 443 inbound | |
+| S3 | qusign-documents-prod | SSE-S3, 퍼블릭 차단 |
+| S3 VPC Endpoint | Gateway type, private RT에 연결 | 무료, 인터넷 미경유 |
 | ECR | qusign_backend | |
 | SSM (SecureString) | /qusign/prod/db-password, jwt-secret, admin-password | KMS 암호화 |
 | SSM (String) | /qusign/prod/s3-bucket, cors-origins, server-url, admin-email | |
 | Lambda | qusign_start_instances / Python 3.13 | |
-| EventBridge | cron(0 9 \* \* ? \*) 시작 / cron(30 21 \* \* ? \*) 정지 | Asia/Seoul |
+| EventBridge Scheduler | qusign_morning_start / qusign_nightly_stop (일정 그룹: default) | ⚠️ CloudWatch Events Rule 아님, EventBridge Scheduler로 정정 |
 | IAM Role | qusign_ec2_role | S3·SES·SSM·ECR 접근 |
-| IAM Role | qusign_github_actions_deployer | ECR push·SSM·EC2 제어 |
-| Route 53 | qusign.link → 3.0.193.52 | A 레코드 |
+| IAM User | qusign_github_actions_deployer | ⚠️ Role 아니라 User. 정적 액세스 키로 GitHub Actions 인증 |
+| Route 53 | qusign.link → 3.0.193.52 (A), www.qusign.link (CNAME) | Hosted Zone ID: Z05035142H5MR6F494TUU |
 | CloudWatch Logs | Lambda 실행 이력 | |
 
 ---
@@ -38,47 +39,66 @@ AWS 콘솔에서 아래 ID를 메모장에 기록한다. import 명령어에 직
 ```
 # 수집 항목 (AWS Console → 각 서비스 페이지)
 
-VPC
-  VPC ID:          vpc-__________
-  Subnet ID:       subnet-__________
-  IGW ID:          igw-__________
-  Route Table ID:  rtb-__________
+VPC   (아래 값은 aws cli describe-* 명령으로 전량 확인 완료 ✅)
+  VPC ID:          vpc-0ad2925f2b2784bd1        ✅ (Name 태그: qusign_vpc-vpc — 상단 요약표의 "qusign_vpc"와 다름, 실제 이름 반영 필요)
+  IGW ID:          igw-042a4e36b7532cc61        ✅ (Name: qusign_vpc-igw)
+  Public  Subnet ID: subnet-0a0f2b0e687b5a6f7   ✅ (qusign_vpc-subnet-public1-ap-southeast-1a, 10.0.0.0/20)
+  Private Subnet ID: subnet-033858f52fa1dcefb   ✅ (qusign_vpc-subnet-private1-ap-southeast-1a, 10.0.128.0/20)
+  Public  RT ID:   rtb-09e26e5286e55bfed        ✅ (qusign_vpc-rtb-public — local + 0.0.0.0/0→IGW, public 서브넷에 연결)
+  Private RT ID:   rtb-0e6db2d0bb93e45a8        ✅ (qusign_vpc-rtb-private1-ap-southeast-1a — local + S3 VPC 엔드포인트 라우트, private 서브넷에 연결)
+  기본(Main) RT ID: rtb-031428bb52dc8216c       ✅ (이름 태그 없음, main=true, 서브넷 연결 없음 — local 라우트만 존재, 실사용 안 함)
+  ⚠️ 계획서는 서브넷 1개/RT 1개만 가정했으나 실제는 public+private 서브넷 각 1개, RT 3개(public/private/main) 구조 — networking 모듈을 아래처럼 확장 필요
 
 EC2
-  Instance ID:     i-__________________
-  Key Pair 이름:   (예: qusign-key)
-  AMI ID:          ami-__________________  ← EC2 상세 페이지에서 확인
+  Instance ID:     i-0447a621521e4fc2d          ✅ (qusign_app)
+  Key Pair 이름:   qusign-keypair               ✅ (계획서 예시 "qusign-key"와 실제 다름 — 주의)
+  AMI ID:          ami-0dfb1c86c34509daf        ✅ (al2023-ami-2023.12.20260611.0-kernel-6.1-x86_64)
 
 Security Group
-  SG ID:           sg-__________
+  SG ID:           sg-0d6159b3a82a45699          ✅ (qusign_ec2_sg, "EC2 security group for QuSign", 인바운드 3건)
+  ※ vpc-0ad2925f2b2784bd1에 default SG(sg-0520217bac47de7c7)도 있으나 미사용으로 추정 — import 대상 아님
 
 Elastic IP
-  Allocation ID:   eipalloc-__________
+  Allocation ID:   eipalloc-0d6803d4ca4534aaa    ✅ (Name: qusign_app_elasticip)
+  Association ID:  eipassoc-00183371ee2d69e32    ✅
+  Network Interface ID: eni-0855bac0dbe983c63    ✅ (참고용, HCL에는 불필요)
 
 S3
-  버킷 이름:       qusign_documents_prod
-  VPC Endpoint ID: vpce-__________
+  버킷 이름:       qusign-documents-prod         ⚠️ 정정: 이 문서 전체의 언더스코어 표기는 오탈자 — S3 버킷명은 언더스코어 사용 불가, 실제로는 하이픈 (아래 일괄 수정함)
+  VPC Endpoint ID: vpce-0374390452c0b002c        ✅ (Name: qusign_vpc-vpce-s3, Gateway 타입)
+  ⚠️ 연결된 라우팅 테이블: rtb-0e6db2d0bb93e45a8 (private RT) — 계획서는 storage 모듈에 route_table_id를 networking의 단일 public RT로 넘기고 있었으나, 실제로는 private RT에 연결되어 있음. Phase 3 storage 모듈 호출부 수정 필요
 
 ECR
-  Repository URI:  (secrets.ECR_REGISTRY 값 확인)
+  Repository 이름: qusign_backend                ✅
+  Repository URI:  285868221698.dkr.ecr.ap-southeast-1.amazonaws.com/qusign_backend  ✅
+  Repository ARN:  arn:aws:ecr:ap-southeast-1:285868221698:repository/qusign_backend  ✅
 
 IAM
-  EC2 Role ARN:    arn:aws:iam::<계정ID>:role/qusign_ec2_role
-  GitHub Role ARN: arn:aws:iam::<계정ID>:role/qusign_github_actions_deployer
+  EC2 Role ARN:    arn:aws:iam::285868221698:role/qusign_ec2_role       ✅ (IAM 역할 13개 중 확인됨, 신뢰 대상: ec2)
   Instance Profile 이름: qusign_ec2_role (보통 역할명과 동일)
+  ⚠️⚠️ 확정 정정: qusign_github_actions_deployer는 IAM Role이 아니라 IAM User! (aws iam list-users로 확인: kwakchaewon, qusign_cwkwak, qusign_github_actions_deployer)
+     User ARN: arn:aws:iam::285868221698:user/qusign_github_actions_deployer
+     인증 방식: `.github/workflows/deploy.yml`에서 aws-actions/configure-aws-credentials@v4 + secrets.AWS_ACCESS_KEY_ID (정적 액세스 키). OIDC provider도 미설정(aws iam list-open-id-connect-providers 결과 없음).
+     → Phase 3 IAM은 aws_iam_role이 아니라 aws_iam_user로 작성. 액세스 키 시크릿 값은 재조회 불가하므로 aws_iam_access_key는 Terraform으로 관리하지 않고 기존 GitHub Secrets 값 그대로 유지 (import 대상에서 제외)
+  ※ 추가 확인된 역할(EC2/GitHub 외): qusign_eventbridge_scheduler_role (신뢰 대상: scheduler), qusign_lambda_eventbridge_role (신뢰 대상: lambda) — 계획서 미기재, scheduler 모듈 IAM에 반영 필요
 
 Lambda
-  Function ARN:    arn:aws:lambda:ap-southeast-1:<계정ID>:function:qusign_start_instances
+  Function ARN:    arn:aws:lambda:ap-southeast-1:285868221698:function:qusign_start_instances  ✅ (실제 콘솔 값과 일치 확인)
+  실행 Role:       qusign_lambda_eventbridge_role로 추정 (Lambda 콘솔 '구성 > 권한' 탭에서 재확인 필요)
 
 EventBridge
-  시작 규칙 이름: (콘솔에서 확인)
-  정지 규칙 이름: (콘솔에서 확인)
+  ⚠️⚠️ 확정: "버스 > 규칙"에는 규칙 없음(규칙 없음, 계정 예약 규칙은 Scheduler로 이동됨 배너 확인) — CloudWatch Events Rule 방식 아님!
+  실제로는 EventBridge Scheduler(aws_scheduler_schedule) 사용 중:
+    일정 이름: qusign_morning_start   ✅ (일정 그룹: default, 상태: 활성, 대상: qusign_start_instances Lambda, LAMBDA_Invoke)
+    일정 이름: qusign_nightly_stop    ✅ (일정 그룹: default, 상태: 활성, 대상: qusign_start_instances Lambda, LAMBDA_Invoke)
+  → Phase 3 scheduler 모듈 HCL을 aws_cloudwatch_event_rule/aws_cloudwatch_event_target에서 aws_scheduler_schedule로 전면 수정 필요 (아래 Phase 3 절 참고)
 
 Route 53
-  Hosted Zone ID:  Z__________________
-  A 레코드 이름:   qusign.link
+  Hosted Zone ID:  Z05035142H5MR6F494TUU          ✅
+  A 레코드 이름:   qusign.link                    ✅ (A → 3.0.193.52, TTL 300)
+  ※ 실제 레코드 4개: A(qusign.link), NS(4개 네임서버), SOA, CNAME(www.qusign.link → qusign.link) — 계획서 dns 모듈에 www CNAME 레코드 import/코드화 누락, 추가 필요
 
-계정 ID: (AWS Console 우상단 계정명 클릭)
+계정 ID: 285868221698                            ✅ (kwakchaewon / qusign_cwkwak)
 ```
 
 ---
@@ -88,7 +108,7 @@ Route 53
 ### 1-1. state 전용 S3 버킷 + DynamoDB 테이블 생성 (콘솔 1회)
 
 ```bash
-# 앱 버킷(qusign_documents_prod)과 별도로 생성
+# 앱 버킷(qusign-documents-prod)과 별도로 생성
 # 콘솔 또는 AWS CLI로 직접 생성 — Terraform으로 관리하면 닭-달걀 문제 발생
 
 aws s3api create-bucket \
@@ -132,6 +152,8 @@ QuSign/
         │   ├── main.tf
         │   ├── variables.tf
         │   └── outputs.tf
+        ├── iam/
+        │   └── main.tf          ← github_actions_deployer User (변수/출력 불필요할 만큼 단순)
         ├── storage/
         │   ├── main.tf
         │   ├── variables.tf
@@ -204,10 +226,14 @@ module "compute" {
   sg_id              = module.networking.sg_id
 }
 
+module "iam" {
+  source = "./modules/iam"   # qusign_github_actions_deployer는 Role이 아니라 User — 별도 모듈로 분리
+}
+
 module "storage" {
   source = "./modules/storage"
-  vpc_id           = module.networking.vpc_id
-  route_table_id   = module.networking.route_table_id
+  vpc_id                = module.networking.vpc_id
+  private_route_table_id = module.networking.private_route_table_id  # S3 엔드포인트는 private RT에 연결됨 (public 아님)
 }
 
 module "secrets" {
@@ -216,7 +242,8 @@ module "secrets" {
 
 module "scheduler" {
   source = "./modules/scheduler"
-  ec2_instance_id = module.compute.instance_id
+  ec2_instance_id    = module.compute.instance_id
+  scheduler_role_arn = module.secrets.scheduler_role_arn  # qusign_eventbridge_scheduler_role — 어느 모듈에 둘지 Phase 1에서 재검토
 }
 
 module "dns" {
@@ -253,27 +280,33 @@ cd infra
 terraform init
 
 # ── 1. networking 모듈 ──────────────────────────────────
-terraform import module.networking.aws_vpc.main                      vpc-__________
-terraform import module.networking.aws_subnet.public                 subnet-__________
-terraform import module.networking.aws_internet_gateway.main         igw-__________
-terraform import module.networking.aws_route_table.public            rtb-__________
-terraform import module.networking.aws_route_table_association.public rtb-__________ # association ID 별도
-terraform import module.networking.aws_security_group.main           sg-__________
+terraform import module.networking.aws_vpc.main                       vpc-0ad2925f2b2784bd1
+terraform import module.networking.aws_subnet.public                  subnet-0a0f2b0e687b5a6f7
+terraform import module.networking.aws_subnet.private                 subnet-033858f52fa1dcefb
+terraform import module.networking.aws_internet_gateway.main          igw-042a4e36b7532cc61
+terraform import module.networking.aws_route_table.public             rtb-09e26e5286e55bfed
+terraform import module.networking.aws_route_table.private            rtb-0e6db2d0bb93e45a8
+terraform import module.networking.aws_route_table_association.public  rtbassoc-066d67498e883a475
+terraform import module.networking.aws_route_table_association.private rtbassoc-0fe5f35b38830f8f5
+terraform import module.networking.aws_security_group.main            sg-0d6159b3a82a45699
 
 # ── 2. compute 모듈 ─────────────────────────────────────
-terraform import module.compute.aws_instance.app                     i-__________________
-terraform import module.compute.aws_eip.app                          eipalloc-__________
-terraform import module.compute.aws_eip_association.app              eipassoc-__________
+terraform import module.compute.aws_instance.app                     i-0447a621521e4fc2d
+terraform import module.compute.aws_eip.app                          eipalloc-0d6803d4ca4534aaa
+terraform import module.compute.aws_eip_association.app              eipassoc-00183371ee2d69e32
 terraform import module.compute.aws_iam_role.ec2_role                qusign_ec2_role
 terraform import module.compute.aws_iam_instance_profile.ec2         qusign_ec2_role
+# GitHub Actions 배포용은 Role이 아니라 User — compute 모듈이 아닌 iam 모듈(신규) 또는 별도 파일로 분리 권장
+terraform import module.iam.aws_iam_user.github_actions_deployer     qusign_github_actions_deployer
+# ※ aws_iam_access_key는 시크릿 값 재조회 불가 — Terraform 관리 대상에서 제외, 기존 GitHub Secrets 값 유지
 
 # ── 3. storage 모듈 ─────────────────────────────────────
-terraform import module.storage.aws_s3_bucket.documents              qusign_documents_prod
-terraform import module.storage.aws_s3_bucket_versioning.documents   qusign_documents_prod
-terraform import module.storage.aws_s3_bucket_server_side_encryption_configuration.documents qusign_documents_prod
-terraform import module.storage.aws_s3_bucket_public_access_block.documents qusign_documents_prod
+terraform import module.storage.aws_s3_bucket.documents              qusign-documents-prod
+terraform import module.storage.aws_s3_bucket_versioning.documents   qusign-documents-prod
+terraform import module.storage.aws_s3_bucket_server_side_encryption_configuration.documents qusign-documents-prod
+terraform import module.storage.aws_s3_bucket_public_access_block.documents qusign-documents-prod
 terraform import module.storage.aws_ecr_repository.backend           qusign_backend
-terraform import module.storage.aws_vpc_endpoint.s3                  vpce-__________
+terraform import module.storage.aws_vpc_endpoint.s3                  vpce-0374390452c0b002c
 
 # ── 4. secrets 모듈 ─────────────────────────────────────
 terraform import module.secrets.aws_ssm_parameter.db_password        /qusign/prod/db-password
@@ -285,14 +318,16 @@ terraform import module.secrets.aws_ssm_parameter.admin_email        /qusign/pro
 terraform import module.secrets.aws_ssm_parameter.admin_password     /qusign/prod/admin-password
 
 # ── 5. scheduler 모듈 ───────────────────────────────────
+# ⚠️ 확정: CloudWatch Events Rule이 아니라 EventBridge Scheduler(aws_scheduler_schedule) 사용 중. import 대상 전면 변경.
 terraform import module.scheduler.aws_lambda_function.ec2_scheduler  qusign_start_instances
-terraform import module.scheduler.aws_cloudwatch_event_rule.start    <시작규칙이름>
-terraform import module.scheduler.aws_cloudwatch_event_rule.stop     <정지규칙이름>
+terraform import module.scheduler.aws_scheduler_schedule.morning_start default/qusign_morning_start
+terraform import module.scheduler.aws_scheduler_schedule.nightly_stop  default/qusign_nightly_stop
 terraform import module.scheduler.aws_cloudwatch_log_group.lambda    /aws/lambda/qusign_start_instances
 
 # ── 6. dns 모듈 ─────────────────────────────────────────
-terraform import module.dns.aws_route53_zone.main                    Z__________________
-terraform import module.dns.aws_route53_record.root                  Z__________________.qusign.link.A
+terraform import module.dns.aws_route53_zone.main                    Z05035142H5MR6F494TUU
+terraform import module.dns.aws_route53_record.root                  Z05035142H5MR6F494TUU_qusign.link_A
+terraform import module.dns.aws_route53_record.www                   Z05035142H5MR6F494TUU_www.qusign.link_CNAME
 ```
 
 ---
@@ -302,24 +337,35 @@ terraform import module.dns.aws_route53_record.root                  Z__________
 ### modules/networking/main.tf
 
 ```hcl
+# ⚠️ 계획서 초안(단일 퍼블릭 서브넷)에서 실제 구조(public+private 각 1개, RT 3개)로 전면 수정됨.
+# main 라우팅 테이블(rtb-031428bb52dc8216c)은 서브넷 연결 없이 방치 상태 — Terraform에서는
+# aws_vpc의 default_route_table_id로 참조만 하고 별도 리소스로 관리하지 않는 것을 권장 (아래는 미포함).
+
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
-  tags = { Name = "qusign_vpc" }
+  tags = { Name = "qusign_vpc-vpc" }
 }
 
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
+  cidr_block              = "10.0.0.0/20"
   availability_zone       = "ap-southeast-1a"
-  map_public_ip_on_launch = true
-  tags = { Name = "qusign-public-subnet" }
+  map_public_ip_on_launch = false   # 콘솔 확인값 그대로 — EIP를 통해서만 퍼블릭 접근
+  tags = { Name = "qusign_vpc-subnet-public1-ap-southeast-1a" }
+}
+
+resource "aws_subnet" "private" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.128.0/20"
+  availability_zone = "ap-southeast-1a"
+  tags = { Name = "qusign_vpc-subnet-private1-ap-southeast-1a" }
 }
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
-  tags   = { Name = "qusign-igw" }
+  tags   = { Name = "qusign_vpc-igw" }
 }
 
 resource "aws_route_table" "public" {
@@ -328,7 +374,14 @@ resource "aws_route_table" "public" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.main.id
   }
-  tags = { Name = "qusign-public-rt" }
+  tags = { Name = "qusign_vpc-rtb-public" }
+}
+
+# S3 게이트웨이 엔드포인트 라우트는 storage 모듈의 aws_vpc_endpoint.s3에서
+# route_table_ids로 이 RT를 지정하는 방식으로 부여됨 (여기선 local 라우트만 암묵 포함)
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+  tags = { Name = "qusign_vpc-rtb-private1-ap-southeast-1a" }
 }
 
 resource "aws_route_table_association" "public" {
@@ -336,8 +389,13 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
+resource "aws_route_table_association" "private" {
+  subnet_id      = aws_subnet.private.id
+  route_table_id = aws_route_table.private.id
+}
+
 resource "aws_security_group" "main" {
-  name   = "qusign-ec2-sg"
+  name   = "qusign_ec2_sg"  # 실제 콘솔명 확인됨 (하이픈 아님)
   vpc_id = aws_vpc.main.id
 
   ingress {
@@ -367,7 +425,7 @@ resource "aws_security_group" "main" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = { Name = "qusign-ec2-sg" }
+  tags = { Name = "qusign_ec2_sg" }
 }
 ```
 
@@ -418,11 +476,26 @@ resource "aws_iam_instance_profile" "ec2" {
 }
 ```
 
+### modules/iam/main.tf
+
+```hcl
+# GitHub Actions 배포용 — 콘솔 확인 결과 Role이 아니라 User (OIDC 미설정, 정적 액세스 키 방식)
+resource "aws_iam_user" "github_actions_deployer" {
+  name = "qusign_github_actions_deployer"
+}
+
+# 액세스 키(aws_iam_access_key)는 시크릿 값이 생성 시점에만 노출되고 재조회 불가하므로
+# Terraform으로 새로 만들지 않는다. 기존 GitHub Secrets(AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY)
+# 값을 그대로 유지하고, 이 User 리소스는 IAM 정책/이름만 코드로 관리한다.
+# TODO(장기 개선): OIDC 기반 aws_iam_role + aws_iam_openid_connect_provider로 전환해
+# 정적 액세스 키 자체를 제거하는 것을 8단계 이후 검토 (현재는 범위 밖)
+```
+
 ### modules/storage/main.tf
 
 ```hcl
 resource "aws_s3_bucket" "documents" {
-  bucket = "qusign_documents_prod"
+  bucket = "qusign-documents-prod"
   tags   = { Name = "qusign-documents" }
 }
 
@@ -459,8 +532,8 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_id            = var.vpc_id
   service_name      = "com.amazonaws.ap-southeast-1.s3"
   vpc_endpoint_type = "Gateway"
-  route_table_ids   = [var.route_table_id]
-  tags = { Name = "qusign-s3-endpoint" }
+  route_table_ids   = [var.private_route_table_id]   # 실제 콘솔 확인: private RT에 연결됨 (public 아님)
+  tags = { Name = "qusign_vpc-vpce-s3" }
 }
 ```
 
@@ -494,7 +567,7 @@ resource "aws_ssm_parameter" "admin_password" {
 resource "aws_ssm_parameter" "s3_bucket" {
   name  = "/qusign/prod/s3-bucket"
   type  = "String"
-  value = "qusign_documents_prod"
+  value = "qusign-documents-prod"
 }
 
 resource "aws_ssm_parameter" "cors_origins" {
@@ -544,28 +617,30 @@ resource "aws_cloudwatch_log_group" "lambda" {
   retention_in_days = 14
 }
 
-resource "aws_cloudwatch_event_rule" "start" {
-  name                = "qusign-ec2-start"
-  schedule_expression = "cron(0 0 * * ? *)"   # UTC 00:00 = KST 09:00
-  description         = "KST 09:00 EC2 시작"
+# ⚠️ 실제 운영 방식은 CloudWatch Events Rule이 아니라 EventBridge Scheduler.
+# aws_cloudwatch_event_rule / aws_cloudwatch_event_target 대신 aws_scheduler_schedule 사용.
+resource "aws_scheduler_schedule" "morning_start" {
+  name                = "qusign_morning_start"
+  group_name          = "default"
+  schedule_expression = "cron(0 0 * * ? *)"    # UTC 00:00 = KST 09:00
+  flexible_time_window { mode = "OFF" }
+
+  target {
+    arn      = aws_lambda_function.ec2_scheduler.arn
+    role_arn = var.scheduler_role_arn          # qusign_eventbridge_scheduler_role
+  }
 }
 
-resource "aws_cloudwatch_event_rule" "stop" {
-  name                = "qusign-ec2-stop"
+resource "aws_scheduler_schedule" "nightly_stop" {
+  name                = "qusign_nightly_stop"
+  group_name          = "default"
   schedule_expression = "cron(30 12 * * ? *)"  # UTC 12:30 = KST 21:30
-  description         = "KST 21:30 EC2 정지"
-}
+  flexible_time_window { mode = "OFF" }
 
-resource "aws_cloudwatch_event_target" "start" {
-  rule      = aws_cloudwatch_event_rule.start.name
-  target_id = "StartEC2"
-  arn       = aws_lambda_function.ec2_scheduler.arn
-}
-
-resource "aws_cloudwatch_event_target" "stop" {
-  rule      = aws_cloudwatch_event_rule.stop.name
-  target_id = "StopEC2"
-  arn       = aws_lambda_function.ec2_scheduler.arn
+  target {
+    arn      = aws_lambda_function.ec2_scheduler.arn
+    role_arn = var.scheduler_role_arn
+  }
 }
 ```
 
@@ -583,6 +658,15 @@ resource "aws_route53_record" "root" {
   type    = "A"
   ttl     = 300
   records = [var.elastic_ip]
+}
+
+# 콘솔에 이미 존재 (계획서 최초 작성 시 누락됨) — import 필수
+resource "aws_route53_record" "www" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "www.qusign.link"
+  type    = "CNAME"
+  ttl     = 300
+  records = ["qusign.link"]
 }
 ```
 

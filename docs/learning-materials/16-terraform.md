@@ -457,3 +457,11 @@ resource "aws_instance" "app" {
 **Q7. `import` 대상 리소스 타입을 콘솔에서 확인하지 않고 계획 문서만 믿고 진행하면 어떻게 되는가?**
 
 > QuSign 실제 사례로 답할 수 있다: 계획 초안은 EC2 정지/시작 스케줄이 `aws_cloudwatch_event_rule`이라고 가정했지만, 콘솔을 열어보니 실제로는 `aws_scheduler_schedule`(EventBridge Scheduler)이었다. 존재하지 않는 타입으로 `terraform import`를 시도하면 AWS API가 "그런 리소스 없음" 에러를 내거나, 최악의 경우 이름이 우연히 겹쳐 엉뚱한 리소스를 잘못 흡수할 수 있다. 같은 이유로 GitHub Actions 배포 주체도 IAM Role이 아니라 IAM User였다. 그래서 Phase 2(import) 전에 반드시 Phase 0(콘솔·CLI 조사)로 리소스 타입까지 확정해야 하며, `aws iam list-roles`에 없다고 포기하지 말고 `list-users`처럼 인접한 리소스 종류도 함께 확인해야 한다.
+
+**Q8. `import` 직후 `terraform plan`에서 diff가 나오면 무조건 `apply`해도 되는가?**
+
+> 아니다. QuSign에서 실제로 위험했던 사례가 있다: networking 모듈을 import한 직후 `plan`을 돌렸더니 `aws_security_group.main`이 `must be replaced`(destroy 후 create)로 나왔다. 원인은 HCL에 `description` 속성을 안 적어서 Terraform이 기본값("Managed by Terraform")으로 채우려 했기 때문인데, `aws_security_group`의 `description`은 **변경 시 리소스 자체를 강제로 재생성(ForceNew)**하는 속성이다. 이 상태로 그냥 `apply`했다면 운영 중인 EC2에 붙어있던 보안 그룹이 삭제되면서 SSH/HTTP/HTTPS 접속이 전부 끊겼을 것이다. 진짜 원인은 `terraform plan` 출력에서 `# forces replacement` 표시로 알 수 있다 — 이 표시가 있는 필드는 값이 조금만 달라도 리소스 전체가 destroy+create된다는 뜻이므로, `apply` 전에 반드시 `aws ec2 describe-security-groups` 같은 명령으로 실제 값을 재확인하고 HCL을 정확히 맞춰야 한다. 일반화하면: **import 후의 diff는 "코드가 실제와 다르다"는 신호일 뿐, 그 diff를 무조건 실제 인프라 쪽으로 밀어붙이면(=apply) 안 되고, 어느 쪽이 맞는 상태인지 판단한 뒤 보통은 HCL을 실제 상태에 맞게 고쳐야 한다.**
+
+**Q9. `terraform plan`의 diff 표시(`~`, `-`, `+`)에서 어느 쪽이 "현재 실제 상태"이고 어느 쪽이 "코드가 원하는 값"인가?**
+
+> `속성 = 현재값 -> 새값` 순서다. `~`(in-place update)는 현재값이 왼쪽, HCL이 요구하는 새값이 오른쪽에 나온다. QuSign에서 실제로 이걸 헷갈린 사례가 있다: `aws_scheduler_schedule`의 `retry_policy.maximum_retry_attempts`가 `0 -> 185`로 나오길래 "실제 값이 185인가보다" 하고 HCL에 185를 적었는데, `aws scheduler get-schedule`로 직접 조회해보니 실제 값은 0이었다. 착각의 원인은 HCL에 그 속성을 아예 안 적었을 때 Terraform provider가 내부적으로 쓰는 **기본값(185)**과, refresh로 읽어온 **실제 AWS 값(0)**을 헷갈린 것 — "185"는 실제 인프라 값이 아니라 "이 속성을 안 적으면 이 기본값으로 취급하겠다"는 provider의 가정값이었다. 교훈: 애매하면 추측하지 말고 `aws <service> describe/get-*` 같은 read-only 명령으로 실제 값을 직접 조회해서 확정한다. 같은 세션에서 `aws_scheduler_schedule`의 `input` 필드도 `jsonencode({action="start"})`를 썼더니 "whitespace changes"라는 diff가 계속 남았는데, 원인은 AWS에 저장된 원본 문자열이 `{"action": "start"}`(콜론 뒤 공백 있음)이고 `jsonencode()` 출력은 `{"action":"start"}`(공백 없음)이라 byte 단위로 다르기 때문이었다 — 이런 경우는 `jsonencode()` 대신 실제 문자열을 그대로 리터럴로 옮겨 적어야 완전히 일치시킬 수 있다.

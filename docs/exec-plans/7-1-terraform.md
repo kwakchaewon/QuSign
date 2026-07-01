@@ -393,25 +393,24 @@ resource "aws_route_table_association" "private" {
 }
 
 resource "aws_security_group" "main" {
-  name   = "qusign_ec2_sg"  # 실제 콘솔명 확인됨 (하이픈 아님)
-  vpc_id = aws_vpc.main.id
+  name        = "qusign_ec2_sg" # 실제 콘솔명 확인됨 (하이픈 아님)
+  description = "EC2 security group for QuSign" # ⚠️⚠️ 필수: description 생략 시 기본값("Managed by Terraform")으로 바뀌며 SG 강제 재생성(destroy+recreate) 유발 — import 직후 plan에서 실제로 겪음
+  vpc_id      = aws_vpc.main.id
 
+  # 실제 콘솔 인바운드 규칙엔 description이 설정돼 있지 않음 — 일치시키기 위해 생략(추가하면 diff 발생)
   ingress {
-    description = "HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    description = "HTTP (Nginx redirect)"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -426,6 +425,8 @@ resource "aws_security_group" "main" {
   tags = { Name = "qusign_ec2_sg" }
 }
 ```
+
+⚠️⚠️ **실전에서 겪은 위험 사례 (2026-07-01)**: networking 모듈 import 직후 `terraform plan`에서 `aws_security_group.main`이 "must be replaced"로 나왔다. 원인은 `description`을 HCL에 안 적어서 Terraform 기본값("Managed by Terraform")으로 채우려 했기 때문 — `aws_security_group`의 `description`은 **변경 시 무조건 리소스 전체를 삭제 후 재생성(ForceNew)**하는 필드다. 이 상태로 `apply`했다면 운영 중인 EC2에 붙어있는 보안 그룹이 삭제되면서 SSH/HTTP/HTTPS 접속이 끊겼을 것이다. `aws ec2 describe-security-groups`로 실제 description(`"EC2 security group for QuSign"`)을 확인해 HCL에 반영한 뒤 `plan`이 "No changes"로 확인됐다. **교훈**: import 후 `plan`을 반드시 확인하고, diff에 `# forces replacement` 표시가 있으면 절대 그대로 apply하지 말 것.
 
 ### modules/compute/main.tf
 
@@ -448,7 +449,7 @@ resource "aws_instance" "app" {
 
 resource "aws_eip" "app" {
   domain = "vpc"
-  tags   = { Name = "qusign-eip" }
+  tags   = { Name = "qusign_app_elasticip" } # 실제 콘솔 태그명으로 정정
 }
 
 resource "aws_eip_association" "app" {
@@ -457,7 +458,8 @@ resource "aws_eip_association" "app" {
 }
 
 resource "aws_iam_role" "ec2_role" {
-  name = "qusign_ec2_role"
+  name        = "qusign_ec2_role"
+  description = "EC2 instance role for QuSign app" # ⚠️ import 후 plan diff로 확인된 실제 값 (없으면 in-place update 발생 — 강제 재생성은 아님)
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -466,6 +468,13 @@ resource "aws_iam_role" "ec2_role" {
       Action    = "sts:AssumeRole"
     }]
   })
+
+  tags = {
+    Environment = "prod"
+    ManagedBy   = "manual" # 콘솔에서 붙인 기존 태그 그대로 유지 (import 시 값 일치 목적, 의미상 갱신은 별도 작업)
+    Owner       = "kwakchaewon"
+    Project     = "qusign"
+  }
 }
 
 resource "aws_iam_instance_profile" "ec2" {
@@ -494,7 +503,7 @@ resource "aws_iam_user" "github_actions_deployer" {
 ```hcl
 resource "aws_s3_bucket" "documents" {
   bucket = "qusign-documents-prod"
-  tags   = { Name = "qusign-documents" }
+  # 실제 버킷엔 태그가 없음 — 일치시키기 위해 생략 (태그 추가는 별도 의도적 변경으로 취급)
 }
 
 resource "aws_s3_bucket_versioning" "documents" {
@@ -523,7 +532,7 @@ resource "aws_ecr_repository" "backend" {
   name                 = "qusign_backend"
   image_tag_mutability = "MUTABLE"
 
-  image_scanning_configuration { scan_on_push = false }
+  image_scanning_configuration { scan_on_push = true } # 실제 콘솔 값 (초안의 false는 오탈자)
 }
 
 resource "aws_vpc_endpoint" "s3" {
@@ -535,6 +544,8 @@ resource "aws_vpc_endpoint" "s3" {
 }
 ```
 
+⚠️ import 후 `plan`에서 확인된 정정: S3 버킷은 실제로 태그가 전혀 없어 `tags` 블록 제거, ECR `scan_on_push`는 실제로 `true`.
+
 ### modules/secrets/main.tf
 
 ```hcl
@@ -542,16 +553,18 @@ resource "aws_vpc_endpoint" "s3" {
 # import 후 ignore_changes = [value]로 콘솔 값 유지.
 
 resource "aws_ssm_parameter" "db_password" {
-  name  = "/qusign/prod/db-password"
-  type  = "SecureString"
-  value = "PLACEHOLDER"   # import 후 아래 lifecycle이 실제 값 보호
+  name        = "/qusign/prod/db-password"
+  description = "QuSign 프로덕션 MariaDB 비밀번호" # import 후 plan에서 확인된 실제 값
+  type        = "SecureString"
+  value       = "PLACEHOLDER"   # import 후 아래 lifecycle이 실제 값 보호
   lifecycle { ignore_changes = [value] }
 }
 
 resource "aws_ssm_parameter" "jwt_secret" {
-  name  = "/qusign/prod/jwt-secret"
-  type  = "SecureString"
-  value = "PLACEHOLDER"
+  name        = "/qusign/prod/jwt-secret"
+  description = "QuSign JWT 액세스 토큰 서명 시크릿"
+  type        = "SecureString"
+  value       = "PLACEHOLDER"
   lifecycle { ignore_changes = [value] }
 }
 
@@ -563,15 +576,17 @@ resource "aws_ssm_parameter" "admin_password" {
 }
 
 resource "aws_ssm_parameter" "s3_bucket" {
-  name  = "/qusign/prod/s3-bucket"
-  type  = "String"
-  value = "qusign-documents-prod"
+  name        = "/qusign/prod/s3-bucket"
+  description = "S3 버킷명"
+  type        = "String"
+  value       = "qusign-documents-prod"
 }
 
 resource "aws_ssm_parameter" "cors_origins" {
-  name  = "/qusign/prod/cors-origins"
-  type  = "String"
-  value = "https://qusign.link"
+  name        = "/qusign/prod/cors-origins"
+  description = "CORS 허용 출처"
+  type        = "String"
+  value       = "https://qusign.link"
 }
 
 resource "aws_ssm_parameter" "server_url" {
@@ -603,54 +618,67 @@ data "aws_iam_role" "scheduler_exec" {
 
 resource "aws_lambda_function" "ec2_scheduler" {
   function_name = "qusign_start_instances"
-  runtime       = "python3.13"
-  handler       = "lambda_function.lambda_handler"
-  role          = data.aws_iam_role.lambda_exec.arn
+  # 실제 콘솔 값은 python3.14이지만, 설치된 aws provider(5.100.0)가 아직 이 값을 유효한
+  # enum으로 인식하지 못해 HCL엔 유효한 최신값을 적고 실제 값과의 diff는 ignore_changes로 무시한다.
+  runtime = "python3.13"
+  handler = "lambda_function.lambda_handler"
+  role    = data.aws_iam_role.lambda_exec.arn
+  publish = false
 
   # 코드는 콘솔/배포 파이프라인 관리 — Terraform은 메타데이터만 관리
   filename         = "${path.module}/lambda_placeholder.zip"
   source_code_hash = filebase64sha256("${path.module}/lambda_placeholder.zip")
 
-  environment {
-    variables = {
-      INSTANCE_ID = var.ec2_instance_id
-    }
-  }
-
-  lifecycle { ignore_changes = [filename, source_code_hash] }
+  # 실제 함수는 환경변수 없이, EventBridge Scheduler의 target input({"action":"start"/"stop"})으로 동작을 구분함
+  lifecycle { ignore_changes = [filename, source_code_hash, runtime] }
 }
 
 resource "aws_cloudwatch_log_group" "lambda" {
   name              = "/aws/lambda/qusign_start_instances"
-  retention_in_days = 14
+  retention_in_days = 0 # 실제 값: 만료 없음(Never expire). 계획서 초안의 14는 잘못된 가정이었음
 }
 
-# ⚠️ 실제 운영 방식은 CloudWatch Events Rule이 아니라 EventBridge Scheduler.
-# aws_cloudwatch_event_rule / aws_cloudwatch_event_target 대신 aws_scheduler_schedule 사용.
+# ⚠️ 실제 스케줄은 UTC로 환산한 값이 아니라 schedule_expression_timezone="Asia/Seoul"로
+# KST 시각을 그대로 사용하고 있었다 (EventBridge Scheduler는 타임존 파라미터를 직접 지원 — 레거시
+# CloudWatch Events Rule은 UTC cron만 지원해서 계획 초안 때 습관적으로 UTC 환산값을 적었던 실수).
 resource "aws_scheduler_schedule" "morning_start" {
-  name                = "qusign_morning_start"
-  group_name          = "default"
-  schedule_expression = "cron(0 0 * * ? *)"    # UTC 00:00 = KST 09:00
+  name                         = "qusign_morning_start"
+  group_name                   = "default"
+  schedule_expression          = "cron(0 9 * * ? *)" # KST 09:00 (타임존 자체가 Asia/Seoul)
+  schedule_expression_timezone = "Asia/Seoul"
   flexible_time_window { mode = "OFF" }
 
   target {
     arn      = aws_lambda_function.ec2_scheduler.arn
     role_arn = data.aws_iam_role.scheduler_exec.arn
+    input    = "{\"action\": \"start\"}" # 실제 저장된 문자열과 공백까지 일치 (jsonencode()는 콜론 뒤 공백이 없어 diff 발생)
+
+    retry_policy {
+      maximum_retry_attempts = 0 # 실제 콘솔 값 (재시도 없음)
+    }
   }
 }
 
 resource "aws_scheduler_schedule" "nightly_stop" {
-  name                = "qusign_nightly_stop"
-  group_name          = "default"
-  schedule_expression = "cron(30 12 * * ? *)"  # UTC 12:30 = KST 21:30
+  name                         = "qusign_nightly_stop"
+  group_name                   = "default"
+  schedule_expression          = "cron(30 21 * * ? *)" # KST 21:30
+  schedule_expression_timezone = "Asia/Seoul"
   flexible_time_window { mode = "OFF" }
 
   target {
     arn      = aws_lambda_function.ec2_scheduler.arn
     role_arn = data.aws_iam_role.scheduler_exec.arn
+    input    = "{\"action\": \"stop\"}"
+
+    retry_policy {
+      maximum_retry_attempts = 0
+    }
   }
 }
 ```
+
+⚠️⚠️ **import 후 발견된 대규모 정정**: 계획 초안의 스케줄 시각(UTC 환산)·Lambda 런타임(3.13)·로그 보존기간(14일)·환경변수(INSTANCE_ID) 전부 실제와 달랐다. `ec2_instance_id` 변수는 이제 아무 데도 쓰이지 않아 모듈 변수 자체를 제거했다. 실제 Lambda는 환경변수가 아니라 EventBridge Scheduler의 target `input` JSON(`{"action":"start"}`/`{"action":"stop"}`)으로 동작을 구분한다.
 
 ### modules/dns/main.tf
 
@@ -693,11 +721,11 @@ terraform plan              # ← 반드시 "No changes. Your infrastructure mat
 |---|---|---|
 | `terraform init` | 에러 없음 | [x] ✅ (2026-07-01, backend 포함) |
 | `terraform validate` | 통과 | [x] ✅ (2026-07-01, backend 제외 상태에서 확인) |
-| `terraform plan` | **Changes: 0** | [ ] (Phase 2 import 전이라 아직 리소스 전체가 신규로 잡힘) |
-| state 파일 위치 | S3 `qusign-terraform-state/prod/terraform.tfstate` | [ ] |
+| `terraform plan` | **Changes: 0** | [x] ✅ (2026-07-01, 24개 리소스 전량 import 후 "No changes" 확인) |
+| state 파일 위치 | S3 `qusign-terraform-state/prod/terraform.tfstate` | [x] ✅ (2026-07-01) |
 | state 파일 암호화 | SSE 활성화 | [x] ✅ (2026-07-01, 버킷 생성 시 적용) |
-| S3 자체 잠금(`use_lockfile`) | 정상 동작 | [ ] (DynamoDB lock에서 정정됨, 실제 import/apply 시 확인) |
-| 운영 서버 | plan 전후 `curl https://qusign.link/actuator/health` 200 | [ ] |
+| S3 자체 잠금(`use_lockfile`) | 정상 동작 | [x] ✅ (2026-07-01, import 전 구간 동안 정상 동작, 락 충돌 없음) |
+| 운영 서버 | plan 전후 `curl https://qusign.link/actuator/health` 200 | [x] ✅ (2026-07-01, 200 확인) |
 
 ### 최종 검증 (재현성 테스트)
 
@@ -721,6 +749,10 @@ terraform destroy                      # 정리
 | Lambda zip 없음 | `lambda_placeholder.zip` 빈 파일로 생성 후 `ignore_changes` 처리 |
 | import 실패 (Not Found) | Phase 0에서 수집한 ID 재확인. 리소스 이름 ≠ ID |
 | state lock 오류 | 이전 apply 비정상 종료 시 `terraform force-unlock <lock-id>` |
+| Git Bash에서 `/qusign/prod/...` 같은 SSM 경로 import 시 `C:/Program Files/Git/qusign/...`로 깨짐 | MSYS/Git Bash의 자동 POSIX 경로 변환 때문. `export MSYS_NO_PATHCONV=1` 설정 후 재시도 |
+| provider가 `runtime = "python3.14"` 같은 최신 값을 "expected ... got python3.14" 에러로 거부 | 설치된 aws provider 버전이 아직 그 enum을 모름. HCL엔 provider가 아는 유효값을 적고 `lifecycle { ignore_changes = [runtime] }`로 우회 |
+| `aws_scheduler_schedule`의 `input` 필드가 `jsonencode()`로 써도 계속 "whitespace changes" diff | AWS가 저장한 원본 문자열의 공백(`{"action": "start"}`, 콜론 뒤 공백)과 `jsonencode()` 출력(`{"action":"start"}`)이 byte 단위로 다름 → 리터럴 문자열로 정확히 맞추면 해결 |
+| `aws ec2 describe-security-groups` 등으로 얻은 실제 값과 diff 방향이 헷갈릴 때 | `plan` 출력은 `현재상태(state/실제) -> 원하는값(HCL)` 순서. 처음엔 반대로 착각해서 `maximum_retry_attempts`를 0→185로 잘못 고쳤다가 재확인 후 정정한 사례 있음 |
 
 ---
 
@@ -738,8 +770,8 @@ terraform destroy                      # 정리
 
 ## 완료 기준
 
-- [ ] `terraform plan` → `No changes` (모든 모듈)
-- [ ] state 파일이 S3에 암호화 저장
-- [ ] `terraform plan` 실행 후에도 `https://qusign.link` 정상 응답
-- [ ] `infra/` 디렉토리가 `develop` 브랜치에 커밋됨
-- [ ] PLAN.md 7-1 항목 전체 체크
+- [x] `terraform plan` → `No changes` (모든 모듈) ✅ (2026-07-01)
+- [x] state 파일이 S3에 암호화 저장 ✅ (2026-07-01)
+- [x] `terraform plan` 실행 후에도 `https://qusign.link` 정상 응답 ✅ (2026-07-01)
+- [ ] `infra/` 디렉토리가 `develop` 브랜치에 커밋됨 (커밋 예정)
+- [ ] PLAN.md 7-1 항목 전체 체크 (재현성 테스트 등 일부 남음)

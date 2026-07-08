@@ -296,26 +296,27 @@ class MlDsa65Algorithm : SignatureAlgorithm {
     override val algorithmName = "ML-DSA-65"
 
     override fun generateKeyPair(): KeyPair {
-        val gen = KeyPairGenerator.getInstance("DILITHIUM", "BC")
-        gen.initialize(DilithiumParameterSpec.dilithium3)
+        val gen = KeyPairGenerator.getInstance("ML-DSA", "BC")
+        gen.initialize(MLDSAParameterSpec.ml_dsa_65)
         return gen.generateKeyPair()
     }
 
     override fun sign(privateKey: PrivateKey, data: ByteArray): ByteArray {
-        val signer = Signature.getInstance("DILITHIUM", "BC")
+        val signer = Signature.getInstance("ML-DSA", "BC")
         signer.initSign(privateKey)
         signer.update(data)
         return signer.sign()
     }
 
     override fun verify(publicKey: PublicKey, data: ByteArray, signature: ByteArray): Boolean {
-        val verifier = Signature.getInstance("DILITHIUM", "BC")
+        val verifier = Signature.getInstance("ML-DSA", "BC")
         verifier.initVerify(publicKey)
         verifier.update(data)
         return verifier.verify(signature)
     }
 }
 ```
+(`"ML-DSA"`/`MLDSAParameterSpec.ml_dsa_65`는 실제 `BouncyCastlePqcSignatureService.kt`와 동일한 명칭입니다 — 구 BouncyCastle의 `"DILITHIUM"`/`DilithiumParameterSpec.dilithium3` 명칭은 FIPS 204 표준화 이후 폐기되었습니다. [[06-pqc-mldsa]] 참고.)
 
 ```yaml
 # application.yml

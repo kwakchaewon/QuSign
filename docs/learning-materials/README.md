@@ -2,6 +2,12 @@
 
 PLAN.md 각 단계에서 필요한 핵심 개념을 **이론 → 현재 코드 적용 예시 → 확인 질문 & 답변** 형식으로 정리합니다.
 
+## 0단계: Kotlin vs Java
+
+| # | 주제 | 파일 | PLAN.md |
+|---|---|---|---|
+| 0 | **Kotlin vs Java** — 왜 Kotlin을 쓰는가, 대표적인 차이 | [00-kotlin-vs-java.md](00-kotlin-vs-java.md) | - |
+
 ## 1단계: 환경 세팅 + PQC 핵심 검증
 
 | # | 주제 | 파일 | PLAN.md |
@@ -76,13 +82,13 @@ PLAN.md 각 단계에서 필요한 핵심 개념을 **이론 → 현재 코드 �
 | `backend/src/main/kotlin/com/qusign/auth/service/AuthService.kt` | null safety (elvis + throw) |
 | `backend/src/main/kotlin/com/qusign/auth/entity/User.kt` | nullable 필드, soft delete |
 | `backend/src/main/kotlin/com/qusign/auth/dto/AuthDtos.kt` | data class |
-| `backend/src/main/kotlin/com/qusign/signature/service/PqcSignatureServiceImpl.kt` | ML-DSA 키 생성·서명·검증 |
+| `backend/src/main/kotlin/com/qusign/signature/service/BouncyCastlePqcSignatureService.kt` | ML-DSA 키 생성·서명·검증 |
 | `backend/src/main/kotlin/com/qusign/signature/service/PdfBoxSignatureService.kt` | PDFBox 메타데이터 삽입·추출 |
 | `backend/src/main/kotlin/com/qusign/notification/service/NotificationService.kt` | Redis Pub/Sub |
 | `backend/src/main/kotlin/com/qusign/notification/service/SseEmitterRegistry.kt` | SSE, ConcurrentHashMap |
 | `backend/src/main/kotlin/com/qusign/signature/service/SignatureFlowService.kt` | 트랜잭션, 감사 로그 |
-| `backend/src/main/kotlin/com/qusign/config/SecurityConfig.kt` | Spring Security, RBAC |
-| `frontend/src/stores/authStore.ts` | Pinia, JWT 관리 |
+| `backend/src/main/kotlin/com/qusign/common/config/SecurityConfig.kt` | Spring Security, RBAC |
+| `frontend/src/stores/auth.ts` | Pinia, JWT 관리 |
 | `frontend/src/lib/api.ts` | Axios 인터셉터 |
 | `frontend/src/router/index.ts` | Vue Router 가드 |
 | `.github/workflows/deploy.yml` | GitHub Actions CI/CD |

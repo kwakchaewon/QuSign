@@ -27,12 +27,13 @@ PDF 시각적 내용(본문)은 변경하지 않아 원본 해시와 서명 후 
 
 | 메타데이터 키 | 값 형식 | 설명 |
 |---|---|---|
-| `X-Signature` | Base64(ML-DSA 서명 bytes) | 서명값 |
-| `X-SignerPublicKey` | Base64(공개키 bytes) | 검증용 공개키 |
-| `X-SignedAt` | ISO-8601 (`2025-01-15T09:30:00Z`) | 서명 일시 |
-| `X-SignerEmail` | `signer@example.com` | 서명자 식별 |
-| `X-SignerIP` | `192.168.1.1` | 감사 추적용 IP |
-| `X-DocumentHash` | Hex(SHA3-256) | 원본 문서 해시 |
+| `QuSign-Signature` | Base64(ML-DSA 서명 bytes) | 서명값 |
+| `QuSign-SignerId` | `signer@example.com` | 서명자 식별 (이메일을 ID로 사용) |
+| `QuSign-SignedAt` | ISO-8601 (`2025-01-15T09:30:00Z`) | 서명 일시 |
+| `QuSign-DocumentHash` | Base64(SHA3-256) | 원본 문서 해시 |
+| `QuSign-SignerIP` | `192.168.1.1` | 감사 추적용 IP |
+
+공개키는 PDF에 넣지 않습니다. 검증 시 `QuSign-SignerId`로 DB에서 사용자를 조회해 그 사용자의 `publicKey` 컬럼을 사용합니다 — 즉 QuSign 검증은 서버(DB) 의존적이며, PDF 파일만으로 오프라인 검증은 불가능합니다.
 
 ### 왜 PDF 본문이 아닌 메타데이터인가
 
@@ -46,56 +47,55 @@ PDF 시각적 내용(본문)은 변경하지 않아 원본 해시와 서명 후 
 
 ### 서명 삽입 — `PdfBoxSignatureService.kt`
 ```kotlin
-fun embedSignature(
+override fun embedSignature(
     pdfBytes: ByteArray,
     signature: ByteArray,
-    publicKey: PublicKey,
-    signerEmail: String,
-    ipAddress: String
+    signerId: String,
+    documentHash: ByteArray,
+    ipAddress: String,
 ): ByteArray {
-    PDDocument.load(pdfBytes).use { doc ->
+    Loader.loadPDF(pdfBytes).use { doc ->
         val info = doc.documentInformation
-        info.setCustomMetadataValue("X-Signature", Base64.getEncoder().encodeToString(signature))
-        info.setCustomMetadataValue("X-SignerPublicKey", Base64.getEncoder().encodeToString(publicKey.encoded))
-        info.setCustomMetadataValue("X-SignedAt", Instant.now(ZoneOffset.UTC).toString())
-        info.setCustomMetadataValue("X-SignerEmail", signerEmail)
-        info.setCustomMetadataValue("X-SignerIP", ipAddress)
+        info.setCustomMetadataValue(KEY_SIGNATURE, Base64.getEncoder().encodeToString(signature))
+        info.setCustomMetadataValue(KEY_SIGNER_ID, signerId)
+        info.setCustomMetadataValue(KEY_SIGNED_AT, Instant.now().toString())
+        info.setCustomMetadataValue(KEY_DOC_HASH, Base64.getEncoder().encodeToString(documentHash))
+        info.setCustomMetadataValue(KEY_SIGNER_IP, ipAddress)
 
-        val outputStream = ByteArrayOutputStream()
-        doc.save(outputStream)
-        return outputStream.toByteArray()
+        return ByteArrayOutputStream().also { doc.save(it) }.toByteArray()
     }
 }
 ```
 `.use { }` — `Closeable`을 안전하게 닫아주는 Kotlin 확장 함수입니다. (`try-finally` 대체)
+`Loader.loadPDF()`는 PDFBox 3.x의 로딩 API입니다 (2.x의 `PDDocument.load()`는 3.x에서 제거되었습니다).
 
 ### 서명 추출 — `PdfBoxSignatureService.kt`
 ```kotlin
-fun extractMetadata(pdfBytes: ByteArray): PdfSignatureMetadata {
-    PDDocument.load(pdfBytes).use { doc ->
+override fun extractMetadata(pdfBytes: ByteArray): SignatureMetadata? {
+    Loader.loadPDF(pdfBytes).use { doc ->
         val info = doc.documentInformation
-        return PdfSignatureMetadata(
-            signature = Base64.getDecoder().decode(
-                info.getCustomMetadataValue("X-Signature") ?: throw SignatureNotFoundException()
-            ),
-            publicKeyBytes = Base64.getDecoder().decode(
-                info.getCustomMetadataValue("X-SignerPublicKey") ?: throw SignatureNotFoundException()
-            ),
-            signedAt = info.getCustomMetadataValue("X-SignedAt"),
-            signerEmail = info.getCustomMetadataValue("X-SignerEmail")
+        val b64      = info.getCustomMetadataValue(KEY_SIGNATURE)  ?: return null
+        val signerId = info.getCustomMetadataValue(KEY_SIGNER_ID)  ?: return null
+        val signedAt = info.getCustomMetadataValue(KEY_SIGNED_AT)  ?: return null
+        val hashB64  = info.getCustomMetadataValue(KEY_DOC_HASH)   ?: return null
+        return SignatureMetadata(
+            signature    = Base64.getDecoder().decode(b64),
+            signerId     = signerId,
+            signedAt     = signedAt,
+            documentHash = Base64.getDecoder().decode(hashB64),
         )
     }
 }
 ```
 
-### 무결성 검증 흐름
+### 무결성 검증 흐름 — `SignatureFlowService.kt:728-739`
 ```
-원본 PDF → SHA3-256 해시 → DB 저장 (업로드 시)
-서명된 PDF → 메타데이터에서 서명값·공개키 추출 → ML-DSA 검증
+서명된 PDF → 메타데이터에서 signature·signerId·documentHash 추출
+signerId(이메일)로 DB에서 사용자 조회 → publicKey 컬럼 로드
+ML-DSA.verify(publicKey, documentHash, signature) → true/false
 ```
 
-서명값 검증 대상은 **서명 삽입 전 원본 파일의 해시**입니다.
-이 해시는 DB에 별도 저장되어 있어 서명된 PDF의 메타데이터와 비교·검증합니다.
+공개키는 PDF가 아니라 **DB**에서 가져옵니다. `documentHash`는 서명 삽입 전 원본 파일의 SHA3-256 해시이며, 메타데이터 안에 함께 봉인되어 있어 서명된 PDF 자체만으로 "무엇에 대한 서명인지"를 알 수 있습니다.
 
 ---
 
@@ -109,10 +109,10 @@ fun extractMetadata(pdfBytes: ByteArray): PdfSignatureMetadata {
 
 > 서명 삽입 후 PDF 파일 자체가 변경되므로 SHA3-256 해시값이 달라집니다. DB에는 서명 전 원본의 해시가 저장되어 있어 "이미 서명된 PDF"를 감지하고 차단합니다 (4단계 중복 업로드 방지 기능).
 
-**Q3. PDF 메타데이터에 넣는 `X-Signature` 값이 Base64인 이유는?**
+**Q3. PDF 메타데이터에 넣는 `QuSign-Signature` 값이 Base64인 이유는?**
 
 > ML-DSA 서명값은 이진(binary) 바이트 배열입니다. PDF 메타데이터는 UTF-8 텍스트만 저장할 수 있으므로 Base64로 인코딩하여 ASCII 문자열로 변환합니다. 추출 시 Base64 디코딩으로 원본 바이트를 복원합니다.
 
-**Q4. 원본 문서 해시를 메타데이터의 `X-DocumentHash`에 저장하는 동시에 DB에도 저장하는 이유는?**
+**Q4. 검증 시 공개키를 PDF가 아니라 DB에서 가져오는 이유는? 단점은 없는가?**
 
-> DB는 서비스 내부 검증용, 메타데이터는 서비스 외부(오프라인) 검증용입니다. PDF 파일만 있어도 포함된 공개키로 서명을 직접 검증할 수 있어 서비스 종속성을 낮춥니다.
+> QuSign은 공개키를 PDF에 넣지 않고, 메타데이터의 `QuSign-SignerId`(서명자 이메일)로 DB를 조회해 공개키를 가져옵니다. 이렇게 하면 사용자가 키를 분실·재발급했을 때 DB의 최신 공개키 기준으로 검증할 수 있고, PDF에 공개키 원문을 노출하지 않아도 됩니다. 단점은 **오프라인(서비스 종료 후) 검증이 불가능**하다는 점입니다 — PDF 파일만으로는 서명을 검증할 수 없고 QuSign DB가 살아있어야 합니다.

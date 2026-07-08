@@ -83,7 +83,7 @@ Point(1, 2) == Point(1, 2)  // true
 
 ## 현재 코드에서의 사용 예시
 
-### 요청 DTO — `AuthDtos.kt:7`
+### 요청 DTO — `AuthDtos.kt:10`
 ```kotlin
 data class RegisterRequest(
     @field:Email(message = "유효한 이메일 형식이어야 합니다")
@@ -93,25 +93,35 @@ data class RegisterRequest(
 ```
 HTTP 요청 바디를 역직렬화할 때 사용합니다. `equals`/`hashCode`가 자동 생성되므로 테스트에서 값 비교가 쉬워집니다.
 
-### 응답 DTO (보조 생성자 포함) — `SignatureDtos.kt:31`
+### 응답 DTO (보조 생성자 포함) — `SignatureDtos.kt:73`
 ```kotlin
 data class SignatureRequestResponse(
     val id: Long,
     val documentId: Long,
     val documentFilename: String,
     val signerEmail: String,
+    val token: String,
+    val status: String,
+    val expiresAt: String,
+    val createdAt: String?,
 ) {
     constructor(req: SignatureRequest) : this(
         id = req.id,
         documentId = req.document.id,
         documentFilename = req.document.originalFilename,
         signerEmail = req.signerEmail,
+        token = req.token,
+        status = req.status,
+        expiresAt = req.expiresAt.toString(),
+        createdAt = req.createdAt?.toString(),
     )
 }
 ```
+(실제 파일에는 Swagger `@Schema` 어노테이션이 각 필드에 붙어 있으나, 여기서는 데이터 클래스 구조에 집중하기 위해 생략했습니다.)
+
 엔티티(`SignatureRequest`)를 받아 DTO로 변환하는 보조 생성자 패턴입니다. 서비스 레이어에서 `SignatureRequestResponse(entity)` 한 줄로 변환합니다.
 
-### 중첩 DTO — `DashboardDtos.kt:11`
+### 중첩 DTO — `DashboardDtos.kt:20`
 ```kotlin
 data class RecentRequestItem(
     val id: Long,

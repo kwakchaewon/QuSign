@@ -163,7 +163,7 @@ liboqs-java (JNI → C liboqs)
   단점: 플랫폼별 네이티브 빌드 필요, 운영 복잡도 증가
 ```
 
-JDK 로드맵 (JEP 496 - JDK 24 Preview): 표준 `java.security` API에 ML-DSA 통합 예정.
+JDK 로드맵 (JEP 497 - JDK 24 Preview): 표준 `java.security` API에 ML-DSA 통합 예정.
 BouncyCastle을 쓰면 JDK 표준화 시 인터페이스 변경 없이 교체 가능합니다.
 
 ---
@@ -218,12 +218,12 @@ BouncyCastle을 쓰면 JDK 표준화 시 인터페이스 변경 없이 교체 �
 7. SHA3-256(PDF 원본) → documentHash
 8. ML-DSA.sign(privateKey, documentHash) → signature bytes
 9. Arrays.fill(privateKeyBytes, 0)  ← 즉시 zeroing
-10. PDF 메타데이터에 signature + publicKey 삽입
+10. PDF 메타데이터에 signature + signerId + documentHash 삽입 (공개키는 미삽입 — DB에서 signerId로 조회)
 11. 서명된 PDF를 S3에 저장
 
 [무결성 검증]
-12. 서명된 PDF에서 signature + publicKey 추출
-13. SHA3-256(원본 PDF) vs DB 저장 해시 비교
+12. 서명된 PDF에서 signature + signerId + documentHash 추출
+13. signerId로 DB에서 publicKey 조회, SHA3-256(원본 PDF) vs 추출한 documentHash 비교
 14. ML-DSA.verify(publicKey, documentHash, signature) → true/false
 ```
 
@@ -231,56 +231,62 @@ BouncyCastle을 쓰면 JDK 표준화 시 인터페이스 변경 없이 교체 �
 
 ## 현재 코드에서의 사용 예시
 
-### 키쌍 생성 — `PqcSignatureServiceImpl.kt`
+### 키쌍 생성 — `BouncyCastlePqcSignatureService.kt`
 ```kotlin
-fun generateKeyPair(): KeyPair {
-    val keyPairGenerator = KeyPairGenerator.getInstance("DILITHIUM", "BC")
-    keyPairGenerator.initialize(DilithiumParameterSpec.dilithium3) // ML-DSA-65
-    return keyPairGenerator.generateKeyPair()
+override fun generateKeyPair(): KeyPair {
+    val kpg = KeyPairGenerator.getInstance("ML-DSA", "BC")
+    kpg.initialize(MLDSAParameterSpec.ml_dsa_65)
+    return kpg.generateKeyPair()
 }
 ```
-`"DILITHIUM"` — BouncyCastle이 ML-DSA를 등록하는 알고리즘 이름입니다.
-`dilithium3` — 보안 레벨 3 (192-bit quantum security).
+`"ML-DSA"` — BouncyCastle이 ML-DSA를 등록하는 알고리즘 이름입니다.
+`ml_dsa_65` — 보안 레벨 3 (192-bit quantum security). (구 BouncyCastle 버전의 `"DILITHIUM"`/`DilithiumParameterSpec.dilithium3` 명칭은 FIPS 204 표준화 이후 `"ML-DSA"`/`MLDSAParameterSpec.ml_dsa_65`로 변경되었습니다.)
 
-### 서명 — `PqcSignatureServiceImpl.kt`
+### 서명 — `BouncyCastlePqcSignatureService.kt`
 ```kotlin
-fun sign(privateKey: PrivateKey, data: ByteArray): ByteArray {
-    val signer = Signature.getInstance("DILITHIUM", "BC")
+override fun sign(privateKey: PrivateKey, message: ByteArray): ByteArray {
+    val signer = Signature.getInstance("ML-DSA", "BC")
     signer.initSign(privateKey)
-    signer.update(data)
+    signer.update(message)
     return signer.sign()
 }
 ```
 
-### 검증 — `PqcSignatureServiceImpl.kt`
+### 검증 — `BouncyCastlePqcSignatureService.kt`
 ```kotlin
-fun verify(publicKey: PublicKey, data: ByteArray, signature: ByteArray): Boolean {
-    val verifier = Signature.getInstance("DILITHIUM", "BC")
+override fun verify(publicKey: PublicKey, message: ByteArray, signature: ByteArray): Boolean {
+    val verifier = Signature.getInstance("ML-DSA", "BC")
     verifier.initVerify(publicKey)
-    verifier.update(data)
+    verifier.update(message)
     return verifier.verify(signature)
 }
 ```
 
-### 개인키 암호화/복호화 개념 — `CryptoService.kt`
+### 개인키 암호화/복호화 — `KeyEncryptionService.kt`
 ```kotlin
-fun encryptPrivateKey(privateKeyBytes: ByteArray, password: String): EncryptedKey {
-    val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
-    val iv = ByteArray(12).also { SecureRandom().nextBytes(it) }
+data class EncryptedKey(
+    val ciphertext: String,
+    val salt: String,
+    val iv: String,
+    val iterations: Int = PBKDF2_ITERATIONS,  // 310_000
+)
 
-    // PBKDF2로 비밀번호 → 256-bit 키 유도
-    val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-    val spec = PBEKeySpec(password.toCharArray(), salt, 310_000, 256)
-    val aesKey = SecretKeySpec(factory.generateSecret(spec).encoded, "AES")
+fun encrypt(plaintext: ByteArray, password: String): EncryptedKey {
+    val salt = SecureRandom.getInstanceStrong().generateSeed(SALT_BYTES)   // 16B
+    val iv = SecureRandom.getInstanceStrong().generateSeed(IV_BYTES)      // 12B
+    val key = deriveKey(password, salt, PBKDF2_ITERATIONS)                // PBKDF2WithHmacSHA256
 
-    // AES-256-GCM 암호화
     val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-    cipher.init(Cipher.ENCRYPT_MODE, aesKey, GCMParameterSpec(128, iv))
-    val ciphertext = cipher.doFinal(privateKeyBytes)
+    cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
 
-    return EncryptedKey(ciphertext, iv, salt)
+    return EncryptedKey(
+        ciphertext = Base64.getEncoder().encodeToString(cipher.doFinal(plaintext)),
+        salt = Base64.getEncoder().encodeToString(salt),
+        iv = Base64.getEncoder().encodeToString(iv),
+    )
 }
 ```
+실제 `EncryptedKey`는 암/복호화 결과를 Base64 문자열로 저장하고, PBKDF2 반복 횟수(`iterations`)도 함께 저장합니다 — 나중에 반복 횟수를 올리더라도 기존에 암호화된 키를 그 키가 만들어질 당시의 반복 횟수로 복호화할 수 있도록 하기 위함입니다.
 
 ---
 
@@ -302,9 +308,9 @@ fun encryptPrivateKey(privateKeyBytes: ByteArray, password: String): EncryptedKe
 
 > 개인키 원문이 아닌 사용자 비밀번호로 AES-256-GCM 암호화된 형태로 저장합니다. 서버가 해킹되더라도 비밀번호를 모르면 개인키를 복호화할 수 없습니다 (AES-256은 양자 컴퓨터로도 안전합니다). 서명 시에만 비밀번호를 받아 메모리에서 복호화하고, 서명 완료 후 즉시 `Arrays.fill(bytes, 0)`으로 zeroing합니다.
 
-**Q5. `dilithium3`을 선택한 이유는?**
+**Q5. `ml_dsa_65`(ML-DSA-65)를 선택한 이유는?**
 
-> NIST 보안 레벨 3 (192-bit quantum security)으로 보안과 성능의 균형이 좋습니다. `dilithium2`(레벨 2, 128-bit)는 현재 충분하나 양자 컴퓨터 발전 속도를 감안하면 마진이 적습니다. `dilithium5`(레벨 5, 256-bit)는 서명 크기가 40% 더 크지만 실질적 보안 향상이 크지 않아 현 단계에서는 `dilithium3`(= ML-DSA-65)이 표준 선택입니다.
+> NIST 보안 레벨 3 (192-bit quantum security)으로 보안과 성능의 균형이 좋습니다. ML-DSA-44(레벨 2, 128-bit)는 현재 충분하나 양자 컴퓨터 발전 속도를 감안하면 마진이 적습니다. ML-DSA-87(레벨 5, 256-bit)는 서명 크기가 40% 더 크지만 실질적 보안 향상이 크지 않아 현 단계에서는 ML-DSA-65가 표준 선택입니다.
 
 **Q6. SHA3-256을 서명 대상으로 쓰는 이유는? ML-DSA가 직접 문서에 서명하면 안 되나?**
 

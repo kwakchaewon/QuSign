@@ -77,7 +77,7 @@ val label = when (status) {
 
 ## 현재 코드에서의 사용 예시
 
-### 조건 형태로 상태 계산 — `DocumentService.kt:69`
+### 조건 형태로 상태 계산 — `DocumentService.kt:90`
 ```kotlin
 val status = when {
     reqs.isEmpty()                        -> "NONE"
@@ -87,17 +87,18 @@ val status = when {
 ```
 서명 요청 목록을 보고 문서의 전체 상태를 결정합니다. 서로 다른 조건(isEmpty, all)을 다뤄야 해서 인자 없는 형태를 사용합니다.
 
-### 만료 여부 포함 상태 결정 — `SignatureFlowService.kt:218`
+### 만료 여부 포함 상태 결정 — `SignatureFlowService.kt:458`
 ```kotlin
 val effectiveStatus = when {
-    req.status == "SIGNED"       -> "SIGNED"
-    req.expiresAt.isBefore(now)  -> "EXPIRED"
-    else                         -> "PENDING"
+    req.status == "SIGNED"      -> "SIGNED"
+    req.status == "CANCELLED"   -> "CANCELLED"
+    req.expiresAt.isBefore(now) -> "EXPIRED"
+    else                        -> "PENDING"
 }
 ```
-순서가 중요합니다. SIGNED 체크를 먼저 해야 이미 서명된 요청이 만료 기간이 지났더라도 "EXPIRED"로 잘못 분류되지 않습니다.
+순서가 중요합니다. `SIGNED`/`CANCELLED` 체크를 먼저 해야, 이미 종결된 요청이 만료 기간이 지났다는 이유만으로 "EXPIRED"로 잘못 분류되지 않습니다.
 
-### 카운터 증감 — `DashboardService.kt:34`
+### 카운터 증감 — `DashboardService.kt:39`
 ```kotlin
 when (aggregateStatus(requestsByDocId[doc.id].orEmpty(), now)) {
     "SIGNED"  -> signedCount++
@@ -165,6 +166,6 @@ val message = when (code) {
 
 ---
 
-**Q5. `SignatureFlowService.kt:218`에서 `"SIGNED"` 체크를 먼저 하는 이유는?**
+**Q5. `SignatureFlowService.kt:458`에서 `"SIGNED"`/`"CANCELLED"` 체크를 먼저 하는 이유는?**
 
-> 이미 서명이 완료된 요청은 만료 시간이 지났더라도 `"EXPIRED"`로 분류해서는 안 됩니다. `when`은 위에서 아래 순서로 평가하고 첫 번째 매칭에서 멈춥니다. `"SIGNED"` 브랜치가 먼저 있어야 서명 완료된 요청이 올바르게 처리됩니다.
+> 이미 서명이 완료되었거나 취소된 요청은 만료 시간이 지났더라도 `"EXPIRED"`로 분류해서는 안 됩니다. `when`은 위에서 아래 순서로 평가하고 첫 번째 매칭에서 멈춥니다. `"SIGNED"`/`"CANCELLED"` 브랜치가 `isBefore(now)` 체크보다 먼저 있어야 이미 종결된 요청이 올바르게 처리됩니다.

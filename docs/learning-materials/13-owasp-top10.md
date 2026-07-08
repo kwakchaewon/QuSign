@@ -125,22 +125,28 @@ http.remoteIpTrustedProxies("127.0.0.1")
 **QuSign 적용**
 ```kotlin
 // SSE 단기 토큰 — JWT URL 파라미터 노출 방지
-@GetMapping("/api/notifications/sse-token")
-fun getSseToken(@AuthenticationPrincipal email: String): SseTokenResponse {
-    val shortToken = UUID.randomUUID().toString()
-    redisTemplate.opsForValue().set("sse:$shortToken", email, 30, TimeUnit.SECONDS)
-    return SseTokenResponse(shortToken)
+@PostMapping("/api/notifications/sse-token")
+fun issueSseToken(authentication: Authentication): ApiResponse<SseTokenResponse> {
+    val userId = resolveUserId(authentication)
+    return ApiResponse.ok(SseTokenResponse(sseTokenService.issue(userId)))
+}
+
+// SseTokenService — Redis에 "sse-token:{uuid}" → userId, TTL 30초로 저장
+fun issue(userId: Long): String {
+    val token = UUID.randomUUID().toString()
+    redisTemplate.opsForValue().set("sse-token:$token", userId.toString(), Duration.ofSeconds(30))
+    return token
 }
 
 // SSE 엔드포인트는 단기 토큰으로 인증 (URL에 JWT 노출 없음)
 @GetMapping("/api/notifications/stream")
-fun stream(@RequestParam token: String): SseEmitter {
-    val email = redisTemplate.opsForValue().get("sse:$token")
-        ?: throw UnauthorizedException()
-    redisTemplate.delete("sse:$token")  // 1회용 소비
-    ...
+fun stream(@RequestParam token: String?): SseEmitter {
+    val userId = sseTokenService.consume(token)  // getAndDelete — 1회용 소비
+        ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 토큰입니다.")
+    return registry.register(userId)
 }
 ```
+(토큰 발급은 `POST`, 토큰 조회+삭제는 `GET`으로 분리되어 있고, 실제 구현은 `SseTokenService`에 캡슐화되어 있습니다. — [[11-redis-sse]] 참고)
 
 ---
 
@@ -155,12 +161,16 @@ fun stream(@RequestParam token: String): SseEmitter {
 @Entity
 @Table(name = "audit_logs")
 class AuditLog(
-    @Id @GeneratedValue val id: Long = 0,
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long = 0,
     @Enumerated(EnumType.STRING) val eventType: AuditEventType,
     val actorEmail: String,
+    val signatureRequestId: Long? = null,
+    val bundleId: Long? = null,
+    val documentId: Long? = null,
     val ipAddress: String,           // IPv6 대비 45자
-    val createdAt: Instant = Instant.now(ZoneOffset.UTC)  // 서버 UTC 고정
-    // userAgent는 DB에만 저장 (API 응답 미포함)
+    val userAgent: String,           // DB에만 저장 (API 응답 미포함)
+    val createdAt: LocalDateTime,    // 서버 시각 (UTC 아님 — LocalDateTime, 애플리케이션 타임존 기준)
+    val retainedUntil: LocalDateTime,  // createdAt + 10년, 삽입 후 변경 금지
 )
 ```
 

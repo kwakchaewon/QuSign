@@ -1285,12 +1285,34 @@ SSM Parameter Store  ← DB 비밀번호, JWT 시크릿 등 민감값 관리
 
 ### 7-1. Terraform 인프라 코드화
 
-- [ ] IaC 개념 이해
-- [ ] Terraform 기본 명령어 (`init`, `plan`, `apply`, `destroy`)
-- [ ] HCL 문법 기초 / provider / state / 모듈 개념
-- [ ] VPC / EC2 / RDS / S3 코드화
-- [ ] Terraform state S3 백엔드 설정
-- [ ] `terraform plan`으로 기존 인프라 diff 확인 → `apply` 검증
+> 상세 실행 계획: `docs/exec-plans/7-1-terraform.md` (Phase 0~4), 이론: `docs/learning-materials/16-terraform.md`
+
+- [x] IaC 개념 / HCL 문법 / provider / state / 모듈 개념 학습 ✅ (2026-07-01) — `docs/learning-materials/16-terraform.md`
+- [x] AWS 콘솔·CLI로 기존 리소스 ID 전량 수집 (Phase 0) ✅ (2026-07-01) — VPC/서브넷/RT/SG/EIP/S3/ECR/IAM/Lambda/EventBridge Scheduler/Route53. 콘솔 조사 중 계획 초안과 실제가 다른 부분 다수 발견(아래 참고)
+- [x] Terraform CLI 설치 (v1.15.7) ✅ (2026-07-01)
+- [x] `infra/` 디렉토리 + 전체 모듈 HCL 작성 (networking/compute/iam/storage/secrets/scheduler/dns) ✅ (2026-07-01)
+- [x] state 전용 S3 버킷(`qusign-terraform-state`) 생성 ✅ (2026-07-01) — 버저닝/SSE-S3 암호화/퍼블릭 차단 적용
+- [x] `terraform init` (backend 포함) / `validate` 통과 ✅ (2026-07-01)
+- [x] `terraform import`로 전체 모듈(networking/compute/iam/storage/secrets/scheduler/dns) 흡수 (Phase 2) ✅ (2026-07-01) — 24개 리소스 전량
+- [x] `terraform plan` diff 0 확인 (전체 모듈 "No changes") ✅ (2026-07-01)
+- [x] import 후 `curl https://qusign.link/actuator/health` 200 확인 (운영 서버 무영향) ✅ (2026-07-01)
+
+**7단계 완료 기준 중 "Terraform으로 인프라 재현 가능"의 첫 단추(기존 인프라 흡수)는 완료. 재현성(dev workspace apply/destroy) 테스트는 아직 미실시.**
+
+⚠️ 조사 중 발견한 실제 인프라와 계획 초안의 차이(HCL에 반영 완료): EventBridge는 CloudWatch Events Rule이 아니라 **EventBridge Scheduler** 사용 중, GitHub Actions 배포 주체는 IAM Role이 아니라 **IAM User**(정적 액세스 키), S3 VPC 엔드포인트는 public이 아니라 **private 라우팅 테이블**에 연결, VPC에 서브넷/라우팅테이블이 계획보다 많음(public+private 각 1개, RT 3개).
+
+⚠️ **state 잠금 방식 변경**: 초안은 DynamoDB 락 테이블을 썼으나, `terraform init` 경고로 `dynamodb_table`이 Deprecated임을 확인 → Terraform 1.10+의 S3 자체 잠금(`use_lockfile = true`)으로 전환. DynamoDB 리소스·IAM 권한 자체가 불필요해짐.
+
+⚠️ **IAM 권한 부족**: `qusign_developers` 그룹에 Route53/Lambda/Scheduler/SSM/CloudWatch Logs 권한이 전혀 없어 `terraform import`가 막힘 → `ReadOnlyAccess` 관리형 정책 추가로 해결.
+
+⚠️⚠️ **위험 회피 사례**: networking 모듈 import 직후 `plan`에서 `aws_security_group`이 "must be replaced"로 나옴 — HCL에 `description`을 안 적어 Terraform 기본값으로 덮어쓰려 했고, 이 필드는 변경 시 SG를 강제로 삭제 후 재생성(ForceNew)한다. 그대로 apply했다면 운영 서버 접속이 끊겼을 것. 실제 콘솔 값으로 정정 후 "No changes" 확인. → `docs/exec-plans/7-1-terraform.md` 참고.
+
+⚠️ **나머지 모듈 import 중 발견한 계획-실제 차이 (전부 in-place update 수준, 위험도 낮음)**:
+- Lambda 런타임 실제 값 `python3.14` — 계획서의 `python3.13`은 오탈자. 설치된 aws provider(5.100.0)가 아직 이 값을 모르는 enum이라 `ignore_changes`로 우회
+- CloudWatch Logs 보존기간 실제 `0`(만료 없음) — 계획서의 `14일`은 잘못된 가정
+- EventBridge Scheduler의 cron은 UTC 환산값이 아니라 **`schedule_expression_timezone = "Asia/Seoul"`로 KST 그대로** 저장 — 레거시 CloudWatch Events Rule(UTC cron만 지원)과 헷갈려서 최초 계획에 UTC 환산값을 잘못 적음
+- 각 스케줄 target에 `input = {"action": "start/stop"}` JSON이 실려 있어 Lambda가 이 값으로 동작 분기 — 계획엔 누락돼 있었음
+- IAM Role(`qusign_ec2_role`)·IAM User(`qusign_github_actions_deployer`) 둘 다 실제 `description`/태그가 있는데 계획 초안엔 없었음
 
 ---
 

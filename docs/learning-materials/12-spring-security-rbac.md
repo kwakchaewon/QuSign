@@ -85,27 +85,32 @@ class AdminController(private val adminService: AdminService) {
 ```kotlin
 @Component
 class AdminInitializer(
-    private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder,
-    @Value("\${ADMIN_EMAIL:}") private val adminEmail: String,
-    @Value("\${ADMIN_PASSWORD:}") private val adminPassword: String
-) : ApplicationRunner {
-
-    override fun run(args: ApplicationArguments) {
+    private val authService: AuthService,
+    @Value("\${admin.email:}") private val adminEmail: String,
+    @Value("\${admin.password:}") private val adminPassword: String,
+) {
+    @EventListener(ApplicationReadyEvent::class)
+    fun init() {
         if (adminEmail.isBlank() || adminPassword.isBlank()) return
-        if (userRepository.existsByEmail(adminEmail)) return
-
-        userRepository.save(User(
-            email = adminEmail,
-            passwordHash = passwordEncoder.encode(adminPassword),
-            role = "ADMIN"
-        ))
+        authService.ensureAdmin(adminEmail, adminPassword)
     }
+}
+
+// AuthService.kt
+fun ensureAdmin(email: String, password: String) {
+    val user = userRepository.findByEmail(email) ?: run {
+        register(email, password)
+        userRepository.findByEmail(email)!!
+    }
+    if (user.role == "ADMIN") return
+    user.role = "ADMIN"
+    userRepository.save(user)
 }
 ```
 
-`ApplicationRunner.run()`은 Spring Boot 시작 직후 1회 실행됩니다.
-`ADMIN_EMAIL` / `ADMIN_PASSWORD` 환경변수가 없으면 관리자를 생성하지 않습니다.
+`@EventListener(ApplicationReadyEvent::class)`는 Spring Boot 시작이 완전히 끝난 직후 1회 실행됩니다.
+`admin.email` / `admin.password` 프로퍼티(환경변수로는 `ADMIN_EMAIL`/`ADMIN_PASSWORD`가 매핑됨)가 없으면 관리자를 생성하지 않습니다.
+계정 존재 여부 확인과 저장 로직은 `AuthService.ensureAdmin()`에 캡슐화되어 있습니다 — 계정이 없으면 새로 등록하고, 있는데 `ADMIN`이 아니면 역할만 승격합니다(이미 `ADMIN`이면 아무 것도 하지 않아 재시작마다 중복 실행되어도 안전합니다).
 
 ---
 
@@ -171,9 +176,9 @@ router.beforeEach((to) => {
 
 > 이중 방어입니다. `SecurityConfig`는 경로 패턴으로 빠르게 차단하고, `@PreAuthorize`는 비즈니스 로직 가까이에서 명시적으로 권한을 선언합니다. 라우팅 변경으로 경로 보안이 우회되어도 메서드 수준 보안이 남아 있습니다.
 
-**Q3. `AdminInitializer`에서 `existsByEmail` 체크를 하는 이유는?**
+**Q3. `AdminInitializer`가 `ensureAdmin()` 안에서 계정 존재 여부를 확인하는 이유는?**
 
-> 서버를 재시작할 때마다 `ApplicationRunner`가 실행됩니다. 체크 없이 `save()`를 호출하면 중복 이메일 제약 위반으로 시작 시 예외가 발생합니다. 이미 존재하면 건너뛰고, 없을 때만 생성합니다.
+> 서버를 재시작할 때마다 `@EventListener(ApplicationReadyEvent::class)`가 실행됩니다. 체크 없이 매번 `register()`를 호출하면 중복 이메일 제약 위반으로 시작 시 예외가 발생합니다. `ensureAdmin()`은 계정이 없으면 새로 만들고, 있는데 `role`이 `ADMIN`이 아니면 승격만 하며, 이미 `ADMIN`이면 아무 것도 하지 않아 재시작마다 반복 실행되어도 안전합니다(멱등성).
 
 **Q4. 관리자 권한 검사를 프론트엔드(Router 가드)에서만 하면 안 되는 이유는?**
 

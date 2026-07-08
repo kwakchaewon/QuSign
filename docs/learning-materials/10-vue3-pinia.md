@@ -59,7 +59,7 @@ user.name = 'Bob'
 Vuex의 후계자입니다. 보일러플레이트 없이 TypeScript 친화적 스토어를 만들 수 있습니다.
 
 ```typescript
-// stores/authStore.ts
+// stores/auth.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
@@ -87,7 +87,7 @@ export const useAuthStore = defineStore('auth', () => {
 ```vue
 <!-- 컴포넌트에서 사용 -->
 <script setup lang="ts">
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore } from '@/stores/auth'
 const authStore = useAuthStore()
 </script>
 
@@ -149,15 +149,24 @@ api.interceptors.response.use(
 ## QuSign 화면 구조
 
 ```
-LoginView       /login          ← 로그인 폼
-RegisterView    /register       ← 회원가입
-HomeView        /home           ← 대시보드 (통계 + 최근 요청)
-RequestView     /request        ← 3단계 서명 요청 생성 (멀티 업로드)
-SignerView      /sign/:token    ← 서명자 화면 (본인 확인 → PDF 미리보기 → 서명)
-VerifyView      /verify         ← 무결성 검증 (토큰 / 파일 탭)
-DocumentDetailView  /documents/:id  ← 요청 상세 (감사 타임라인 포함)
-AccountSettingsView /settings   ← 비밀번호 변경 / 계정 탈퇴
+LoginView             /login             ← 로그인 폼
+SignupView            /signup            ← 회원가입
+HomeView              /home              ← 홈
+UnifiedDashboardView  /documents         ← 문서 현황 (보낸/받은 통합)
+DashboardView         /documents/sent    ← 보낸 서명 요청 목록
+DocumentDetailView    /documents/:id     ← 문서 상세 (감사 타임라인 포함)
+BundleDetailView      /bundles/:id       ← 번들(여러 문서 묶음) 상세
+RequestView           /request           ← 서명 요청 생성 (멀티 업로드)
+ReceivedDocumentsView /received          ← 받은 서명 요청 목록
+ReceivedDetailView    /received/:token   ← 받은 서명 요청 상세
+SignerView            /sign/:token?      ← 서명자 화면 (본인 확인 → PDF 미리보기 → 서명)
+VerifyView            /verify            ← 무결성 검증 (토큰 / 파일 탭)
+AccountSettingsView   /settings          ← 비밀번호 변경 / 계정 탈퇴
+NotificationsView     /notifications     ← 알림 목록
+AdminLayout           /admin/*           ← 관리자 레이아웃 (중첩 라우트: 대시보드/사용자 관리/감사 로그)
 ```
+
+(`/register`가 아니라 `/signup`이며, `RegisterView`가 아니라 `SignupView`입니다. `/sign/:token`은 토큰 파라미터가 선택적(`:token?`)입니다.)
 
 ### PDF.js 연동
 

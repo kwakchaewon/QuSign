@@ -17,7 +17,86 @@ RSA와 ECDSA는 각각 다른 수학적 어려움에 기반합니다.
 | RSA | 정수 인수분해 (IFP) | N = p × q 가 클 때 p, q를 찾기 어려움 |
 | ECDSA | 타원곡선 이산 로그 (ECDLP) | P = k·G 에서 k를 찾기 어려움 |
 
-**고전 컴퓨터**로 2048-bit RSA를 깨려면 우주 나이보다 오래 걸립니다.
+**현대 컴퓨터**로 2048-bit RSA를 깨려면 우주 나이보다 오래 걸립니다.
+
+#### RSA 암호화란 — 수학적 원리
+
+RSA는 "곱셈은 쉽지만 인수분해는 어렵다"는 비대칭성을 이용한 공개키 암호입니다.
+
+**1) 키 생성**
+
+1. 큰 소수 두 개 `p`, `q`를 무작위로 선택 (RSA-2048이면 곱 `N`이 2048비트가 되도록 각각 1024비트급)
+2. `N = p × q` 계산 → 공개되는 모듈러스
+3. 오일러 파이 함수 `φ(N) = (p-1)(q-1)` 계산 (p, q를 모르면 사실상 계산 불가)
+4. `φ(N)`과 서로소인 `e` 선택 (관례적으로 `e = 65537`)
+5. `d ≡ e⁻¹ (mod φ(N))` 계산 → 개인키
+
+```
+공개키: (N, e)   ← 누구나 볼 수 있음
+개인키: (N, d)   ← 절대 노출 금지
+```
+
+**2) 암호화 / 복호화**
+
+```
+암호화: c = mᵉ mod N
+복호화: m = cᵈ mod N
+```
+
+이게 성립하는 이유는 오일러 정리(Euler's theorem) 때문입니다:
+`e·d ≡ 1 (mod φ(N))` 이므로 `m^(ed) ≡ m (mod N)`이 항상 성립합니다.
+
+**3) 안전성의 핵심 — trapdoor**
+
+공격자는 공개키 `(N, e)`만 알고 있습니다. 개인키 `d`를 구하려면 `φ(N) = (p-1)(q-1)`을 알아야 하고,
+`φ(N)`을 구하려면 `N`을 인수분해해서 `p`, `q`를 알아내야 합니다.
+
+→ **RSA를 깨는 것 = N을 인수분해하는 것**과 (알려진 방법의 범위 내에서) 사실상 동치입니다.
+
+#### 정수 인수분해는 왜 그렇게 어려운가
+
+순진한 방법(trial division)은 `√N`까지 나눠보는 것으로 `O(√N)`이 걸립니다.
+N이 2048비트면 `√N`도 1024비트 규모 — 이건 우주가 몇 개 있어도 끝나지 않는 크기입니다.
+
+실제 공격에 쓰이는 가장 빠른 고전 알고리즘은 **일반 수체 체(GNFS, General Number Field Sieve)**로,
+지수 시간은 아니지만 여전히 **준지수 시간(sub-exponential)**이 걸립니다:
+
+```
+시간 복잡도 ≈ exp( (64/9)^(1/3) · (ln N)^(1/3) · (ln ln N)^(2/3) )
+```
+
+핵심은 "N의 비트 수가 늘어날수록 필요 연산량이 폭발적으로 증가한다"는 것입니다.
+
+| 키 길이 | 상태 | 비고 |
+|---|---|---|
+| RSA-512 | 1999년 인수분해 성공 | 수 주 소요 |
+| RSA-768 | 2009년 인수분해 성공 | 약 2년, 수백 대 컴퓨터 병렬 사용 |
+| RSA-1024 | 실제 인수분해 기록 없음 | RSA-768보다 수백~수천 배 어려움으로 추정 |
+| RSA-2048 | 인수분해 기록 없음 | 현재 표준 권장 최소 길이 |
+
+키 길이가 768 → 2048비트(약 2.7배)로 늘어날 때, GNFS 복잡도는 `(ln N)^(1/3)` 항 때문에
+선형이 아니라 **초지수적으로** 증가합니다. 이 관계를 계산해보면 RSA-2048 인수분해에 필요한
+연산량은 RSA-768 대비 대략 10¹²~10¹⁵배 더 많은 것으로 추정됩니다.
+
+**우주 나이와 비교하면:**
+
+```
+우주 나이 ≈ 138억 년 ≈ 1.38 × 10¹⁰ 년
+
+지구상의 모든 컴퓨팅 자원(최상위 슈퍼컴퓨터급 성능 가정)을 전부 동원해도
+GNFS로 RSA-2048을 깨려면 → 추정치 10²⁰ ~ 10²⁵ 년 (가정에 따라 문헌마다 편차 있음)
+
+즉 우주 나이보다 10~15자릿수(10¹⁰~10¹⁵배) 더 긴 시간이 필요합니다.
+```
+
+> ⚠️ 정확한 숫자는 "어떤 하드웨어를 가정하느냐"에 따라 달라지지만, 핵심은
+> **어떤 가정을 쓰든 "우주 나이보다 압도적으로 길다"는 결론 자체는 바뀌지 않는다**는 점입니다.
+> 무어의 법칙으로 컴퓨팅 성능이 계속 좋아져도, GNFS의 준지수적 증가 속도를 따라잡을 수 없습니다.
+
+**핵심 요약**: RSA-2048이 안전한 이유는 "절대 못 푸는 문제"라서가 아니라,
+"고전 컴퓨터로 풀려면 준지수 시간이 걸리고, 그 값이 우주 나이를 아득히 초과하기" 때문입니다.
+반대로 Shor 알고리즘은 양자 컴퓨터에서 같은 문제를 **다항 시간**에 풀어버리기 때문에
+PQC로 전환해야 하는 것입니다 (아래 참고).
 
 #### Shor 알고리즘 — 양자 컴퓨터의 위협
 
@@ -163,7 +242,7 @@ liboqs-java (JNI → C liboqs)
   단점: 플랫폼별 네이티브 빌드 필요, 운영 복잡도 증가
 ```
 
-JDK 로드맵 (JEP 496 - JDK 24 Preview): 표준 `java.security` API에 ML-DSA 통합 예정.
+JDK 로드맵 (JEP 497 - JDK 24 Preview): 표준 `java.security` API에 ML-DSA 통합 예정.
 BouncyCastle을 쓰면 JDK 표준화 시 인터페이스 변경 없이 교체 가능합니다.
 
 ---
@@ -218,12 +297,12 @@ BouncyCastle을 쓰면 JDK 표준화 시 인터페이스 변경 없이 교체 �
 7. SHA3-256(PDF 원본) → documentHash
 8. ML-DSA.sign(privateKey, documentHash) → signature bytes
 9. Arrays.fill(privateKeyBytes, 0)  ← 즉시 zeroing
-10. PDF 메타데이터에 signature + publicKey 삽입
+10. PDF 메타데이터에 signature + signerId + documentHash 삽입 (공개키는 미삽입 — DB에서 signerId로 조회)
 11. 서명된 PDF를 S3에 저장
 
 [무결성 검증]
-12. 서명된 PDF에서 signature + publicKey 추출
-13. SHA3-256(원본 PDF) vs DB 저장 해시 비교
+12. 서명된 PDF에서 signature + signerId + documentHash 추출
+13. signerId로 DB에서 publicKey 조회, SHA3-256(원본 PDF) vs 추출한 documentHash 비교
 14. ML-DSA.verify(publicKey, documentHash, signature) → true/false
 ```
 
@@ -231,56 +310,62 @@ BouncyCastle을 쓰면 JDK 표준화 시 인터페이스 변경 없이 교체 �
 
 ## 현재 코드에서의 사용 예시
 
-### 키쌍 생성 — `PqcSignatureServiceImpl.kt`
+### 키쌍 생성 — `BouncyCastlePqcSignatureService.kt`
 ```kotlin
-fun generateKeyPair(): KeyPair {
-    val keyPairGenerator = KeyPairGenerator.getInstance("DILITHIUM", "BC")
-    keyPairGenerator.initialize(DilithiumParameterSpec.dilithium3) // ML-DSA-65
-    return keyPairGenerator.generateKeyPair()
+override fun generateKeyPair(): KeyPair {
+    val kpg = KeyPairGenerator.getInstance("ML-DSA", "BC")
+    kpg.initialize(MLDSAParameterSpec.ml_dsa_65)
+    return kpg.generateKeyPair()
 }
 ```
-`"DILITHIUM"` — BouncyCastle이 ML-DSA를 등록하는 알고리즘 이름입니다.
-`dilithium3` — 보안 레벨 3 (192-bit quantum security).
+`"ML-DSA"` — BouncyCastle이 ML-DSA를 등록하는 알고리즘 이름입니다.
+`ml_dsa_65` — 보안 레벨 3 (192-bit quantum security). (구 BouncyCastle 버전의 `"DILITHIUM"`/`DilithiumParameterSpec.dilithium3` 명칭은 FIPS 204 표준화 이후 `"ML-DSA"`/`MLDSAParameterSpec.ml_dsa_65`로 변경되었습니다.)
 
-### 서명 — `PqcSignatureServiceImpl.kt`
+### 서명 — `BouncyCastlePqcSignatureService.kt`
 ```kotlin
-fun sign(privateKey: PrivateKey, data: ByteArray): ByteArray {
-    val signer = Signature.getInstance("DILITHIUM", "BC")
+override fun sign(privateKey: PrivateKey, message: ByteArray): ByteArray {
+    val signer = Signature.getInstance("ML-DSA", "BC")
     signer.initSign(privateKey)
-    signer.update(data)
+    signer.update(message)
     return signer.sign()
 }
 ```
 
-### 검증 — `PqcSignatureServiceImpl.kt`
+### 검증 — `BouncyCastlePqcSignatureService.kt`
 ```kotlin
-fun verify(publicKey: PublicKey, data: ByteArray, signature: ByteArray): Boolean {
-    val verifier = Signature.getInstance("DILITHIUM", "BC")
+override fun verify(publicKey: PublicKey, message: ByteArray, signature: ByteArray): Boolean {
+    val verifier = Signature.getInstance("ML-DSA", "BC")
     verifier.initVerify(publicKey)
-    verifier.update(data)
+    verifier.update(message)
     return verifier.verify(signature)
 }
 ```
 
-### 개인키 암호화/복호화 개념 — `CryptoService.kt`
+### 개인키 암호화/복호화 — `KeyEncryptionService.kt`
 ```kotlin
-fun encryptPrivateKey(privateKeyBytes: ByteArray, password: String): EncryptedKey {
-    val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
-    val iv = ByteArray(12).also { SecureRandom().nextBytes(it) }
+data class EncryptedKey(
+    val ciphertext: String,
+    val salt: String,
+    val iv: String,
+    val iterations: Int = PBKDF2_ITERATIONS,  // 310_000
+)
 
-    // PBKDF2로 비밀번호 → 256-bit 키 유도
-    val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-    val spec = PBEKeySpec(password.toCharArray(), salt, 310_000, 256)
-    val aesKey = SecretKeySpec(factory.generateSecret(spec).encoded, "AES")
+fun encrypt(plaintext: ByteArray, password: String): EncryptedKey {
+    val salt = SecureRandom.getInstanceStrong().generateSeed(SALT_BYTES)   // 16B
+    val iv = SecureRandom.getInstanceStrong().generateSeed(IV_BYTES)      // 12B
+    val key = deriveKey(password, salt, PBKDF2_ITERATIONS)                // PBKDF2WithHmacSHA256
 
-    // AES-256-GCM 암호화
     val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-    cipher.init(Cipher.ENCRYPT_MODE, aesKey, GCMParameterSpec(128, iv))
-    val ciphertext = cipher.doFinal(privateKeyBytes)
+    cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
 
-    return EncryptedKey(ciphertext, iv, salt)
+    return EncryptedKey(
+        ciphertext = Base64.getEncoder().encodeToString(cipher.doFinal(plaintext)),
+        salt = Base64.getEncoder().encodeToString(salt),
+        iv = Base64.getEncoder().encodeToString(iv),
+    )
 }
 ```
+실제 `EncryptedKey`는 암/복호화 결과를 Base64 문자열로 저장하고, PBKDF2 반복 횟수(`iterations`)도 함께 저장합니다 — 나중에 반복 횟수를 올리더라도 기존에 암호화된 키를 그 키가 만들어질 당시의 반복 횟수로 복호화할 수 있도록 하기 위함입니다.
 
 ---
 
@@ -302,9 +387,9 @@ fun encryptPrivateKey(privateKeyBytes: ByteArray, password: String): EncryptedKe
 
 > 개인키 원문이 아닌 사용자 비밀번호로 AES-256-GCM 암호화된 형태로 저장합니다. 서버가 해킹되더라도 비밀번호를 모르면 개인키를 복호화할 수 없습니다 (AES-256은 양자 컴퓨터로도 안전합니다). 서명 시에만 비밀번호를 받아 메모리에서 복호화하고, 서명 완료 후 즉시 `Arrays.fill(bytes, 0)`으로 zeroing합니다.
 
-**Q5. `dilithium3`을 선택한 이유는?**
+**Q5. `ml_dsa_65`(ML-DSA-65)를 선택한 이유는?**
 
-> NIST 보안 레벨 3 (192-bit quantum security)으로 보안과 성능의 균형이 좋습니다. `dilithium2`(레벨 2, 128-bit)는 현재 충분하나 양자 컴퓨터 발전 속도를 감안하면 마진이 적습니다. `dilithium5`(레벨 5, 256-bit)는 서명 크기가 40% 더 크지만 실질적 보안 향상이 크지 않아 현 단계에서는 `dilithium3`(= ML-DSA-65)이 표준 선택입니다.
+> NIST 보안 레벨 3 (192-bit quantum security)으로 보안과 성능의 균형이 좋습니다. ML-DSA-44(레벨 2, 128-bit)는 현재 충분하나 양자 컴퓨터 발전 속도를 감안하면 마진이 적습니다. ML-DSA-87(레벨 5, 256-bit)는 서명 크기가 40% 더 크지만 실질적 보안 향상이 크지 않아 현 단계에서는 ML-DSA-65가 표준 선택입니다.
 
 **Q6. SHA3-256을 서명 대상으로 쓰는 이유는? ML-DSA가 직접 문서에 서명하면 안 되나?**
 

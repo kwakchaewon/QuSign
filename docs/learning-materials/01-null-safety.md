@@ -81,28 +81,28 @@ val length = str?.length ?: 0
 
 ## 현재 코드에서의 사용 예시
 
-### Elvis로 예외 던지기 — `AuthService.kt:42`
+### Elvis로 예외 던지기 — `AuthService.kt:46`
 ```kotlin
 val user = userRepository.findByEmail(email)
     ?: throw InvalidCredentialsException()
 ```
 `findByEmail`은 `User?`를 반환합니다. 결과가 null이면 즉시 예외를 던져 이후 코드가 null 역참조로 깨지는 것을 방지합니다.
 
-### Elvis로 조기 반환 — `DocumentService.kt:64`
+### Elvis로 조기 반환 — `DocumentService.kt:72`
 ```kotlin
 val user = userRepository.findByEmail(email)
     ?: return emptyList()
 ```
 유저를 찾지 못했을 때 빈 리스트를 바로 반환합니다. if-null 분기 없이 한 줄로 처리합니다.
 
-### 연쇄 safe call — `SignatureFlowService.kt:225`
+### 연쇄 safe call — `SignatureFlowService.kt:467`
 ```kotlin
 signedAt = sig?.signedAt?.toString()
 ```
 `sig`가 null이거나 `signedAt`이 null이면 전체 식이 null이 됩니다.
 어느 단계에서도 NPE가 발생하지 않습니다.
 
-### Nullable 필드 선언 — `User.kt:37`
+### Nullable 필드 선언 — `User.kt:40`
 ```kotlin
 var deletedAt: LocalDateTime? = null
 ```

@@ -62,25 +62,45 @@ scrape_configs:
 ## Spring Boot Logback JSON 연동
 
 구조화 JSON 로그를 출력하면 Loki에서 필드 파싱이 가능합니다.
+이 부분은 8단계(Loki/Grafana 스택 자체)보다 먼저 구현되어 있습니다 — `backend/src/main/resources/logback-spring.xml`에 이미 존재합니다.
 
 ```xml
-<!-- logback-spring.xml -->
-<appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+<!-- logback-spring.xml (실제 구현) -->
+<springProperty scope="context" name="appName" source="spring.application.name" defaultValue="qusign"/>
+
+<appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
   <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-    <customFields>{"service":"qusign-backend","env":"${SPRING_PROFILES_ACTIVE}"}</customFields>
+    <customFields>{"app":"${appName}"}</customFields>
+    <timeZone>Asia/Seoul</timeZone>
+    <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</timestampPattern>
   </encoder>
 </appender>
+
+<appender name="CONSOLE_TEXT" class="ch.qos.logback.core.ConsoleAppender">
+  <encoder>
+    <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+  </encoder>
+</appender>
+
+<!-- local 프로파일은 사람이 읽기 쉬운 텍스트, 그 외(dev/prod)는 JSON -->
+<springProfile name="local">
+  <root level="INFO"><appender-ref ref="CONSOLE_TEXT"/></root>
+</springProfile>
+<springProfile name="!local">
+  <root level="INFO"><appender-ref ref="CONSOLE_JSON"/></root>
+</springProfile>
 ```
 
-출력 예시:
+`env` 필드는 없고 `app`(= `spring.application.name`)만 커스텀 필드로 넣습니다. 환경 구분은 로그 필드가 아니라 어떤 Promtail/Loki 인스턴스로 수집되는지(EC2별로 분리)로 하겠다는 설계입니다. 로컬 개발 중에는 JSON이 아니라 사람이 읽기 좋은 텍스트 포맷(`CONSOLE_TEXT`)이 나갑니다 — `<springProfile name="local">` 분기 때문입니다.
+
+출력 예시 (LogstashEncoder 기본 필드 + `app` 커스텀 필드):
 ```json
 {
-  "timestamp": "2025-01-15T09:30:00.123Z",
+  "@timestamp": "2025-01-15T09:30:00.123+0900",
   "level": "INFO",
-  "service": "qusign-backend",
-  "env": "prod",
-  "message": "서명 완료: document=42, signer=user@example.com",
-  "traceId": "abc123"
+  "logger_name": "com.qusign.signature.service.SignatureFlowService",
+  "app": "qusign",
+  "message": "서명 완료: document=42, signer=user@example.com"
 }
 ```
 

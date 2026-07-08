@@ -28,7 +28,7 @@ Redis 6.0부터는 네트워크 I/O에 한해 멀티스레드를 도입했지만
 
 | 자료구조 | 명령 | QuSign 활용 |
 |---|---|---|
-| String | GET/SET | SSE 단기 토큰 (`sse:{uuid}` → email) |
+| String | GET/SET | SSE 단기 토큰 (`sse-token:{uuid}` → userId, TTL 30초) |
 | List | LPUSH/RPOP | — |
 | Hash | HGET/HSET | — |
 | Set | SADD/SMEMBERS | — |
@@ -44,11 +44,11 @@ Redis 6.0부터는 네트워크 I/O에 한해 멀티스레드를 도입했지만
 
 ```
 발행자(Publisher)
-  PUBLISH user:42:notifications '{"type":"SIGN_DONE"}'
+  PUBLISH notification:42 '{"type":"SIGN_DONE"}'
          │
          ▼
 Redis 서버 (채널 테이블 조회)
-  user:42:notifications → [구독자 A, 구독자 B]
+  notification:42 → [구독자 A, 구독자 B]
          │
          ├──▶ 구독자 A (Spring SseEmitter 핸들러)
          └──▶ 구독자 B (다른 인스턴스의 SSE 핸들러)
@@ -61,7 +61,7 @@ Redis 서버 (채널 테이블 조회)
 | **At-most-once** | 구독자에게 최대 1번 전달 (0번 또는 1번) |
 | **Fire-and-forget** | 발행자는 누가 수신했는지 모름 |
 | **비영속** | 구독자 없을 때 발행된 메시지는 즉시 소실 |
-| **채널 패턴** | `PSUBSCRIBE user:*`로 와일드카드 구독 가능 |
+| **채널 패턴** | `PSUBSCRIBE notification:*`로 와일드카드 구독 가능 |
 
 #### Pub/Sub vs Redis Streams vs Redis Lists 비교
 
@@ -162,16 +162,35 @@ SseEmitterRegistry에서 emitter 제거
 ```
 
 ```kotlin
-@GetMapping("/api/notifications/stream", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-fun stream(@AuthenticationPrincipal email: String): SseEmitter {
-    val emitter = SseEmitter(3600_000L)  // 1시간 타임아웃
-    sseEmitterRegistry.register(email, emitter)
+// NotificationController.kt — EventSource는 Authorization 헤더를 못 보내므로
+// 30초짜리 단기 토큰을 먼저 발급받고, 그 토큰을 쿼리 파라미터로 스트림에 연결한다
+@PostMapping("/sse-token")
+fun issueSseToken(authentication: Authentication): ApiResponse<SseTokenResponse> {
+    val userId = resolveUserId(authentication)
+    return ApiResponse.ok(SseTokenResponse(sseTokenService.issue(userId)))
+}
 
-    emitter.onCompletion { sseEmitterRegistry.remove(email, emitter) }
-    emitter.onTimeout { sseEmitterRegistry.remove(email, emitter) }
+@GetMapping("/stream", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+fun stream(@RequestParam token: String?): SseEmitter {
+    if (token.isNullOrBlank()) throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "토큰이 필요합니다.")
+    val userId = sseTokenService.consume(token)
+        ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 토큰입니다.")
+    return registry.register(userId)
+}
+```
 
-    // 연결 즉시 초기 이벤트 전송 (연결 확인 + 누락 알림 보정)
-    emitter.send(SseEmitter.event().name("connect").data("connected"))
+```kotlin
+// SseEmitterRegistry.kt — emitter 생성·초기 이벤트 전송·정리 콜백을 registry가 전담
+fun register(userId: Long): SseEmitter {
+    val emitter = SseEmitter(0L)  // 0 = 타임아웃 없음(무제한 유지, Nginx가 실제 연결 수명을 관리)
+    emitters.getOrPut(userId) { CopyOnWriteArrayList() }.add(emitter)
+
+    val cleanup = Runnable { remove(userId, emitter) }
+    emitter.onCompletion(cleanup)
+    emitter.onTimeout(cleanup)
+    emitter.onError { cleanup.run() }
+
+    emitter.send(SseEmitter.event().name("connected").data("ok"))
     return emitter
 }
 ```
@@ -180,27 +199,23 @@ fun stream(@AuthenticationPrincipal email: String): SseEmitter {
 Spring이 응답 헤더를 `Content-Type: text/event-stream`으로 설정합니다.
 이 헤더가 없으면 브라우저가 SSE로 인식하지 못하고 일반 HTTP 응답으로 처리합니다.
 
+**단기 토큰을 쓰는 이유**: 브라우저의 `EventSource` API는 커스텀 헤더(`Authorization: Bearer ...`)를 지원하지 않습니다. JWT를 쿼리 파라미터로 그대로 노출하면 로그에 남는 등 위험하므로, `POST /sse-token`으로 30초짜리 일회성 토큰(Redis `sse-token:{uuid}` → userId)을 먼저 발급받고 `GET /stream?token=...`에서 소비합니다.
+
 ---
 
 ### Spring Data Redis — Pub/Sub 설정
 
 ```kotlin
 @Configuration
-class RedisConfig(
-    @Value("\${spring.data.redis.host}") private val host: String,
-    @Value("\${spring.data.redis.port}") private val port: Int
-) {
-
-    // Lettuce 연결 팩토리 (기본값, Netty 기반 비동기)
-    @Bean
-    fun redisConnectionFactory(): LettuceConnectionFactory =
-        LettuceConnectionFactory(host, port)
+class RedisConfig {
 
     // Redis 명령 실행 클라이언트
+    // (연결 팩토리 빈은 직접 정의하지 않음 — Spring Boot autoconfigure가
+    //  application.yml의 spring.data.redis.* 설정을 읽어 Lettuce 기반으로 자동 생성)
     @Bean
-    fun redisTemplate(factory: RedisConnectionFactory): RedisTemplate<String, String> =
+    fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<String, String> =
         RedisTemplate<String, String>().apply {
-            connectionFactory = factory
+            setConnectionFactory(connectionFactory)
             keySerializer = StringRedisSerializer()
             valueSerializer = StringRedisSerializer()
         }
@@ -208,13 +223,14 @@ class RedisConfig(
     // 구독 컨테이너 — 별도 스레드에서 채널 감청
     @Bean
     fun redisMessageListenerContainer(
-        factory: RedisConnectionFactory,
-        listener: NotificationMessageListener
-    ): RedisMessageListenerContainer = RedisMessageListenerContainer().apply {
-        connectionFactory = factory
-        // "user:*:notifications" 패턴 구독
-        addMessageListener(listener, PatternTopic("user:*:notifications"))
-    }
+        connectionFactory: RedisConnectionFactory,
+        subscriber: NotificationEventSubscriber,
+    ): RedisMessageListenerContainer =
+        RedisMessageListenerContainer().apply {
+            setConnectionFactory(connectionFactory)
+            // "notification:*" 패턴 구독 — 채널명은 "notification:{userId}"
+            addMessageListener(subscriber, PatternTopic("notification:*"))
+        }
 }
 ```
 
@@ -241,14 +257,14 @@ SignatureFlowService.sign()
       │
       ▼
 NotificationService.createAndPublish()
-  1. User.notifySignDone 확인 → false면 종료
+  1. User.notifySignDone / notifySignRequest 확인 → false면 종료 (알림 타입별로 다른 플래그 참조)
   2. Notification 엔티티 DB 저장 (영속)
-  3. redisTemplate.convertAndSend("user:{userId}:notifications", json)
+  3. redisTemplate.convertAndSend("notification:{userId}", json)
       │
       ▼
 RedisMessageListenerContainer (별도 스레드)
-  → NotificationMessageListener.onMessage(message)
-  → SseEmitterRegistry.send(userId, event)
+  → NotificationEventSubscriber.onMessage(message)
+  → SseEmitterRegistry.send(userId, payload)
       │
       ▼
 활성 SseEmitter들에게 event push
@@ -280,24 +296,32 @@ RedisMessageListenerContainer (별도 스레드)
 @Component
 class SseEmitterRegistry {
     // userId → 해당 유저의 활성 SSE 연결 목록 (멀티탭 지원)
-    private val emitters = ConcurrentHashMap<String, CopyOnWriteArrayList<SseEmitter>>()
+    private val emitters = ConcurrentHashMap<Long, CopyOnWriteArrayList<SseEmitter>>()
 
-    fun register(userId: String, emitter: SseEmitter) {
+    fun register(userId: Long): SseEmitter {
+        val emitter = SseEmitter(0L)
         emitters.getOrPut(userId) { CopyOnWriteArrayList() }.add(emitter)
+        // ... onCompletion/onTimeout/onError로 remove(userId, emitter) 연결 (앞 섹션 참고)
+        return emitter
     }
 
-    fun remove(userId: String, emitter: SseEmitter) {
-        emitters[userId]?.remove(emitter)
-    }
-
-    fun send(userId: String, event: Any) {
-        emitters[userId]?.forEach { emitter ->
-            runCatching { emitter.send(event) }
-                .onFailure { emitters[userId]?.remove(emitter) }
+    fun send(userId: Long, data: String) {
+        emitters[userId]?.removeIf { emitter ->
+            try {
+                emitter.send(SseEmitter.event().name("notification").data(data))
+                false
+            } catch (_: Exception) {
+                true  // 전송 실패한 emitter는 순회하며 즉시 목록에서 제거
+            }
         }
+    }
+
+    private fun remove(userId: Long, emitter: SseEmitter) {
+        emitters[userId]?.remove(emitter)
     }
 }
 ```
+`send()`가 실패한 emitter를 별도의 `remove()` 호출 없이 `removeIf` 안에서 바로 걸러내는 점이 특징입니다 — 순회와 제거를 한 번에 처리합니다.
 
 #### 왜 ConcurrentHashMap + CopyOnWriteArrayList인가
 
@@ -327,9 +351,9 @@ CopyOnWriteArrayList: 순회 시 스냅샷 복사본 사용 → remove와 동시
 
 > Redis 메시지는 소실됩니다. QuSign은 알림을 DB에도 저장하므로, 재연결 시 `GET /api/notifications`를 호출해 DB에서 읽지 않은 알림을 가져옵니다. Redis는 실시간 push에, DB는 영속 저장소로 역할을 분리합니다. SSE `Last-Event-ID` 헤더를 활용한 서버 측 재전송을 구현하면 더 완벽하지만, 현재 DB 복구 방식으로 충분합니다.
 
-**Q3. `SseEmitter` 타임아웃을 1시간으로 설정한 이유는?**
+**Q3. `SseEmitter(0L)`처럼 타임아웃을 0으로 설정한 이유는?**
 
-> Nginx의 `proxy_read_timeout 3600s` 설정과 맞춥니다. Nginx가 먼저 끊으면 Spring의 타임아웃 콜백이 실행되고, Spring이 먼저 끊으면 클라이언트가 자동 재연결합니다. 실제 운영에서는 Nginx가 먼저 끊기 때문에 Spring 타임아웃은 안전망 역할입니다. SSE endpoint에는 `proxy_buffering off`와 `proxy_cache off`가 필수입니다.
+> Spring의 `SseEmitter`에서 `0`은 "타임아웃 없음"을 의미합니다. QuSign은 Spring 쪽 타임아웃을 두지 않고, 연결의 실질적인 수명 관리를 Nginx의 `proxy_read_timeout`, 클라이언트의 네트워크 단절, `onError`/`onCompletion` 콜백에 맡깁니다. 브라우저 `EventSource`는 연결이 끊기면 자동 재연결하므로, 서버 쪽에서 임의로 짧은 타임아웃을 두면 오히려 불필요한 재연결(및 재차 SSE 토큰 발급)이 잦아집니다. SSE endpoint에는 `proxy_buffering off`가 필수입니다 — 버퍼링이 켜져 있으면 Nginx가 이벤트를 즉시 클라이언트로 흘려보내지 않습니다.
 
 **Q4. `ConcurrentHashMap` 대신 일반 `HashMap`을 쓰면 어떤 문제가 생기나?**
 
@@ -341,4 +365,4 @@ CopyOnWriteArrayList: 순회 시 스냅샷 복사본 사용 → remove와 동시
 
 **Q6. 사용자가 알림 설정(notifySignDone)을 OFF하면 무엇이 바뀌나?**
 
-> `NotificationService.createAndPublish()`에서 해당 사용자의 `User.notifySignDone` 필드를 확인하여 `false`이면 DB 저장과 Redis 발행 모두 건너뜁니다. Redis 구독 설정과 SSE 연결 자체는 변하지 않습니다. 알림이 생성되지 않으므로 배지 숫자도 증가하지 않습니다.
+> `NotificationService.isEnabled()`가 알림 타입별로 서로 다른 사용자 플래그를 확인합니다: `SIGN_DONE`/`SIGN_EXPIRED`는 `User.notifySignDone`, `SIGN_REQUEST`/`SIGN_CANCELLED`/`SIGN_EXPIRING_SOON`은 `User.notifySignRequest`를 봅니다. 해당 플래그가 `false`이면 `createAndPublish()`가 DB 저장과 Redis 발행을 모두 건너뜁니다. Redis 구독 설정과 SSE 연결 자체는 변하지 않습니다. 알림이 생성되지 않으므로 배지 숫자도 증가하지 않습니다.

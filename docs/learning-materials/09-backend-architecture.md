@@ -285,47 +285,61 @@ class AppConfig {
 ```
 auth/          ← 회원가입, 로그인, JWT
 document/      ← PDF 업로드, 목록, 다운로드, 대시보드
-signature/     ← 서명 요청, 서명 실행, 검증, 취소, 감사 로그
+signature/     ← 서명 요청, 서명 실행, 검증, 취소
+audit/         ← 감사 로그 (별도 도메인)
 notification/  ← Redis Pub/Sub + SSE 알림
 admin/         ← 관리자 API
+common/        ← StorageService, 설정, 공통 필터
 ```
 
-### 인터페이스 분리 — 환경별 전략 패턴
+### 인터페이스 분리 — 구현체는 하나, 설정으로 로컬/프로덕션 전환
+
+QuSign은 로컬(MinIO)과 프로덕션(AWS S3)에 각각 다른 구현 클래스를 두지 않습니다.
+MinIO가 S3 API와 호환되므로, **구현체는 `S3StorageService` 하나**이고 `S3Client`를 어떻게
+생성하느냐(엔드포인트 오버라이드 여부)로 로컬/프로덕션을 가릅니다.
 
 ```kotlin
-// 추상화
+// 추상화 — common/storage/StorageService.kt
 interface StorageService {
-    fun upload(key: String, bytes: ByteArray, contentType: String)
+    fun upload(key: String, data: ByteArray, contentType: String)
     fun download(key: String): ByteArray
-    fun delete(key: String)
 }
 
-// 로컬 환경 구현체
+// 단일 구현체 — common/storage/S3StorageService.kt
 @Service
-@Profile("local")
-class MinioStorageService(private val minioClient: MinioClient) : StorageService {
-    override fun upload(key: String, bytes: ByteArray, contentType: String) {
-        minioClient.putObject(PutObjectArgs.builder()
-            .bucket("qusign-local").`object`(key)
-            .stream(bytes.inputStream(), bytes.size.toLong(), -1)
-            .contentType(contentType).build())
+class S3StorageService(
+    private val s3Client: S3Client,
+    @Value("\${storage.bucket}") private val bucket: String,
+) : StorageService {
+    override fun upload(key: String, data: ByteArray, contentType: String) {
+        s3Client.putObject(
+            PutObjectRequest.builder().bucket(bucket).key(key).contentType(contentType).build(),
+            RequestBody.fromBytes(data),
+        )
     }
+
+    override fun download(key: String): ByteArray =
+        s3Client.getObjectAsBytes(GetObjectRequest.builder().bucket(bucket).key(key).build()).asByteArray()
 }
 
-// 프로덕션 환경 구현체
-@Service
-@Profile("prod")
-class S3StorageService(private val s3Client: S3Client) : StorageService {
-    override fun upload(key: String, bytes: ByteArray, contentType: String) {
-        s3Client.putObject(PutObjectRequest.builder()
-            .bucket(bucketName).key(key)
-            .contentType(contentType).build(),
-            RequestBody.fromBytes(bytes))
+// 환경별 분기 — common/config/StorageConfig.kt
+@Bean
+fun s3Client(): S3Client {
+    val builder = S3Client.builder().region(Region.of(region))
+    return if (endpoint.isBlank()) {
+        // 프로덕션: storage.endpoint 미설정 → EC2 IAM 역할로 자동 인증
+        builder.credentialsProvider(DefaultCredentialsProvider.create()).build()
+    } else {
+        // 로컬: storage.endpoint=http://localhost:9000(MinIO) → 정적 자격증명 + 엔드포인트 오버라이드
+        builder.endpointOverride(URI.create(endpoint))
+            .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
+            .serviceConfiguration { it.pathStyleAccessEnabled(true) }
+            .build()
     }
 }
 ```
 
-서비스 코드는 `StorageService` 인터페이스만 의존 → 환경 전환 시 코드 변경 없음.
+서비스 코드는 `StorageService` 인터페이스만 의존 → 환경 전환 시 비즈니스 코드 변경 없음. (`@Profile` 기반 구현체 분리가 아니라, 설정값 하나로 같은 구현체의 내부 클라이언트 생성 방식만 바뀌는 구조입니다.)
 
 ---
 

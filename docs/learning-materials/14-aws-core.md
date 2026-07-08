@@ -70,15 +70,16 @@ EC2 내부 코드
 ```
 
 ```kotlin
-// StorageConfig.kt — endpoint가 비어있으면 IAM 역할 자동 인증
+// StorageConfig.kt — endpoint가 비어있으면 자격증명 제공자 체인이 EC2 IAM 역할까지 자동 탐색
 val credentialsProvider = if (endpoint.isBlank()) {
-    InstanceProfileCredentialsProvider.create()  // EC2 IAM 역할 사용
+    DefaultCredentialsProvider.create()  // 환경변수 → 시스템 프로퍼티 → ... → EC2 인스턴스 프로파일 순서로 탐색
 } else {
-    StaticCredentialsProvider.create(             // MinIO 로컬 개발
+    StaticCredentialsProvider.create(     // MinIO 로컬 개발
         AwsBasicCredentials.create(accessKey, secretKey)
     )
 }
 ```
+`DefaultCredentialsProvider`는 여러 자격증명 소스를 체인으로 시도하는 provider로, 그중 하나가 EC2 인스턴스 프로파일(IMDS)입니다. `InstanceProfileCredentialsProvider`를 직접 지정할 수도 있지만, QuSign은 로컬/EC2 어디서 실행되든 같은 코드가 동작하도록 `DefaultCredentialsProvider`(체인 방식)를 씁니다.
 
 ---
 

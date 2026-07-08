@@ -87,64 +87,72 @@ deploy-frontend:
 ```yaml
 deploy-backend:
   steps:
-    # 1. JAR 빌드
-    - run: ./gradlew bootJar
-
-    # 2. ECR 로그인
+    # 1. AWS 자격증명 구성 + ECR 로그인
+    - uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-southeast-1
     - uses: aws-actions/amazon-ecr-login@v2
 
-    # 3. Docker 이미지 빌드 + ECR 푸시
-    - run: |
-        docker build -t $ECR_REGISTRY/qusign_backend:latest ./backend
-        docker push $ECR_REGISTRY/qusign_backend:latest
+    # 2. Buildx로 이미지 빌드 + 푸시 (레이어 캐시를 GitHub Actions 캐시에 저장)
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/build-push-action@v5
+      with:
+        context: backend
+        push: true
+        tags: ${{ secrets.ECR_REGISTRY }}/qusign_backend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
-    # 4. EC2 SSH → SSM 값 읽기 → docker-compose up
-    - uses: appleboy/ssh-action@master
+    # 3. docker-compose.prod.yml을 SCP로 EC2에 미리 전송
+    - run: scp -i ~/.ssh/ec2.pem docker-compose.prod.yml ec2-user@$EC2_HOST:/home/ec2-user/
+
+    # 4. EC2 SSH → SSM에서 7개 파라미터 읽기 → .env 생성 → docker-compose up
+    - uses: appleboy/ssh-action@v1
       with:
         host: ${{ secrets.EC2_HOST }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          # SSM에서 비밀값 읽기
-          DB_PASS=$(aws ssm get-parameter --name /qusign/prod/db-password \
-            --with-decryption --query Parameter.Value --output text)
-          JWT_SECRET=$(aws ssm get-parameter --name /qusign/prod/jwt-secret \
-            --with-decryption --query Parameter.Value --output text)
+          # db-password, jwt-secret, s3-bucket, cors-origins, server-url, admin-email, admin-password
+          DB_PASSWORD=$(aws ssm get-parameter --name /qusign/prod/db-password --with-decryption --query Parameter.Value --output text)
+          JWT_SECRET=$(aws ssm get-parameter --name /qusign/prod/jwt-secret --with-decryption --query Parameter.Value --output text)
+          # ... (S3_BUCKET, CORS_ORIGINS, SERVER_URL, ADMIN_EMAIL, ADMIN_PASSWORD도 동일 패턴)
 
-          # .env 파일 생성 (메모리에만 — 파일 삭제)
-          cat > /home/ec2-user/.env << EOF
-          DB_PASSWORD=$DB_PASS
+          cat > /home/ec2-user/.env << ENVEOF
+          ECR_REGISTRY=$ECR_REGISTRY
+          DB_PASSWORD=$DB_PASSWORD
           JWT_SECRET=$JWT_SECRET
-          EOF
+          ENVEOF
 
-          # ECR 로그인 → 최신 이미지 풀 → 재시작
           aws ecr get-login-password --region ap-southeast-1 | \
-            docker login --username AWS --password-stdin $ECR_REGISTRY
-          docker-compose -f docker-compose.prod.yml pull
-          docker-compose -f docker-compose.prod.yml up -d
-          rm -f /home/ec2-user/.env
+            docker login --username AWS --password-stdin "$ECR_REGISTRY"
+          docker-compose -f /home/ec2-user/docker-compose.prod.yml pull backend
+          docker-compose -f /home/ec2-user/docker-compose.prod.yml up -d
 ```
+`docker build`/`docker push`를 직접 호출하지 않고 `docker/build-push-action@v5`(Buildx 기반)를 씁니다 — GitHub Actions 캐시(`type=gha`)를 재사용해 매번 전체 레이어를 새로 빌드하지 않습니다. `appleboy/ssh-action`은 `@master`가 아니라 고정 버전(`@v1`)을 사용합니다 — 태그가 아닌 브랜치 참조는 언제든 내용이 바뀔 수 있어 CI 재현성에 좋지 않습니다.
 
 ### 프론트엔드 배포 흐름
 
 ```yaml
 deploy-frontend:
   steps:
-    - run: |
-        cd frontend
-        npm ci
-        npm run build   # dist/ 생성
-
-    # SCP로 EC2에 전송
-    - uses: appleboy/scp-action@master
+    - uses: actions/setup-node@v4
       with:
-        host: ${{ secrets.EC2_HOST }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        source: "frontend/dist/*"
-        target: "/var/www/qusign/dist"
-        strip_components: 2
-```
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
 
-프론트엔드는 ECR 불필요 — Vue 빌드 결과물(정적 파일)을 직접 EC2로 전송합니다.
+    - working-directory: frontend
+      run: npm ci && npm run build-only   # dist/ 생성
+
+    # SSH로 대상 디렉터리 준비 후, scp -r 로 dist/ 전체 전송
+    - run: |
+        ssh -i ~/.ssh/ec2.pem ec2-user@$EC2_HOST \
+          "sudo mkdir -p /var/www/qusign/dist && sudo chown -R ec2-user:ec2-user /var/www/qusign"
+        scp -i ~/.ssh/ec2.pem -r frontend/dist/* ec2-user@$EC2_HOST:/var/www/qusign/dist/
+```
+프론트엔드는 ECR 불필요 — Vue 빌드 결과물(정적 파일)을 직접 EC2로 전송합니다. `appleboy/scp-action` 같은 전용 액션 대신, SSH로 디렉터리를 준비한 뒤 원시 `scp -r`로 전송하는 2단계 방식입니다. 빌드 명령은 `npm run build`가 아니라 `npm run build-only`입니다(타입체크를 별도 단계로 분리한 스크립트 이름).
 
 ---
 
@@ -176,25 +184,41 @@ docker push 285868221698.dkr.ecr.ap-southeast-1.amazonaws.com/qusign_backend:lat
 
 ## Multi-Stage Dockerfile
 
+실제 `backend/Dockerfile`은 스테이지가 3개입니다 — liboqs C 라이브러리 빌드, Spring Boot 앱 빌드, 최종 런타임 이미지.
+
 ```dockerfile
-# 빌드 스테이지
-FROM gradle:8-jdk21 AS build
-WORKDIR /app
-COPY . .
-RUN gradle bootJar --no-daemon
+# Stage 1: liboqs C 네이티브 라이브러리 빌드
+FROM ubuntu:22.04 AS liboqs-builder
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake ninja-build gcc g++ libssl-dev git ca-certificates
+WORKDIR /build
+RUN git clone --depth 1 --branch main https://github.com/open-quantum-safe/liboqs.git
+WORKDIR /build/liboqs
+RUN cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/liboqs \
+    -DBUILD_SHARED_LIBS=ON -DOQS_BUILD_ONLY_LIB=ON . && ninja && ninja install
 
-# 런타임 스테이지 (작은 이미지)
-FROM amazoncorretto:21-alpine
-WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
+# Stage 2: Spring Boot 앱 빌드
+FROM eclipse-temurin:21-jdk-jammy AS app-builder
+WORKDIR /workspace
+COPY gradlew gradlew.bat gradle.properties settings.gradle.kts build.gradle.kts ./
+COPY gradle/ gradle/
+RUN ./gradlew dependencies --no-daemon -q   # 의존성 레이어를 소스 변경 전에 캐시
+COPY src/ src/
+RUN ./gradlew bootJar --no-daemon -x test
 
-# liboqs 네이티브 라이브러리 포함
-COPY --from=build /app/libs/liboqs.so /usr/local/lib/
-
-ENTRYPOINT ["java", "-Xmx512m", "-jar", "app.jar"]
+# Stage 3: 운영 이미지 (JDK가 아닌 JRE — 실행에 컴파일러는 불필요)
+FROM eclipse-temurin:21-jre-jammy
+COPY --from=liboqs-builder /opt/liboqs/lib /opt/liboqs/lib
+COPY --from=app-builder /workspace/build/libs/*.jar app.jar
+ENV LD_LIBRARY_PATH=/opt/liboqs/lib
+EXPOSE 8080
+ENTRYPOINT ["java", "-Djava.library.path=/opt/liboqs/lib", "-jar", "/app.jar"]
 ```
 
-빌드 도구(Gradle, 소스코드)는 최종 이미지에 포함되지 않아 이미지 크기가 작습니다.
+빌드 도구(cmake/gcc, Gradle 전체, liboqs 소스 저장소)는 최종 이미지에 포함되지 않아 이미지 크기가 작습니다.
+liboqs를 소스에서 직접 컴파일하는 이유는 CPU 아키텍처(x86_64/ARM)에 맞는 네이티브 바이너리를 빌드 시점에 생성하기 위해서입니다 — 미리 빌드된 `.so`를 저장소에 커밋해두지 않습니다.
+
+> 참고: 실제 서명·검증 로직은 liboqs가 아니라 BouncyCastle(`"ML-DSA"` provider)을 사용합니다 — [[06-pqc-mldsa]]. liboqs 빌드 스테이지는 향후 liboqs-java(JNI) 전환을 대비한 것으로, 현재 런타임에서 이 라이브러리를 직접 호출하지는 않습니다.
 
 ---
 

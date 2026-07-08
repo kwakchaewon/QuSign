@@ -59,7 +59,7 @@ println("hello world".wordCount)  // 2
 
 ## 현재 코드에서의 사용 예시
 
-### `String.addQusignedSuffix()` — `SignatureFlowService.kt:272`
+### `String.addQusignedSuffix()` — `SignatureFlowService.kt:876`
 ```kotlin
 private fun String.addQusignedSuffix(): String {
     val dot = lastIndexOf('.')

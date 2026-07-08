@@ -76,23 +76,34 @@ backend:
 # docker-compose.yml (로컬)
 services:
   minio:
-    image: minio/minio
+    image: minio/minio:latest
+    container_name: qusign-minio
+    restart: unless-stopped
     command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # 웹 콘솔
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
-
-  redis:
-    image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # 웹 콘솔
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Redis는 로컬 Windows 서비스 사용 (localhost:6379) — 컨테이너화하지 않음
+
+volumes:
+  minio_data:
 ```
 
 백엔드는 `./gradlew bootRun`으로 로컬에서 직접 실행합니다.
 MinIO는 S3 호환 API를 제공하므로 코드 변경 없이 프로덕션 S3와 교체할 수 있습니다.
+**로컬 개발에서 MariaDB와 Redis는 Docker 컨테이너가 아니라 호스트에 설치된 서비스(`localhost:3306`, `localhost:6379`)를 사용합니다.** Docker Compose는 MinIO 하나만 담당합니다 — `docker-compose.prod.yml`(EC2)에서는 반대로 MariaDB까지 컨테이너로 관리합니다.
 
 ### 프로파일 분리 전략
 
@@ -118,7 +129,8 @@ docker compose logs -f minio
 # 컨테이너 상태 확인
 docker compose ps
 
-# 컨테이너 안에서 명령 실행
+# 컨테이너 안에서 명령 실행 (qusign-mariadb는 docker-compose.prod.yml/EC2에서만 존재 —
+# 로컬은 MariaDB가 호스트 서비스이므로 `mariadb -uqusign -p -h localhost`로 직접 접속)
 docker exec -it qusign-mariadb mariadb -uqusign -p
 
 # 전체 정지 + 컨테이너 삭제 (볼륨 유지)

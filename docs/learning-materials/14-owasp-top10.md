@@ -146,7 +146,7 @@ fun stream(@RequestParam token: String?): SseEmitter {
     return registry.register(userId)
 }
 ```
-(토큰 발급은 `POST`, 토큰 조회+삭제는 `GET`으로 분리되어 있고, 실제 구현은 `SseTokenService`에 캡슐화되어 있습니다. — [[11-redis-sse]] 참고)
+(토큰 발급은 `POST`, 토큰 조회+삭제는 `GET`으로 분리되어 있고, 실제 구현은 `SseTokenService`에 캡슐화되어 있습니다. — [[12-redis-sse]] 참고)
 
 ---
 

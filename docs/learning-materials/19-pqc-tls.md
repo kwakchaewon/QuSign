@@ -316,7 +316,7 @@ class MlDsa65Algorithm : SignatureAlgorithm {
     }
 }
 ```
-(`"ML-DSA"`/`MLDSAParameterSpec.ml_dsa_65`는 실제 `BouncyCastlePqcSignatureService.kt`와 동일한 명칭입니다 — 구 BouncyCastle의 `"DILITHIUM"`/`DilithiumParameterSpec.dilithium3` 명칭은 FIPS 204 표준화 이후 폐기되었습니다. [[06-pqc-mldsa]] 참고.)
+(`"ML-DSA"`/`MLDSAParameterSpec.ml_dsa_65`는 실제 `BouncyCastlePqcSignatureService.kt`와 동일한 명칭입니다 — 구 BouncyCastle의 `"DILITHIUM"`/`DilithiumParameterSpec.dilithium3` 명칭은 FIPS 204 표준화 이후 폐기되었습니다. [[07-pqc-mldsa]] 참고.)
 
 ```yaml
 # application.yml

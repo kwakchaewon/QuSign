@@ -218,7 +218,7 @@ ENTRYPOINT ["java", "-Djava.library.path=/opt/liboqs/lib", "-jar", "/app.jar"]
 빌드 도구(cmake/gcc, Gradle 전체, liboqs 소스 저장소)는 최종 이미지에 포함되지 않아 이미지 크기가 작습니다.
 liboqs를 소스에서 직접 컴파일하는 이유는 CPU 아키텍처(x86_64/ARM)에 맞는 네이티브 바이너리를 빌드 시점에 생성하기 위해서입니다 — 미리 빌드된 `.so`를 저장소에 커밋해두지 않습니다.
 
-> 참고: 실제 서명·검증 로직은 liboqs가 아니라 BouncyCastle(`"ML-DSA"` provider)을 사용합니다 — [[06-pqc-mldsa]]. liboqs 빌드 스테이지는 향후 liboqs-java(JNI) 전환을 대비한 것으로, 현재 런타임에서 이 라이브러리를 직접 호출하지는 않습니다.
+> 참고: 실제 서명·검증 로직은 liboqs가 아니라 BouncyCastle(`"ML-DSA"` provider)을 사용합니다 — [[07-pqc-mldsa]]. liboqs 빌드 스테이지는 향후 liboqs-java(JNI) 전환을 대비한 것으로, 현재 런타임에서 이 라이브러리를 직접 호출하지는 않습니다.
 
 ---
 
